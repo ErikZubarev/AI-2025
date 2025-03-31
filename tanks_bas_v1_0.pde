@@ -162,7 +162,7 @@ void displayHomeBase() {
   
 
 void displayTrees() {
-  for (Tank tree : allTrees) {
+  for (Tree tree : allTrees) {
     tree.display();
   }
 }
