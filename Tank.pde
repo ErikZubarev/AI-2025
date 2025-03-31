@@ -1,6 +1,5 @@
 class Tank extends Sprite {
 
-  PVector acceleration;
   PVector velocity;
   PVector position;
   
@@ -26,10 +25,8 @@ class Tank extends Sprite {
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     this.position     = new PVector(this.startpos.x, this.startpos.y);
     this.velocity     = new PVector(0, 0);
-    this.acceleration = new PVector(0, 0);
-    
+
     this.state        = 0; //0(still), 1(moving)
-    this.speed        = 0;
     this.maxspeed     = 3;
     this.isInTransition = false;
   }
@@ -62,12 +59,8 @@ class Tank extends Sprite {
   //======================================
   void moveForward(){
     println("*** Tank.moveForward()");
-    
-    if (this.velocity.x < this.maxspeed) {
-      this.velocity.x += 0.01;
-    } else {
+
       this.velocity.x = this.maxspeed;  
-    }
   }
   
   void moveBackward(){
