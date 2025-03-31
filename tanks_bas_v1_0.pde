@@ -41,12 +41,20 @@ void setup()
   
   gameOver       = false;
   pause          = true;
+
+  
   
   // Trad
   tree_img = loadImage("tree01_v2.png");
   tree1_pos = new PVector(230, 600);
   tree2_pos = new PVector(280, 230);
   tree3_pos = new PVector(530, 520);
+  tree0 = new Tree(tree_img, tree1_pos.x, tree1_pos.y);
+  tree1 = new Tree(tree_img, tree2_pos.x, tree2_pos.y);
+  tree2 = new Tree(tree_img, tree3_pos.x, tree3_pos.y);
+  allTrees[0] = tree0;
+  allTrees[1] = tree1;
+  allTrees[2] = tree2;
   
   tank_size = 50;
   
@@ -56,11 +64,15 @@ void setup()
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
   
+  
   // Team1
   team1Color  = color(0, 150, 200);             // Base Team 1(blue)
   team1_tank0_startpos  = new PVector(width-50, height-250);
   team1_tank1_startpos  = new PVector(width-50, height-150);
   team1_tank2_startpos  = new PVector(width-50, height-50);
+
+  //Teams
+  team = new Team(team0Color, team1Color);
   
   //tank0_startpos = new PVector(50, 50);
   tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0Color );
@@ -144,22 +156,14 @@ void checkForCollisions() {
 //======================================
 // Följande bör ligga i klassen Team
 void displayHomeBase() {
-  strokeWeight(1);
-
-  fill(team0Color, 15);    // Base Team 0(red)
-  rect(0, 0, 150, 350);
-  
-  fill(team1Color, 15);    // Base Team 1(blue) 
-  rect(width - 151, height - 351, 150, 350);
+  team.display();
 }
   
-// Följande bör ligga i klassen Tree
+
 void displayTrees() {
-  imageMode(CENTER);
-  image(tree_img, tree1_pos.x, tree1_pos.y);
-  image(tree_img, tree2_pos.x, tree2_pos.y);
-  image(tree_img, tree3_pos.x, tree3_pos.y);
-  imageMode(CORNER);
+  for (Tank tree : allTrees) {
+    tree.display();
+  }
 }
 
 void displayTanks() {

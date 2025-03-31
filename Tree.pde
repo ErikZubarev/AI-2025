@@ -6,7 +6,7 @@ class Tree extends Sprite {
   float   diameter;
   
   //**************************************************
-  Tree(PImage _image, int _posx, int _posy) {
+  Tree(PImage _image, float _posx, float _posy) {
     
     this.img       = _image;
     this.diameter  = this.img.width/2;
@@ -23,6 +23,8 @@ class Tree extends Sprite {
 
   //**************************************************  
   void display() {
-      
+      imageMode(CENTER);
+      image(img, position.x, position.y);
+      imageMode(CORNER);
   }
 }
