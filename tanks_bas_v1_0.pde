@@ -9,6 +9,8 @@ boolean mouse_pressed;
 
 PImage tree_img;
 PVector tree1_pos, tree2_pos, tree3_pos;
+Tree tree0, tree1, tree2;
+Team team;
 
 Tree[] allTrees   = new Tree[3];
 Tank[] allTanks   = new Tank[6];
