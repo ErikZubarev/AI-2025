@@ -27,7 +27,7 @@ class Tank extends Sprite {
     this.velocity     = new PVector(0, 0);
 
     this.state        = 0; //0(still), 1(moving)
-    this.maxspeed     = 3;
+    this.maxspeed     = 2;
     this.isInTransition = false;
   }
   
@@ -59,18 +59,12 @@ class Tank extends Sprite {
   //======================================
   void moveForward(){
     println("*** Tank.moveForward()");
-
       this.velocity.x = this.maxspeed;  
   }
   
   void moveBackward(){
     println("*** Tank.moveBackward()");
-    
-    if (this.velocity.x > -this.maxspeed) {
-      this.velocity.x -= 0.01;
-    } else {
-      this.velocity.x = -this.maxspeed;  
-    }
+    this.velocity.x = -this.maxspeed;  
   }
   
   void stopMoving(){
