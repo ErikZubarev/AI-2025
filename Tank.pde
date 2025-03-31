@@ -35,7 +35,7 @@ class Tank extends Sprite {
   void checkEnvironment() {
     println("*** Tank.checkEnvironment()");
     
-    borders();
+    borgars();
   }
   
   void checkForCollisions(Sprite sprite) {
@@ -47,7 +47,7 @@ class Tank extends Sprite {
   }
   
   // Följande är bara ett exempel
-  void borders() {
+  void borgars() {
     float r = diameter/2;
     if (position.x < -r) position.x = width+r;
     if (position.y < -r) position.y = height+r;
