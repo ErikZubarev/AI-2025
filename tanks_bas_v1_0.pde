@@ -119,26 +119,29 @@ void draw()
 
 //======================================
 void checkForInput() {
-  
-      if (up) {
+    if (up) {
         if (!pause && !gameOver) {
-          tank0.state=1; // moveForward
+            tank0.state = 1; // moveForward
         }
-      } else 
-      if (down) {
+    } else if (down) {
         if (!pause && !gameOver) {
-          tank0.state=2; // moveBackward
+            tank0.state = 2; // moveBackward
         }
-      }
-      
-      if (right) {
-      } else 
-      if (left) {
-      }
-      
-      if (!up && !down) {
-        tank0.state=0;
-      }
+    }
+
+    if (right) {
+        if (!pause && !gameOver) {
+            tank0.action("rotateRight"); // Rotate right
+        }
+    } else if (left) {
+        if (!pause && !gameOver) {
+            tank0.action("rotateLeft"); // Rotate left
+        }
+    }
+
+    if (!up && !down) {
+        tank0.state = 0;
+    }
 }
 
 //======================================

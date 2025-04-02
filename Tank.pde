@@ -11,6 +11,7 @@ class Tank extends Sprite {
 
   float speed;
   float maxspeed;
+  float angle;
   
   int state;
   boolean isInTransition;
@@ -25,6 +26,7 @@ class Tank extends Sprite {
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     this.position     = new PVector(this.startpos.x, this.startpos.y);
     this.velocity     = new PVector(0, 0);
+    this.angle        = 0;
 
     this.state        = 0; //0(still), 1(moving)
     this.maxspeed     = 2;
@@ -57,40 +59,55 @@ class Tank extends Sprite {
   
   
   //======================================
-  void moveForward(){
-    println("*** Tank.moveForward()");
-      this.velocity.x = this.maxspeed;  
+  void moveForward() {
+      println("*** Tank.moveForward()");
+      this.velocity.x = cos(this.angle) * this.maxspeed; 
+      this.velocity.y = sin(this.angle) * this.maxspeed; 
+  }
+
+  void moveBackward() {
+      println("*** Tank.moveBackward()");
+      this.velocity.x = -cos(this.angle) * this.maxspeed; 
+      this.velocity.y = -sin(this.angle) * this.maxspeed;
+  }
+
+    void rotateLeft() {
+      println("*** Tank.rotateLeft()");
+      this.angle -= radians(5); 
+  }
+
+  void rotateRight() {
+      println("*** Tank.rotateRight()");
+      this.angle += radians(5); 
   }
   
-  void moveBackward(){
-    println("*** Tank.moveBackward()");
-    this.velocity.x = -this.maxspeed;  
+  void stopMoving() {
+      println("*** Tank.stopMoving()");
+      this.velocity.x = 0;
+      this.velocity.y = 0;
   }
-  
-  void stopMoving(){
-    println("*** Tank.stopMoving()");
-    
-    // hade varit finare med animering!
-    this.velocity.x = 0; 
-  }
-  
+
   //======================================
   void action(String _action) {
-    println("*** Tank.action()");
-    
-    switch (_action) {
-      case "move":
-        moveForward();
-        break;
-      case "reverse":  
-        moveBackward();
-        break;
-      case "turning":
-        break;
-      case "stop": 
-        stopMoving();
-        break;
-    }
+      println("*** Tank.action()");
+
+      switch (_action) {
+          case "move":
+              moveForward();
+              break;
+          case "reverse":  
+              moveBackward();
+              break;
+          case "rotateLeft":
+              rotateLeft();
+              break;
+          case "rotateRight":
+              rotateRight();
+              break;
+          case "stop": 
+              stopMoving();
+              break;
+      }
   }
   
   //======================================
@@ -118,17 +135,23 @@ class Tank extends Sprite {
   
   //====================================== 
   void drawTank(float x, float y) {
-    fill(this.col, 50); 
+      fill(this.col, 50); 
 
-    ellipse(x, y, 50, 50);
-    strokeWeight(1);
-    line(x, y, x+25, y);
-    
-    //kanontornet
-    ellipse(0, 0, 25, 25);
-    strokeWeight(3);   
-    float cannon_length = this.diameter/2;
-    line(0, 0, cannon_length, 0);
+      pushMatrix();
+      translate(x, y);
+      rotate(this.angle); // Apply rotation
+
+      ellipse(0, 0, 50, 50);
+      strokeWeight(1);
+      line(0, 0, 25, 0); // Cannon direction
+
+      // Cannon turret
+      ellipse(0, 0, 25, 25);
+      strokeWeight(3);   
+      float cannon_length = this.diameter / 2;
+      line(0, 0, cannon_length, 0);
+
+      popMatrix();
   }
   
   void display() {
