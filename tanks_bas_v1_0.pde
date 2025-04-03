@@ -33,10 +33,9 @@ PVector team1_tank1_startpos;
 PVector team1_tank2_startpos;
 Tank tank3, tank4, tank5;
 
-int tank_size;
-
 boolean gameOver;
 boolean pause;
+ArrayList<PVector> placedPositions = new ArrayList<PVector>();
 
 //======================================
 void setup() 
@@ -51,22 +50,18 @@ void setup()
 
   
   
-  // Trad
+  // Trees, randomly placed in the middle of the playing field
   tree_img = loadImage("tree01_v2.png");
-  //Changed the tree's positions to be semi-randomly in the middle, som overlapp might happen but eh
-  ArrayList<PVector> treePositions = new ArrayList<PVector>();
-
   for (int i = 0; i < 3; i++) {
     PVector newTreePos;
     do {
-      newTreePos = new PVector(random(250, 600), random(250, 600)); // Trees in the middle
-    } while (isOverlapping(newTreePos, treePositions, 100)); // Ensure no overlap
+      newTreePos = new PVector(random(250, 600), random(250, 600)); 
+    } while (isOverlapping(newTreePos, placedPositions, 150));
 
-    treePositions.add(newTreePos);
+    placedPositions.add(newTreePos);
     allTrees[i] = new Tree(tree_img, newTreePos.x, newTreePos.y);
   }
   
-  tank_size = 50;
   
   // Team0
   team0Color  = color(204, 50, 50);             // Base Team 0(red)
@@ -74,16 +69,14 @@ void setup()
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
   
-  
-  ArrayList<PVector> tankPositions = new ArrayList<PVector>();
-
+  // Team1 randomly placed i in the lower right quandrant
   for (int i = 0; i < 3; i++) {
     PVector newTankPos;
     do {
-      newTankPos = new PVector(random(450, 750), random(450, 750)); // Lower-right area
-    } while (isOverlapping(newTankPos, tankPositions, 100)); // Ensure no overlap
+      newTankPos = new PVector(random(450, 750), random(450, 750)); 
+    } while (isOverlapping(newTankPos, placedPositions, 150)); 
 
-    tankPositions.add(newTankPos);
+    placedPositions.add(newTankPos);
   }
 
 
@@ -98,9 +91,9 @@ void setup()
   
   blue_tank_img = loadImage("bluetank.png");
     // Assign to blue tanks
-  tank3 = new Tank("tank3", tankPositions.get(0), blue_tank_img);
-  tank4 = new Tank("tank4", tankPositions.get(1), blue_tank_img);
-  tank5 = new Tank("tank5", tankPositions.get(2), blue_tank_img);
+  tank3 = new Tank("tank3", placedPositions.get(3), blue_tank_img);
+  tank4 = new Tank("tank4", placedPositions.get(4), blue_tank_img);
+  tank5 = new Tank("tank5", placedPositions.get(5), blue_tank_img);
 
   
   allTanks[0] = tank0;                         // Symbol samma som index!
@@ -111,13 +104,14 @@ void setup()
   allTanks[5] = tank5;
 }
 
+//Created helper fucntion to check if the generated pos is too close to a existing one
 boolean isOverlapping(PVector newPos, ArrayList<PVector> existingPositions, float minDistance) {
   for (PVector pos : existingPositions) {
     if (newPos.dist(pos) < minDistance) {
-      return true; // Too close, overlap detected
+      return true; 
     }
   }
-  return false; // No overlap, position is valid
+  return false; 
 }
 
 void draw()
