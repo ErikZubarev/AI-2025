@@ -7,8 +7,8 @@ class Tank extends Sprite {
   String name;
   PImage img;
   color col;
-  float diameter;
-
+  int tankwidth;
+  int tankheight;
   float speed;
   float maxspeed;
   float angle;
@@ -17,10 +17,11 @@ class Tank extends Sprite {
   boolean isInTransition;
  
   //======================================  
-  Tank(String _name, PVector _startpos, float _size, PImage sprite ) {
+  Tank(String _name, PVector _startpos, PImage sprite ) {
     println("*** Tank.Tank()");
     this.name         = _name;
-    this.diameter     = _size;
+    this.tankwidth    = sprite.width;
+    this.tankheight   = sprite.height;
     this.img          = sprite;
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
@@ -50,11 +51,18 @@ class Tank extends Sprite {
   
   // Följande är bara ett exempel
   void borgars() {
-    float r = diameter/2;
-    if (position.x < -r) position.x = width+r;
-    if (position.y < -r) position.y = height+r;
-    if (position.x > width+r) position.x = -r;
-    if (position.y > height+r) position.y = -r;
+    //Code for wrap-around borders
+    //float r = tankwidth;
+    //if (position.x < -r) position.x = width+r;
+    //if (position.y < -r) position.y = height+r;
+    //if (position.x > width+r) position.x = -r;
+    //if (position.y > height+r) position.y = -r;
+    
+    //Code for hard borders
+    float r = tankwidth / 2;  // Half of tank width to keep it within bounds
+
+    position.x = constrain(position.x, r, width - r);
+    position.y = constrain(position.y, r, height - r);
   }
   
   
@@ -171,10 +179,10 @@ class Tank extends Sprite {
       
       strokeWeight(1);
       fill(230);
-      rect(0+25, 0-25, 100, 40);
+      rect(0+40, 0-40, 100, 40);
       fill(30);
       textSize(15);
-      text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 25+5, -5-5);
+      text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
     
     popMatrix();
   }
