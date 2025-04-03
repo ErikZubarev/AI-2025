@@ -8,6 +8,8 @@ boolean left, right, up, down;
 boolean mouse_pressed;
 
 PImage tree_img;
+PImage blue_tank_img;
+PImage red_tank_img;
 PVector tree1_pos, tree2_pos, tree3_pos;
 Tree tree0, tree1, tree2;
 Team team;
@@ -78,13 +80,15 @@ void setup()
   team = new Team(team0Color, team1Color);
   
   //tank0_startpos = new PVector(50, 50);
-  tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0Color );
-  tank1 = new Tank("tank1", team0_tank1_startpos,tank_size, team0Color );
-  tank2 = new Tank("tank2", team0_tank2_startpos,tank_size, team0Color );
+  red_tank_img = loadImage("redtank.png");
+  tank0 = new Tank("tank0", team0_tank0_startpos,tank_size,   red_tank_img);
+  tank1 = new Tank("tank1", team0_tank1_startpos,tank_size,  red_tank_img );
+  tank2 = new Tank("tank2", team0_tank2_startpos,tank_size,   red_tank_img );
   
-  tank3 = new Tank("tank3", team1_tank0_startpos,tank_size, team1Color );
-  tank4 = new Tank("tank4", team1_tank1_startpos,tank_size, team1Color );
-  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size, team1Color );
+  blue_tank_img = loadImage("bluetank.png");
+  tank3 = new Tank("tank3", team1_tank0_startpos,tank_size, blue_tank_img );
+  tank4 = new Tank("tank4", team1_tank1_startpos,tank_size,  blue_tank_img );
+  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size,  blue_tank_img );
   
   allTanks[0] = tank0;                         // Symbol samma som index!
   allTanks[1] = tank1;

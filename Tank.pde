@@ -17,11 +17,11 @@ class Tank extends Sprite {
   boolean isInTransition;
  
   //======================================  
-  Tank(String _name, PVector _startpos, float _size, color _col ) {
+  Tank(String _name, PVector _startpos, float _size, PImage sprite ) {
     println("*** Tank.Tank()");
     this.name         = _name;
     this.diameter     = _size;
-    this.col          = _col;
+    this.img          = sprite;
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     this.position     = new PVector(this.startpos.x, this.startpos.y);
@@ -135,21 +135,24 @@ class Tank extends Sprite {
   
   //====================================== 
   void drawTank(float x, float y) {
-      fill(this.col, 50); 
+      //fill(this.col, 50); 
 
       pushMatrix();
       translate(x, y);
       rotate(this.angle); // Apply rotation
+      
+      imageMode(CENTER);
+      image(img, x, y);
 
-      ellipse(0, 0, 50, 50);
-      strokeWeight(1);
-      line(0, 0, 25, 0); // Cannon direction
+      //ellipse(0, 0, 50, 50);
+      //strokeWeight(1);
+      //line(0, 0, 25, 0); // Cannon direction
 
-      // Cannon turret
-      ellipse(0, 0, 25, 25);
-      strokeWeight(3);   
-      float cannon_length = this.diameter / 2;
-      line(0, 0, cannon_length, 0);
+      //// Cannon turret
+      //ellipse(0, 0, 25, 25);
+      //strokeWeight(3);   
+      //float cannon_length = this.diameter / 2;
+      //line(0, 0, cannon_length, 0);
 
       popMatrix();
   }
