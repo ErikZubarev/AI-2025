@@ -2,6 +2,7 @@ class QuadTreeMemory{
   float x,y,h,w;
   Sprite[] objects; 
   QuadTreeMemory[] children;
+  boolean isEmpty;
   
   QuadTreeMemory(float x, float y, float w, float h){
     this.x = x;
@@ -11,6 +12,7 @@ class QuadTreeMemory{
     
     children = new QuadTreeMemory[]{};
     objects = new Sprite[]{}; // Ally, Enemy, Tree, Landmine
+    isEmpty = true;
   }
   
   void subdivide(){
@@ -23,6 +25,7 @@ class QuadTreeMemory{
   }
   
   void insert(Sprite obj){
+    isEmpty = false;
     if(children.length == 0){
       append(objects, obj);
       return;
@@ -43,5 +46,9 @@ class QuadTreeMemory{
       x < this.x + this.w && 
       this.y <= y && 
       y < this.y + this.h;
+  }
+  
+  boolean isEmpty(){
+    return this.isEmpty;
   }
 }

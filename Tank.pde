@@ -16,9 +16,7 @@ class Tank extends Sprite {
   boolean isInTransition;
   
   QuadTreeMemory memory;
-  int viewWidth = 10;
-  int viewHeight = 50;
- 
+  ViewArea viewArea;
   //======================================  
   Tank(String _name, PVector _startpos, PImage sprite ) {
     println("*** Tank.Tank()");
@@ -36,9 +34,16 @@ class Tank extends Sprite {
     this.maxspeed     = 2;
     this.isInTransition = false;
     this.memory       = new QuadTreeMemory(0,0,800,800); // (0,0) start position to (800,800) px play area
+    this.viewArea     = new ViewArea(position.x, position.y, angle);
   }
   
   //======================================
+  
+
+  
+  void detectObject(){
+    
+  }
   
   void checkEnvironment() {
     println("*** Tank.checkEnvironment()");
@@ -76,22 +81,26 @@ class Tank extends Sprite {
       println("*** Tank.moveForward()");
       this.velocity.x = cos(this.angle) * this.maxspeed; 
       this.velocity.y = sin(this.angle) * this.maxspeed; 
+      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
 
   void moveBackward() {
       println("*** Tank.moveBackward()");
       this.velocity.x = -cos(this.angle) * this.maxspeed; 
       this.velocity.y = -sin(this.angle) * this.maxspeed;
+      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
 
     void rotateLeft() {
       println("*** Tank.rotateLeft()");
       this.angle -= radians(5); 
+      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
 
   void rotateRight() {
       println("*** Tank.rotateRight()");
       this.angle += radians(5); 
+      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
   
   void stopMoving() {
@@ -186,7 +195,39 @@ class Tank extends Sprite {
       fill(30);
       textSize(15);
       text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
+      
+      viewArea.drawArea();
     
     popMatrix();
   }
+  
+  class ViewArea {
+    float x, y; 
+    float width = 100; 
+    float height = 200;
+    float angle;
+
+    public ViewArea(float x, float y, float angle) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+    }
+
+    public void updateViewArea(float agentX, float agentY, float agentAngle) {
+        this.x = agentX + cos(agentAngle) * (height / 2); 
+        this.y = agentY + sin(agentAngle) * (height / 2);  
+        this.angle = agentAngle; 
+    }
+    
+    void drawArea() {
+      pushMatrix();
+
+        rotate(this.angle);
+        rect(x,y, height,width);
+        strokeWeight(1);
+        
+      popMatrix();
+  }
+}
+
 }
