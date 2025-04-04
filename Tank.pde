@@ -81,26 +81,26 @@ class Tank extends Sprite {
       println("*** Tank.moveForward()");
       this.velocity.x = cos(this.angle) * this.maxspeed; 
       this.velocity.y = sin(this.angle) * this.maxspeed; 
-      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
+      
   }
 
   void moveBackward() {
       println("*** Tank.moveBackward()");
       this.velocity.x = -cos(this.angle) * this.maxspeed; 
       this.velocity.y = -sin(this.angle) * this.maxspeed;
-      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
+      
   }
 
     void rotateLeft() {
       println("*** Tank.rotateLeft()");
       this.angle -= radians(5); 
-      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
+      
   }
 
   void rotateRight() {
       println("*** Tank.rotateRight()");
       this.angle += radians(5); 
-      viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
+      
   }
   
   void stopMoving() {
@@ -153,6 +153,7 @@ class Tank extends Sprite {
     }
     
     this.position.add(velocity);
+    viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
   
   //====================================== 
@@ -195,10 +196,8 @@ class Tank extends Sprite {
       fill(30);
       textSize(15);
       text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
-      
-      viewArea.drawArea();
-    
     popMatrix();
+    viewArea.drawArea();
   }
   
   class ViewArea {
@@ -221,13 +220,16 @@ class Tank extends Sprite {
     
     void drawArea() {
       pushMatrix();
-
+        translate(this.x, this.y);
         rotate(this.angle);
-        rect(x,y, height,width);
-        strokeWeight(1);
         
+        rectMode(CENTER);
+        fill(255, 255, 0, 100);
+        rect(0,0, height,width);
+        strokeWeight(1);
+        rectMode(CORNER);
       popMatrix();
+    }
   }
-}
 
 }
