@@ -6,7 +6,6 @@ class Tank extends Sprite {
   PVector startpos;
   String name;
   PImage img;
-  color col;
   int tankwidth;
   int tankheight;
   float speed;
@@ -166,8 +165,6 @@ class Tank extends Sprite {
   }
   
   void display() {
-    fill(this.col);
-    strokeWeight(1);
     
     pushMatrix();
     

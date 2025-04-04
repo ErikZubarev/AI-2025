@@ -20,14 +20,14 @@ Tree[] allTrees   = new Tree[3];
 Tank[] allTanks   = new Tank[6];
 
 // Team0
-color team0Color;
+
 PVector team0_tank0_startpos;
 PVector team0_tank1_startpos;
 PVector team0_tank2_startpos;
 Tank tank0, tank1, tank2;
 
 // Team1
-color team1Color;
+
 PVector team1_tank0_startpos;
 PVector team1_tank1_startpos;
 PVector team1_tank2_startpos;
@@ -35,7 +35,22 @@ Tank tank3, tank4, tank5;
 
 boolean gameOver;
 boolean pause;
+//Positions for trees and enemies
+//TODO maybe seperate the trees from enemys so we can know the difference between them
 ArrayList<PVector> placedPositions = new ArrayList<PVector>();
+
+//Landmine assets
+enum DogState { ENTERING, RUNNING_TO_TARGET, LAUGHING, EXITING }
+DogState dogState = DogState.ENTERING;
+
+PImage landmineImg;
+PImage[] runningFrames = new PImage[3];
+PImage[] laughingFrames = new PImage[2];
+Dog dog;
+PVector newLandMinePos;
+int landmineCounter = 0;
+PVector dogExit;
+ArrayList<Landmine> placedMines = new ArrayList<Landmine>();
 
 //======================================
 void setup() 
@@ -47,6 +62,24 @@ void setup()
   
   gameOver       = false;
   pause          = true;
+  
+  //MINE STUFF
+  landmineImg = loadImage("landmine.png");
+  landmineImg.resize(50, 50);
+  
+  //LOADS IN THE FRAMES OF THE ANIMATIONS SINCE GIFS CANT BE USED
+  for (int i = 0; i < runningFrames.length; i++) {
+    PImage img = loadImage("dog_run_" + i + ".png");
+    img.resize(50, 75);
+    runningFrames[i] = img;
+  }
+  for (int i = 0; i < laughingFrames.length; i++) {
+    PImage img = loadImage("dog_laugh_" + i + ".png");
+    img.resize(50, 75);
+    laughingFrames[i] = img;
+  }
+  //Instantiate dog with its frames
+  dog = new Dog(runningFrames, laughingFrames);
 
   
   
@@ -64,10 +97,11 @@ void setup()
   
   
   // Team0
-  team0Color  = color(204, 50, 50);             // Base Team 0(red)
+  // Base Team 0(red)
   team0_tank0_startpos  = new PVector(50, 50);
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
+  
   
   // Team1 randomly placed i in the lower right quandrant
   for (int i = 0; i < 3; i++) {
@@ -80,8 +114,8 @@ void setup()
   }
 
 
-  //Teams
-  team = new Team(team0Color, team1Color);
+  //Team
+  team = new Team();
   
   //tank0_startpos = new PVector(50, 50);
   red_tank_img = loadImage("redtank.png");
@@ -114,28 +148,50 @@ boolean isOverlapping(PVector newPos, ArrayList<PVector> existingPositions, floa
   return false; 
 }
 
-void draw()
-{
+void draw() {
   background(200);
-  checkForInput(); // Kontrollera inmatning.
+  
+  checkForInput();
   
   if (!gameOver && !pause) {
-    
-    // UPDATE LOGIC
     updateTanksLogic();
-    
-    // CHECK FOR COLLISIONS
     checkForCollisions();
-  
+    landmineCounter++;
   }
-  
-  // UPDATE DISPLAY 
+
   displayHomeBase();
   displayTrees();
   displayTanks();  
-  
   displayGUI();
+  
+
+  if (landmineCounter == 500) {
+    deployLandmine();
+    landmineCounter = 0; 
+  }
+  
+  displayMines();
+  dog.update();
+  dog.display();
+  
 }
+
+//======================================
+
+//TODO change method name, isnt this one that deploys the mine anymore. Just creates its hypthetical PVector and tells the dog to run there. 
+void deployLandmine() {
+  PVector targetPos;
+  do {
+    targetPos = new PVector(random(100, 700), random(100, 700));
+  } while (isOverlapping(targetPos, placedPositions, 100));
+
+  dog.startRun(targetPos);
+}
+
+
+//======================================
+
+
 
 //======================================
 void checkForInput() {
@@ -194,6 +250,12 @@ void displayTrees() {
 void displayTanks() {
   for (Tank tank : allTanks) {
     tank.display();
+  }
+}
+
+void displayMines(){
+  for(Landmine mine : placedMines){
+    mine.display();
   }
 }
 
