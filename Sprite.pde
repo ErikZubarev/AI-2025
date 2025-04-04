@@ -1,3 +1,3 @@
 class Sprite {
-  
+  PVector position;
 }

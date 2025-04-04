@@ -14,6 +14,10 @@ class Tank extends Sprite {
   
   int state;
   boolean isInTransition;
+  
+  QuadTreeMemory memory;
+  int viewWidth = 10;
+  int viewHeight = 50;
  
   //======================================  
   Tank(String _name, PVector _startpos, PImage sprite ) {
@@ -31,9 +35,11 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.maxspeed     = 2;
     this.isInTransition = false;
+    this.memory       = new QuadTreeMemory(0,0,800,800); // (0,0) start position to (800,800) px play area
   }
   
   //======================================
+  
   void checkEnvironment() {
     println("*** Tank.checkEnvironment()");
     
