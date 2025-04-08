@@ -15,4 +15,13 @@ class Boundry{
       this.y + this.height < other.y ||
       this.y > other.y + other.height);
   }
+  
+  boolean isWithin(Boundry other){
+    return (
+      this.x >= other.x &&
+      this.x + this.width <= other.x + other.width &&
+      this.y >= other.y &&
+      this.y + this.height <= other.y + other.height 
+    );
+  }
 }
