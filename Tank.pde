@@ -33,7 +33,7 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.maxspeed     = 2;
     this.isInTransition = false;
-    this.memory       = new QuadTreeMemory(0,0,800,800); // (0,0) start position to (800,800) px play area
+    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800)); // (0,0) start position to (800,800) px play area
     this.viewArea     = new ViewArea(position.x, position.y, angle);
   }
   
@@ -59,16 +59,7 @@ class Tank extends Sprite {
     checkEnvironment();
   }
   
-  // Följande är bara ett exempel
   void borgars() {
-    //Code for wrap-around borders
-    //float r = tankwidth;
-    //if (position.x < -r) position.x = width+r;
-    //if (position.y < -r) position.y = height+r;
-    //if (position.x > width+r) position.x = -r;
-    //if (position.y > height+r) position.y = -r;
-    
-    //Code for hard borders
     float r = tankwidth / 2;  // Half of tank width to keep it within bounds
 
     position.x = constrain(position.x, r, width - r);
@@ -200,18 +191,18 @@ class Tank extends Sprite {
     viewArea.drawArea();
   }
   
-  class ViewArea {
+  class ViewArea extends Boundry{
     float x, y; 
-    float width = 100; 
-    float height = 200;
     float angle;
-
+    final int width = 100; 
+    final int height = 200;
+    
     public ViewArea(float x, float y, float angle) {
+        super(x,y,100,200);
         this.x = x;
         this.y = y;
         this.angle = angle;
     }
-
     public void updateViewArea(float agentX, float agentY, float agentAngle) {
         this.x = agentX + cos(agentAngle) * (height / 2); 
         this.y = agentY + sin(agentAngle) * (height / 2);  
