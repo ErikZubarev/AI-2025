@@ -33,7 +33,7 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.maxspeed     = 2;
     this.isInTransition = false;
-    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800)); // (0,0) start position to (800,800) px play area
+    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 5); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
     this.viewArea     = new ViewArea(position.x, position.y, angle);
   }
   

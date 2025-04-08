@@ -4,25 +4,32 @@
   boolean subdivided;
   boolean explored;
   Boundry boundry;
+  int depth;
     
   // Constructor ======================================  
-  QuadTreeMemory(Boundry boundry){
+  QuadTreeMemory(Boundry boundry, int depth){
     this.boundry = boundry;
     subdivided = false;
     explored = false;
+    this.depth = depth;
   }
     
   // ==================================================  
   void subdivide(){
+    if(depth <= 0){
+      return;
+    }
+    
     float x = boundry.x;
     float y = boundry.y;
     float half_w = boundry.width /2;
     float half_h = boundry.height /2;
+    int lowerDepth = depth-1;
     
-    append(children, new QuadTreeMemory(new Boundry(x, y, half_w, half_h))); 
-    append(children, new QuadTreeMemory(new Boundry(x + half_w, y, half_w, half_h))); 
-    append(children, new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h)));
-    append(children, new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h)));
+    append(children, new QuadTreeMemory(new Boundry(x, y, half_w, half_h), lowerDepth)); 
+    append(children, new QuadTreeMemory(new Boundry(x + half_w, y, half_w, half_h), lowerDepth)); 
+    append(children, new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h), lowerDepth));
+    append(children, new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h), lowerDepth));
     
     subdivided = true;
   }
@@ -30,6 +37,11 @@
   // ==================================================  
   void updateExploredStatus(Boundry viewArea){
     if(!boundry.intersects(viewArea)){
+      return;
+    }
+    
+    if(depth <= 0){
+      explored = true;
       return;
     }
     
@@ -95,12 +107,16 @@
       return;
     }
     
+    if(depth <= 0){
+      return;
+    }
+    
     if(!subdivided){
       subdivide();
     }
     
     // Check which child object fits into
-    for(int i = 0; i < 4; i++){ // 4 because max 4 children per node.
+    for(int i = 0; i < children.length; i++){
       if (children[i].boundry.intersects(obj.boundry)){
         children[i].insert(obj);
       }
