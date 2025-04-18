@@ -192,6 +192,7 @@ class Tank extends Sprite {
       text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
     popMatrix();
     viewArea.drawArea();
+    memory.draw();
   }
   
   class ViewArea extends Boundry{

@@ -1,6 +1,6 @@
 class QuadTreeMemory{  
   Sprite holding; 
-  QuadTreeMemory[] children = {};
+  QuadTreeMemory[] children;
   boolean subdivided;
   boolean explored;
   Boundry boundry;
@@ -12,6 +12,8 @@ class QuadTreeMemory{
     subdivided = false;
     explored = false;
     this.depth = depth;
+    children = new QuadTreeMemory[4];
+    
   }
     
   // ==================================================  
@@ -26,16 +28,24 @@ class QuadTreeMemory{
     float half_h = boundry.height /2;
     int lowerDepth = depth-1;
     
-    append(children, new QuadTreeMemory(new Boundry(x, y, half_w, half_h), lowerDepth)); 
-    append(children, new QuadTreeMemory(new Boundry(x + half_w, y, half_w, half_h), lowerDepth)); 
-    append(children, new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h), lowerDepth));
-    append(children, new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h), lowerDepth));
     
+    println(children.length);
+    children[0] = new QuadTreeMemory(new Boundry(x, y, half_w, half_h), lowerDepth);
+    children[1] = new QuadTreeMemory(new Boundry(x + half_w, y, half_w, half_h), lowerDepth);
+    children[2] = new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h), lowerDepth);
+    children[3] = new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h), lowerDepth);
+    println(children.length);
+    printArray(children);
     subdivided = true;
   }
     
   // ==================================================  
   void updateExploredStatus(Boundry viewArea){
+    
+    if(children[0] == null){
+      return;
+    }
+    
     if(!boundry.intersects(viewArea)){
       return;
     }
@@ -92,8 +102,8 @@ class QuadTreeMemory{
   
   // ==================================================
   void removeChildren(){
-       QuadTreeMemory[] empty = {};
-       children = empty;
+       children = new QuadTreeMemory[4];
+       subdivided = false;
   }
   
   // ==================================================
@@ -151,7 +161,14 @@ class QuadTreeMemory{
   }
 
   void draw(){
+    
+    if(children[0] == null){
+      return;
+    }
+    println(children.length);
+    println(children[0]);
     boundry.draw();
+
     for(QuadTreeMemory child : children){
       child.boundry.draw();
     }

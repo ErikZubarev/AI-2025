@@ -155,6 +155,7 @@ void draw() {
     updateTanksLogic();
     checkForCollisions();
     landmineCounter++;
+    tank0.memory.draw();
   }
 
   displayHomeBase();
@@ -171,7 +172,8 @@ void draw() {
   displayMines();
   dog.update();
   dog.display();
-  tank0.memory.draw();
+  
+  
 }
 
 //======================================
@@ -230,6 +232,7 @@ void checkForCollisions() {
   for (Tank tank : allTanks) {
     tank.checkForCollisions(tank1);
     tank.checkForCollisions(new PVector(width, height));
+    tank.detectObject();
   }
 }
 
