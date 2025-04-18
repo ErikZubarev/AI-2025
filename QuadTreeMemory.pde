@@ -34,7 +34,7 @@ class QuadTreeMemory{
     children[2] = new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h), lowerDepth);
     children[3] = new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h), lowerDepth);
 
-    printArray(children);
+    //printArray(children);
     subdivided = true;
   }
     
@@ -123,6 +123,11 @@ void checkChildren() {
   
   // ==================================================
   void insert(Sprite obj){
+    println("inserting " + obj);
+    if(explored){
+      return;
+    }
+    
     if(holding != null){
       return;
     }
