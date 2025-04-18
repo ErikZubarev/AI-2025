@@ -151,8 +151,9 @@ class QuadTreeMemory{
   }
 
   void draw(){
+    boundry.draw();
     for(QuadTreeMemory child : children){
-      child.boundry.draw(child.boundry.x, child.boundry.y);
+      child.boundry.draw();
     }
   }
 }

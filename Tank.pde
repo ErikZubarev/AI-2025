@@ -161,7 +161,6 @@ class Tank extends Sprite {
       imageMode(CENTER);
       image(img, x, y);
       
-      memory.draw();
       //ellipse(0, 0, 50, 50);
       //strokeWeight(1);
       //line(0, 0, 25, 0); // Cannon direction

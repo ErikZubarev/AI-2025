@@ -25,13 +25,11 @@ class Boundry{
     );
   }
 
-  void draw(float x, float y){
+  void draw(){
     pushMatrix();
-    rectMode(CENTER);
     fill(255, 0, 255, 100);
-    rect(0,0, height,width);
+    rect(x,y, height,width);
     strokeWeight(1);
-    rectMode(CORNER);
     popMatrix();
   }
 }

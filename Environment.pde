@@ -171,6 +171,7 @@ void draw() {
   displayMines();
   dog.update();
   dog.display();
+  tank0.memory.draw();
 }
 
 //======================================
