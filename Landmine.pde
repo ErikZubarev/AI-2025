@@ -7,7 +7,8 @@ class Landmine extends Sprite{
   Landmine(PImage _image, PVector pos) {
     
     this.img       = _image;
-    position  = pos;
+    position       = pos;
+    boundary       = new Boundry(position.x, position.y, img.width, img.height);
     
   }
 

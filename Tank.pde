@@ -24,7 +24,7 @@ class Tank extends Sprite {
     this.img          = sprite;
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
-    position     = new PVector(this.startpos.x, this.startpos.y);
+    position          = new PVector(this.startpos.x, this.startpos.y);
     this.velocity     = new PVector(0, 0);
     this.angle        = 0;
 
@@ -33,6 +33,7 @@ class Tank extends Sprite {
     this.isInTransition = false;
     this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 5); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
     this.viewArea     = new ViewArea(position.x, position.y, angle);
+    boundary          = new Boundry(position.x, position.y, this.tankwidth, this.tankheight);
   }
   
   //======================================
