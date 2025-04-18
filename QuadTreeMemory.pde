@@ -166,14 +166,13 @@ void checkChildren() {
     
     
     if (holding != null && area.intersects(holding.boundry)){
-     
       found.add(holding);
-      
     }
     
-    for(int i = 0; i < children.length; i++){
-      found.addAll(children[i].query(area));
-      
+    for(QuadTreeMemory child : children){
+      if(child != null){
+        found.addAll(child.query(area));
+      }
     }
     
     printArray(found);
