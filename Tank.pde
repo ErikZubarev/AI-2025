@@ -72,40 +72,40 @@ class Tank extends Sprite {
   
   //======================================
   void moveForward() {
-      println("*** Tank.moveForward()");
+      //println("*** Tank.moveForward()");
       this.velocity.x = cos(this.angle) * this.maxspeed; 
       this.velocity.y = sin(this.angle) * this.maxspeed; 
       
   }
 
   void moveBackward() {
-      println("*** Tank.moveBackward()");
+      //println("*** Tank.moveBackward()");
       this.velocity.x = -cos(this.angle) * this.maxspeed; 
       this.velocity.y = -sin(this.angle) * this.maxspeed;
       
   }
 
     void rotateLeft() {
-      println("*** Tank.rotateLeft()");
+      //println("*** Tank.rotateLeft()");
       this.angle -= radians(5); 
       
   }
 
   void rotateRight() {
-      println("*** Tank.rotateRight()");
+      //println("*** Tank.rotateRight()");
       this.angle += radians(5); 
       
   }
   
   void stopMoving() {
-      println("*** Tank.stopMoving()");
+      //println("*** Tank.stopMoving()");
       this.velocity.x = 0;
       this.velocity.y = 0;
   }
 
   //======================================
   void action(String _action) {
-      println("*** Tank.action()");
+      //println("*** Tank.action()");
 
       switch (_action) {
           case "move":
@@ -130,7 +130,7 @@ class Tank extends Sprite {
   //Här är det tänkt att agenten har möjlighet till egna val. 
   
   void update() {
-    println("*** Tank.update()");
+    //println("*** Tank.update()");
     
     switch (state) {
       case 0:
