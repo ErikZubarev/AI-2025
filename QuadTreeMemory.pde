@@ -104,8 +104,21 @@ void checkChildren() {
   
   // ==================================================
   void insert(Sprite obj){
-   
-    if(explored){
+    boolean bingBang = false;
+     ArrayList<Sprite> found = query(obj.boundry);
+     
+     if(found.size() != 0){
+       for(Sprite bing : found){
+         if(bing == obj){
+           bingBang = true;
+         }
+       }
+     }
+     
+     
+     
+    
+    if(explored && bingBang){
       return;
     }
     
@@ -143,20 +156,27 @@ void checkChildren() {
   }
   
   // ==================================================
-  Sprite[] query(Boundry area){
-    Sprite[] found = new Sprite[]{};
+  ArrayList<Sprite> query(Boundry area){
+    ArrayList<Sprite> found = new ArrayList<Sprite>();
+    println("test");
     
     if(!boundry.intersects(area)){
       return found;
     }
     
-    if (area.intersects(holding.boundry)){
-      append(found, holding);
+    
+    if (holding != null && area.intersects(holding.boundry)){
+     
+      found.add(holding);
+      
     }
     
     for(int i = 0; i < children.length; i++){
-      append(found, children[i].query(area));
+      found.addAll(children[i].query(area));
+      
     }
+    
+    printArray(found);
     
     return found;
   }
