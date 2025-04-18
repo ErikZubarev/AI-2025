@@ -41,8 +41,10 @@ class Tank extends Sprite {
   
   void detectObject(){
     for(Sprite obj : placedPositions){
-      if(obj.boundry.intersects(viewArea)){
-        memory.insert(obj);
+      if(viewArea.intersects(obj.boundry)){
+        if(obj != this){
+          memory.insert(obj);
+        }
       }
     }
     memory.updateExploredStatus(viewArea);
