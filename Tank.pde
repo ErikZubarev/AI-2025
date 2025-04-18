@@ -43,7 +43,7 @@ class Tank extends Sprite {
     for(Sprite obj : placedPositions){
       if(viewArea.intersects(obj.boundry)){
         if(obj != this){
-          memory.insert(obj);
+          memory.insert(obj, viewArea);
         }
       }
     }

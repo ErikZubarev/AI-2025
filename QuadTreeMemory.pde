@@ -103,9 +103,9 @@ void checkChildren() {
   }
   
   // ==================================================
-  void insert(Sprite obj){
+  void insert(Sprite obj, Boundry area){
     boolean bingBang = false;
-     ArrayList<Sprite> found = query(obj.boundry);
+     ArrayList<Sprite> found = query(area);
      
      if(found.size() != 0){
        for(Sprite bing : found){
@@ -115,12 +115,6 @@ void checkChildren() {
        }
      }
      
-     
-     
-    
-    if(explored && bingBang){
-      return;
-    }
     
     if(holding != null){
       return;
@@ -147,7 +141,7 @@ void checkChildren() {
     // Check which child object fits into
     for(int i = 0; i < children.length; i++){
       if (children[i].boundry.intersects(obj.boundry)){
-        children[i].insert(obj);
+        children[i].insert(obj, area);
         holding = null;
       }
     }
