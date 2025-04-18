@@ -24,4 +24,14 @@ class Boundry{
       this.y + this.height <= other.y + other.height 
     );
   }
+
+  void draw(float x, float y){
+    pushMatrix();
+    rectMode(CENTER);
+    fill(255, 0, 255, 100);
+    rect(0,0, height,width);
+    strokeWeight(1);
+    rectMode(CORNER);
+    popMatrix();
+  }
 }

@@ -8,7 +8,7 @@ class Tree extends Sprite {
   Tree(PImage _image, float _posx, float _posy) {
     
     this.img       = _image;
-    boundary       = new Boundry(_posx, _posy, _image.width,  _image.height);
+    boundry       = new Boundry(_posx, _posy, _image.width,  _image.height);
     this.name      = "tree";
     position       = new PVector(_posx, _posy);
     

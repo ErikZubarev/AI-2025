@@ -8,7 +8,7 @@ class Landmine extends Sprite{
     
     this.img       = _image;
     position       = pos;
-    boundary       = new Boundry(position.x, position.y, img.width, img.height);
+    boundry       = new Boundry(position.x, position.y, img.width, img.height);
     
   }
 

@@ -98,6 +98,10 @@ class QuadTreeMemory{
   
   // ==================================================
   void insert(Sprite obj){
+    if(holding != null){
+      return;
+    }
+
     if(!boundry.intersects(obj.boundry)){
       return;
     }
@@ -144,5 +148,11 @@ class QuadTreeMemory{
     }
     
     return found;
+  }
+
+  void draw(){
+    for(QuadTreeMemory child : children){
+      child.boundry.draw(child.boundry.x, child.boundry.y);
+    }
   }
 }

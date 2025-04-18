@@ -33,20 +33,16 @@ class Tank extends Sprite {
     this.isInTransition = false;
     this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 5); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
     this.viewArea     = new ViewArea(position.x, position.y, angle);
-    boundary          = new Boundry(position.x, position.y, this.tankwidth, this.tankheight);
+    boundry          = new Boundry(position.x, position.y, this.tankwidth, this.tankheight);
   }
   
   //======================================
 
   
   void detectObject(){
-    //Check every 20th pixel for updates
-    for(int i = 0; i < viewArea.height; i += 20){
-      for(int j = 0; j < viewArea.width; j += 20){
-        float dx = viewArea.x + j;
-        float dy = viewArea.y + i;
-        
-        // if object detected at dx, dy, insert object into memory
+    for(Sprite obj : placedPositions){
+      if(obj.boundry.intersects(viewArea)){
+        memory.insert(obj);
       }
     }
     memory.updateExploredStatus(viewArea);
@@ -164,7 +160,8 @@ class Tank extends Sprite {
       
       imageMode(CENTER);
       image(img, x, y);
-
+      
+      memory.draw();
       //ellipse(0, 0, 50, 50);
       //strokeWeight(1);
       //line(0, 0, 25, 0); // Cannon direction
