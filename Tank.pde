@@ -163,16 +163,6 @@ class Tank extends Sprite {
       imageMode(CENTER);
       image(img, x, y);
       
-      //ellipse(0, 0, 50, 50);
-      //strokeWeight(1);
-      //line(0, 0, 25, 0); // Cannon direction
-
-      //// Cannon turret
-      //ellipse(0, 0, 25, 25);
-      //strokeWeight(3);   
-      //float cannon_length = this.diameter / 2;
-      //line(0, 0, cannon_length, 0);
-
       popMatrix();
   }
   
@@ -199,40 +189,32 @@ class Tank extends Sprite {
   
   class ViewArea extends Boundry {
 
-  // Store angle separately, don't shadow x, y, width, height from Boundry
   float viewAngle;
 
-  // Store the intended dimensions of the view cone/rectangle
-  final float viewLength = 200; // Length along the tank's direction
-  final float viewWidth = 100;  // Width perpendicular to the tank's direction
+  final float viewLength = 200;
+  final float viewWidth = 100;  
 
-  // Constructor
+
   public ViewArea(float agentStartX, float agentStartY, float agentStartAngle) {
-    // Initialize Boundry with placeholder - will be corrected by first update
-    super(agentStartX, agentStartY, 1, 1); // Use small initial values
+    super(agentStartX, agentStartY, 1, 1);
     this.viewAngle = agentStartAngle;
-    updateViewArea(agentStartX, agentStartY, agentStartAngle); // Calculate correct AABB immediately
+    updateViewArea(agentStartX, agentStartY, agentStartAngle);
   }
 
-  // Update method calculates AABB and stores it in inherited fields
   public void updateViewArea(float agentX, float agentY, float agentAngle) {
     this.viewAngle = agentAngle; // Store the current angle
 
-    // Calculate the CENTER of the visual view rectangle
-    // Uses the viewLength to project forward from the agent's position
     float centerX = agentX + cos(this.viewAngle) * (this.viewLength / 2.0);
     float centerY = agentY + sin(this.viewAngle) * (this.viewLength / 2.0);
 
-    // Calculate the 4 corners of the ORIENTED view rectangle
     PVector[] corners = new PVector[4];
-    float angleRad = this.viewAngle; // Assuming angle is in radians
+    float angleRad = this.viewAngle;
     float cosA = cos(angleRad);
     float sinA = sin(angleRad);
     float halfL = this.viewLength / 2.0;
     float halfW = this.viewWidth / 2.0;
 
-    // Calculate offsets from center to corners, then rotate them
-    // Top-Right Corner (relative to center)
+
     float relX_TR = +halfL; float relY_TR = -halfW;
     corners[0] = new PVector(centerX + relX_TR * cosA - relY_TR * sinA,
                              centerY + relX_TR * sinA + relY_TR * cosA);
@@ -250,7 +232,6 @@ class Tank extends Sprite {
                              centerY + relX_BR * sinA + relY_BR * cosA);
 
 
-    // Find the min/max X and Y coords from the calculated corners
     float minX = corners[0].x, maxX = corners[0].x;
     float minY = corners[0].y, maxY = corners[0].y;
     for (int i = 1; i < 4; i++) {
@@ -260,49 +241,29 @@ class Tank extends Sprite {
       maxY = max(maxY, corners[i].y);
     }
 
-    // Update the INHERITED Boundry fields (these are used by intersects/isWithin)
-    // 'this.x', 'this.y' etc. now refer to the fields from the 'Boundry' superclass
-    this.x = minX;             // Top-left corner x of the AABB
-    this.y = minY;             // Top-left corner y of the AABB
-    this.width = maxX - minX;  // Width of the AABB
-    this.height = maxY - minY; // Height of the AABB
+    this.x = minX;          
+    this.y = minY;            
+    this.width = maxX - minX;
+    this.height = maxY - minY; 
   }
 
 
-  // Drawing method - still draws the visually rotated rectangle
   void drawArea() {
-    // Recalculate center needed for drawing transformation
-    // (AABB center might not be the exact visual center)
-    // Need agent's current position - tricky if ViewArea doesn't know the tank
-    // For simplicity, let's assume we can get tank0's position here.
-    // A better way would be to pass agentX/Y to drawArea or store them.
-    float agentX = tank0.position.x; // Example: Get tank0's position
-    float agentY = tank0.position.y;
+    float agentX = position.x; 
+    float agentY = position.y;
     float centerX = agentX + cos(this.viewAngle) * (this.viewLength / 2.0);
     float centerY = agentY + sin(this.viewAngle) * (this.viewLength / 2.0);
 
     pushMatrix();
-      translate(centerX, centerY); // Translate to the visual center
-      rotate(this.viewAngle);     // Rotate to the view angle
+      translate(centerX, centerY);
+      rotate(this.viewAngle);
 
       rectMode(CENTER);
-      fill(255, 255, 0, 100); // Yellow, semi-transparent
-      // Draw using the *intended* view dimensions, centered at the new origin (0,0)
+      fill(255, 255, 0, 100);
       rect(0, 0, this.viewLength, this.viewWidth);
       strokeWeight(1);
-      noStroke(); // Avoid drawing stroke on the visual area maybe
+      noStroke(); 
     popMatrix();
-
-    // --- DEBUGGING: Draw the AABB ---
-    // pushMatrix();
-    //   noFill();
-    //   stroke(255, 0, 0, 150); // Red AABB outline
-    //   strokeWeight(1);
-    //   rectMode(CORNER);
-    //   // Use the inherited Boundry fields (x, y, width, height)
-    //   rect(this.x, this.y, this.width, this.height);
-    // popMatrix();
-    // --- END DEBUGGING ---
 
      rectMode(CORNER); // Reset rectMode
   }

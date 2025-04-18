@@ -74,27 +74,24 @@ class QuadTreeMemory{
   // ==================================================  
 void checkChildren() {
     if (!subdivided) {
-      return;
+        return;
     }
 
     boolean allExplored = true;
     Sprite item = children[0].holding;
-    for (QuadTreeMemory child : children) {
-      if (!child.explored) {
-        allExplored = false;
-      }
-      if(child.holding != item){
-        allExplored = false;
-      }
-    }
 
+    for (QuadTreeMemory child : children) {
+        if (!child.explored || child.holding != item) {
+            allExplored = false;
+            break; // Exit the loop immediately since the conditions are not satisfied
+        }
+    }
 
     if (allExplored) {
-      println("Pruning node (all children explored) at depth " + depth + " - Coords: " + boundry.x + "," + boundry.y); // Add Debug Info
-      this.explored = true; 
-      removeChildren();     
+        println("Pruning node (all children explored) at depth " + depth + " - Coords: " + boundry.x + "," + boundry.y); // Debug info
+        this.explored = true;
+        removeChildren();     
     }
-
   }
   // ==================================================
   void removeChildren() {
