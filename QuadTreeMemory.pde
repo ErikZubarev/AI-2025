@@ -115,9 +115,6 @@ void checkChildren() {
        }
      }
      
-     
-     
-    
     if(explored && bingBang){
       return;
     }
