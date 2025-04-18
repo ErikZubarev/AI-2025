@@ -41,7 +41,7 @@ class QuadTreeMemory{
   // ==================================================  
   void updateExploredStatus(Boundry viewArea){
     
-    if(children[0] == null){
+    if(explored){
       return;
     }
     
@@ -72,38 +72,53 @@ class QuadTreeMemory{
   }
   
   // ==================================================  
-  void checkChildren(){
-
-    if (!subdivided){
-       return; 
+void checkChildren() {
+    if (!subdivided) {
+      return;
     }
-    
-    // Reverse XOR for each explored child 
-    // All false will return true, all true will return true
-    // while a mix of false and true will return false -> children are not identical
-    boolean identicalChildren = 
-                  !(children[0].explored ^
-                  children[1].explored ^
-                  children[2].explored ^
-                  children[3].explored);
-    
-    Sprite firstChildHolding = children[0].holding;
-    for(int i = 0; i < children.length; i++){
-      if(firstChildHolding != children[i].holding){
-        identicalChildren = false;
+
+    // Check if all children actually exist (safety check)
+    for(QuadTreeMemory child : children) {
+        if (child == null) {
+            // This shouldn't happen with the current subdivide, but good practice
+            println("Warning: Null child found during checkChildren at depth " + depth);
+            return;
+        }
+    }
+
+
+    // --- Check Explored Status ---
+    boolean allExplored = true;
+    boolean anyExplored = false; // Optional: To know if at least one is explored
+    for (QuadTreeMemory child : children) {
+      if (!child.explored) {
+        allExplored = false;
+      } else {
+        anyExplored = true;
       }
     }
-    
-    if(identicalChildren){
-       holding = firstChildHolding;
-       removeChildren();
+
+
+    // --- Decide whether to Prune ---
+    // Only prune if ALL children are explored.
+    if (allExplored) {
+      println("Pruning node (all children explored) at depth " + depth + " - Coords: " + boundry.x + "," + boundry.y); // Add Debug Info
+      this.explored = true; // The parent node is now considered fully explored
+      this.holding = null;  // Clear parent holding if pruning explored children (or decide specific logic)
+      removeChildren();     // Perform the prune, setting subdivided = false
     }
+
   }
-  
   // ==================================================
-  void removeChildren(){
-       children = new QuadTreeMemory[4];
-       subdivided = false;
+  void removeChildren() {
+    // Clear references to children for garbage collection
+    for (int i = 0; i < children.length; i++) {
+        children[i] = null;
+    }
+    // Setting children = new QuadTreeMemory[4] is also okay but less explicit about nulling references.
+
+    subdivided = false; // Mark as no longer subdivided (correct for pruning)
+    println("Children removed for node at depth " + depth); // Debug Info
   }
   
   // ==================================================
@@ -160,15 +175,42 @@ class QuadTreeMemory{
     return found;
   }
 
-  void draw(){
-    
-    if(children[0] == null){
-      return;
-    }
-    boundry.draw();
+  // ==================================================
+  // RECURSIVE DRAW METHOD (Replace your existing draw method with this)
+  void draw() {
+    // Style for the boundary rectangle
+    noFill(); // See through the rectangles
+    strokeWeight(1);
 
-    for(QuadTreeMemory child : children){
-      child.boundry.draw();
+    // Color based on explored status
+    if (explored) {
+      // Maybe draw explored leaves differently?
+      if (!subdivided) { // Only fill leaves fully explored
+         fill(0, 0, 255, 20); // Light blue fill for explored leaf nodes
+      }
+      stroke(0, 0, 255, 150); // Blue border for explored nodes
+    } else {
+      stroke(100, 100, 100, 100); // Grey border for unexplored nodes
+    }
+
+    // Draw the boundary rectangle for THIS node
+    // Use rect(x, y, width, height)
+    rect(boundry.x, boundry.y, boundry.width, boundry.height);
+
+    // If this node is subdivided, recursively call draw on its children
+    if (subdivided) {
+      for (QuadTreeMemory child : children) {
+         if (child != null) { // Important check!
+             child.draw(); // Recursive call
+         }
+      }
+    }
+
+    // Optional: Visualize the 'holding' object if it exists at this node level
+    if (holding != null && holding.position != null) {
+        fill(0, 255, 0, 150); // Green circle at object's position
+        noStroke();
+        ellipse(holding.position.x, holding.position.y, 5, 5);
     }
   }
 }
