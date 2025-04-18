@@ -18,7 +18,6 @@ class Tank extends Sprite {
   ViewArea viewArea;
   //======================================  
   Tank(String _name, PVector _startpos, PImage sprite ) {
-    println("*** Tank.Tank()");
     this.name         = _name;
     this.tankwidth    = sprite.width;
     this.tankheight   = sprite.height;
@@ -37,11 +36,19 @@ class Tank extends Sprite {
   }
   
   //======================================
-  
 
   
   void detectObject(){
-    
+    //Check every 20th pixel for updates
+    for(int i = 0; i < viewArea.height; i += 20){
+      for(int j = 0; j < viewArea.width; j += 20){
+        float dx = viewArea.x + j;
+        float dy = viewArea.y + i;
+        
+        // if object detected at dx, dy, insert object into memory
+      }
+    }
+    memory.updateExploredStatus(viewArea);
   }
   
   void checkEnvironment() {

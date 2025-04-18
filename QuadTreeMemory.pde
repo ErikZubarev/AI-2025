@@ -47,7 +47,7 @@ class QuadTreeMemory{
     
     if(boundry.isWithin(viewArea)){
       this.explored = true;
-      removeChildren(); //Potential issue with children holding items
+      checkChildren();
       return;
     }
     
@@ -59,7 +59,7 @@ class QuadTreeMemory{
       children[i].updateExploredStatus(viewArea);
     }
     
-    checkChildren(); // potential issue with children that are supposed to hold items, but haven't yet
+    checkChildren();
   }
   
   // ==================================================  
@@ -102,12 +102,13 @@ class QuadTreeMemory{
       return;
     }
     
-    if(holding == null){
+    if(depth <= 0){
       holding = obj;
       return;
     }
     
-    if(depth <= 0){
+    if(boundry.isWithin(obj.boundry)){
+      holding = obj;
       return;
     }
     
@@ -119,6 +120,7 @@ class QuadTreeMemory{
     for(int i = 0; i < children.length; i++){
       if (children[i].boundry.intersects(obj.boundry)){
         children[i].insert(obj);
+        holding = null;
       }
     }
     
