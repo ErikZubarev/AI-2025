@@ -1,6 +1,5 @@
 class Tree extends Sprite {
   
-  PVector position;
   String  name; 
   PImage  img;
   float   diameter;
@@ -11,7 +10,7 @@ class Tree extends Sprite {
     this.img       = _image;
     this.diameter  = this.img.width/2;
     this.name      = "tree";
-    this.position  = new PVector(_posx, _posy);
+    position  = new PVector(_posx, _posy);
     
   }
 

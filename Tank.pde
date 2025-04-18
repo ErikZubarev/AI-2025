@@ -1,7 +1,6 @@
 class Tank extends Sprite {
 
   PVector velocity;
-  PVector position;
   
   PVector startpos;
   String name;
@@ -26,7 +25,7 @@ class Tank extends Sprite {
     this.img          = sprite;
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
-    this.position     = new PVector(this.startpos.x, this.startpos.y);
+    position     = new PVector(this.startpos.x, this.startpos.y);
     this.velocity     = new PVector(0, 0);
     this.angle        = 0;
 
@@ -46,7 +45,7 @@ class Tank extends Sprite {
   }
   
   void checkEnvironment() {
-    println("*** Tank.checkEnvironment()");
+    //println("*** Tank.checkEnvironment()");
     
     borgars();
   }

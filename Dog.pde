@@ -63,8 +63,9 @@ class Dog extends Sprite {
           laughTimer++;
         } else {
           if (!hasDroppedMine) {
-            placedMines.add(new Landmine(landmineImg, target));
-            placedPositions.add(target.copy());
+            Landmine mine = new Landmine(landmineImg, target);
+            allMines.add(mine);
+            placedPositions.add(mine);
             hasDroppedMine = true;
           }
           state = DogState.EXITING;

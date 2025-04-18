@@ -18,6 +18,7 @@ Team team;
 
 Tree[] allTrees   = new Tree[3];
 Tank[] allTanks   = new Tank[6];
+ArrayList<Landmine> allMines = new ArrayList<Landmine>();
 
 // Team0
 
@@ -37,7 +38,7 @@ boolean gameOver;
 boolean pause;
 //Positions for trees and enemies
 //TODO maybe seperate the trees from enemys so we can know the difference between them
-ArrayList<PVector> placedPositions = new ArrayList<PVector>();
+ArrayList<Sprite> placedPositions = new ArrayList<Sprite>();
 
 //Landmine assets
 enum DogState { ENTERING, RUNNING_TO_TARGET, LAUGHING, EXITING }
@@ -50,7 +51,7 @@ Dog dog;
 PVector newLandMinePos;
 int landmineCounter = 0;
 PVector dogExit;
-ArrayList<Landmine> placedMines = new ArrayList<Landmine>();
+
 
 //======================================
 void setup() 
@@ -91,57 +92,54 @@ void setup()
       newTreePos = new PVector(random(250, 600), random(250, 600)); 
     } while (isOverlapping(newTreePos, placedPositions, 150));
 
-    placedPositions.add(newTreePos);
     allTrees[i] = new Tree(tree_img, newTreePos.x, newTreePos.y);
+    placedPositions.add(allTrees[i]);
+    
   }
   
+
+  //Team
+  team = new Team();
+
+  //Tank Images
+  red_tank_img = loadImage("redtank.png");
+  blue_tank_img = loadImage("bluetank.png");
   
   // Team0
   // Base Team 0(red)
   team0_tank0_startpos  = new PVector(50, 50);
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
+
+  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img);
+  tank1 = new Tank("ally", team0_tank1_startpos, red_tank_img);
+  tank2 = new Tank("ally", team0_tank2_startpos, red_tank_img);
+
+  allTanks[0] = tank0;                         // Symbol samma som index!
+  allTanks[1] = tank1;
+  allTanks[2] = tank2;
   
+  placedPositions.add(tank0);
+  placedPositions.add(tank1);
+  placedPositions.add(tank2);
   
-  // Team1 randomly placed i in the lower right quandrant
+  // Team1 randomly placed in the lower right quadrant
   for (int i = 0; i < 3; i++) {
     PVector newTankPos;
     do {
       newTankPos = new PVector(random(450, 750), random(450, 750)); 
     } while (isOverlapping(newTankPos, placedPositions, 150)); 
 
-    placedPositions.add(newTankPos);
+    Tank newTank = new Tank("enemy", newTankPos, blue_tank_img);
+    placedPositions.add(newTank);
+    allTanks[3 + i] = newTank;
   }
-
-
-  //Team
-  team = new Team();
-  
-  //tank0_startpos = new PVector(50, 50);
-  red_tank_img = loadImage("redtank.png");
-  tank0 = new Tank("tank0", team0_tank0_startpos, red_tank_img);
-  tank1 = new Tank("tank1", team0_tank1_startpos, red_tank_img );
-  tank2 = new Tank("tank2", team0_tank2_startpos, red_tank_img );
-  
-  blue_tank_img = loadImage("bluetank.png");
-    // Assign to blue tanks
-  tank3 = new Tank("tank3", placedPositions.get(3), blue_tank_img);
-  tank4 = new Tank("tank4", placedPositions.get(4), blue_tank_img);
-  tank5 = new Tank("tank5", placedPositions.get(5), blue_tank_img);
-
-  
-  allTanks[0] = tank0;                         // Symbol samma som index!
-  allTanks[1] = tank1;
-  allTanks[2] = tank2;
-  allTanks[3] = tank3;
-  allTanks[4] = tank4;
-  allTanks[5] = tank5;
 }
 
 //Created helper fucntion to check if the generated pos is too close to a existing one
-boolean isOverlapping(PVector newPos, ArrayList<PVector> existingPositions, float minDistance) {
-  for (PVector pos : existingPositions) {
-    if (newPos.dist(pos) < minDistance) {
+boolean isOverlapping(PVector newPos, ArrayList<Sprite> existingPositions, float minDistance) {
+  for (Sprite obj : existingPositions) {
+    if (newPos.dist(obj.position) < minDistance) {
       return true; 
     }
   }
@@ -173,7 +171,6 @@ void draw() {
   displayMines();
   dog.update();
   dog.display();
-  
 }
 
 //======================================
@@ -254,7 +251,7 @@ void displayTanks() {
 }
 
 void displayMines(){
-  for(Landmine mine : placedMines){
+  for(Landmine mine : allMines){
     mine.display();
   }
 }

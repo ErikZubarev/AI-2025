@@ -1,5 +1,4 @@
 class Landmine extends Sprite{
-  PVector position;
   String  name; 
   PImage  img;
   float   diameter;
@@ -8,7 +7,7 @@ class Landmine extends Sprite{
   Landmine(PImage _image, PVector pos) {
     
     this.img       = _image;
-    this.position  = pos;
+    position  = pos;
     
   }
 

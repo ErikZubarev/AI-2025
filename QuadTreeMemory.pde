@@ -1,4 +1,4 @@
-  class QuadTreeMemory{  
+class QuadTreeMemory{  
   Sprite holding; 
   QuadTreeMemory[] children = {};
   boolean subdivided;
