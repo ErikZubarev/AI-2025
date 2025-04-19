@@ -242,6 +242,7 @@ void displayTanks() {
   for (Tank tank : allTanks) {
     tank.display();
   }
+  tank0.drawViewArea();
 }
 
 void displayMines(){

@@ -153,7 +153,7 @@ class Tank extends Sprite {
       translate(x, y);
       rotate(this.angle); // Apply rotation
       
-      imageMode(CENTER);
+
       image(img, x, y);
       
       popMatrix();
@@ -165,9 +165,9 @@ class Tank extends Sprite {
     
       translate(this.position.x, this.position.y);
       
-      imageMode(CENTER);
+
       drawTank(0, 0);
-      imageMode(CORNER);
+
       
       strokeWeight(1);
       fill(230);
@@ -176,10 +176,14 @@ class Tank extends Sprite {
       textSize(15);
       text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
     popMatrix();
-    viewArea.drawArea();
+    
     memory.draw();
+    boundry.draw();
   }
   
+  void drawViewArea(){
+    viewArea.drawArea();
+  }
   class ViewArea extends Boundry {
 
   float viewAngle;
