@@ -214,8 +214,6 @@ void updateTanksLogic() {
 
 void checkForCollisions() {
   for (Tank tank : allTanks) {
-    //tank.checkForCollisions(tank1);
-    tank.checkForCollisions(new PVector(width, height));
     tank.detectObject();
   }
 

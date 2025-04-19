@@ -31,7 +31,7 @@ class Tank extends Sprite {
     this.isInTransition = false;
     this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 5); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
     this.viewArea     = new ViewArea(position.x, position.y, angle);
-    boundry          = new Boundry(position.x - tankwidth/2, position.y  - tankheight/2, this.tankwidth, this.tankheight);
+    boundry          = new Boundry(position.x - tankwidth/2, position.y  - tankheight/2, this.tankheight, this.tankheight);
   }
   
   //======================================
@@ -45,18 +45,10 @@ class Tank extends Sprite {
     }
     memory.updateExploredStatus(viewArea);
   }
-  
-  void checkEnvironment() {
-    //println("*** Tank.checkEnvironment()");
-    borgars();
-  }
-  
-  void checkForCollisions(Sprite sprite) {
     
-  }
-  
-  void checkForCollisions(PVector vec) {
-    checkEnvironment();
+  void updateBoundry() {
+    boundry.x = position.x - tankwidth / 2;
+    boundry.y = position.y - tankheight / 2;
   }
   
   void borgars() {
@@ -120,6 +112,7 @@ class Tank extends Sprite {
   //Här är det tänkt att agenten har möjlighet till egna val. 
   
   void update() {
+    PVector previousPosition = position.copy();
     
     switch (state) {
       case 0:
@@ -135,7 +128,17 @@ class Tank extends Sprite {
     }
     
     this.position.add(velocity);
+    updateBoundry();
+      for(Sprite s : placedPositions) {
+        if (s != this && boundry.intersects(s.boundry)) {
+          position = previousPosition;
+          updateBoundry();
+          stopMoving();
+          break; 
+        }
+      }
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
+    borgars();
   }
   
   //====================================== 
