@@ -51,7 +51,7 @@ void updateExploredStatus(Boundry viewArea) {
                     child.updateExploredStatus(viewArea);
                 }
             }
-            //checkChildren();
+            checkChildren();
         }
         return;
     }
@@ -70,7 +70,7 @@ void updateExploredStatus(Boundry viewArea) {
         children[i].updateExploredStatus(viewArea);
     }
     
-    //checkChildren();
+    checkChildren();
 }
 
   
@@ -92,6 +92,7 @@ void checkChildren() {
 
     if (allExplored) {
         this.explored = true;
+        this.holding = item;
         removeChildren();     
     }
   }
@@ -127,16 +128,13 @@ void checkChildren() {
       return;
     }
     
-    if(!subdivided){
-      println("subdivided specifically here");
-      subdivide();
-    }
-    
     boolean insertedIntoChild = false;
-    for(int i = 0; i < children.length; i++){
-      if (children[i].boundry.intersects(area)){
-        children[i].insert(obj, area);
-        insertedIntoChild = true;
+    if(subdivided){
+      for(int i = 0; i < children.length; i++){
+        if (children[i].boundry.intersects(area)){
+          children[i].insert(obj, area);
+          insertedIntoChild = true;
+        }
       }
     }
     
