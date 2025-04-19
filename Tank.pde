@@ -144,14 +144,15 @@ class Tank extends Sprite {
     pushMatrix();
       translate(this.position.x, this.position.y);
       drawTank(0, 0);
-      
-      fill(230);
-      stroke(0);
-      strokeWeight(1);
-      rect(0+40, 0-40, 100, 40);
-      fill(30);
-      textSize(15);
-      text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
+      if(debugMode){
+        fill(230);
+        stroke(0);
+        strokeWeight(1);
+        rect(0+40, 0-40, 100, 40);
+        fill(30);
+        textSize(15);
+        text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
+      }
     popMatrix();
     boundry.draw();
   }

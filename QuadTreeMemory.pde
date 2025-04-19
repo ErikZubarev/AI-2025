@@ -169,7 +169,7 @@ void checkChildren() {
 
   // ==================================================
   void display() {
-    if(!debugMode){
+    if(debugMode){
       pushMatrix();
         noFill();
         strokeWeight(1);

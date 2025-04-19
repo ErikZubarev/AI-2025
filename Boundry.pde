@@ -28,7 +28,7 @@ class Boundry{
 
 
   void draw(){
-    if(!debugMode){
+    if(debugMode){
       pushMatrix();
         strokeWeight(1);
         fill(255, 0, 255, 100);
