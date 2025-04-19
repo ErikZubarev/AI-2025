@@ -28,10 +28,12 @@ class Boundry{
 
 
   void draw(){
-    pushMatrix();
-    fill(255, 0, 255, 100);
-    rect(x,y, width,height);
-    strokeWeight(1);
-    popMatrix();
+    if(!debugMode){
+      pushMatrix();
+        strokeWeight(1);
+        fill(255, 0, 255, 100);
+        rect(x,y, width,height);
+      popMatrix();
+    }
   }
 }

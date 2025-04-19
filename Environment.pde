@@ -1,7 +1,8 @@
 import java.util.Random;
 
+// GLOBAL VARIABLES ====================================
 boolean left, right, up, down;
-boolean mouse_pressed;
+boolean debugMode;
 Random random = new Random();
 
 PImage tree_img;
@@ -16,14 +17,12 @@ Tank[] allTanks   = new Tank[6];
 ArrayList<Landmine> allMines = new ArrayList<Landmine>();
 
 // Team0
-
 PVector team0_tank0_startpos;
 PVector team0_tank1_startpos;
 PVector team0_tank2_startpos;
 Tank tank0, tank1, tank2;
 
 // Team1
-
 PVector team1_tank0_startpos;
 PVector team1_tank1_startpos;
 PVector team1_tank2_startpos;
@@ -47,12 +46,12 @@ int landmineCounter = 0;
 PVector dogExit;
 
 
-//======================================
+// SETUP ============================================================================
 void setup() {
   size(800, 800);
   up             = false;
   down           = false;
-  mouse_pressed  = false;
+  debugMode      = false;
   
   gameOver       = false;
   pause          = true;
@@ -76,7 +75,6 @@ void setup() {
   dog = new Dog(runningFrames, laughingFrames);
 
   
-  
   // Trees, randomly placed in the middle of the playing field
   tree_img = loadImage("tree01_v2.png");
   for (int i = 0; i < 3; i++) {
@@ -89,7 +87,6 @@ void setup() {
     placedPositions.add(allTrees[i]);
     
   }
-  
 
   //Team
   team = new Team();
@@ -129,16 +126,7 @@ void setup() {
   }
 }
 
-//Created helper fucntion to check if the generated pos is too close to a existing one
-boolean isOverlapping(PVector newPos, ArrayList<Sprite> existingPositions, float minDistance) {
-  for (Sprite obj : existingPositions) {
-    if (newPos.dist(obj.position) < minDistance) {
-      return true; 
-    }
-  }
-  return false; 
-}
-
+// DRAW ==========================================================================================
 void draw() {
   
   background(200);
@@ -149,7 +137,7 @@ void draw() {
     updateTanksLogic();
     checkForCollisions();
     landmineCounter++;
-    tank0.memory.draw();
+    tank0.memory.display();
   }
 
   displayHomeBase();
@@ -158,7 +146,7 @@ void draw() {
   displayGUI();
   
 
-  if (landmineCounter == 500) {
+  if (landmineCounter == 1000) {
     deployLandmine();
     landmineCounter = 0; 
   }
@@ -166,12 +154,22 @@ void draw() {
   displayMines();
   dog.update();
   dog.display();
-  
-  
+ 
 }
 
-//======================================
+// HELPER METHODS ======================================
 
+//Created helper fucntion to check if the generated pos is too close to a existing one
+boolean isOverlapping(PVector newPos, ArrayList<Sprite> existingPositions, float minDistance) {
+  for (Sprite obj : existingPositions) {
+    if (newPos.dist(obj.position) < minDistance) {
+      return true; 
+    }
+  }
+  return false; 
+}
+
+// ===============================================
 void deployLandmine() {
   PVector targetPos;
   do {
@@ -192,7 +190,6 @@ void checkForInput() {
             tank0.state = 2; // moveBackward
         }
     }
-
     if (right) {
         if (!pause && !gameOver) {
             tank0.action("rotateRight"); // Rotate right
@@ -216,17 +213,16 @@ void updateTanksLogic() {
 }
 
 void checkForCollisions() {
-  //println("*** checkForCollisions()");
   for (Tank tank : allTanks) {
-    tank.checkForCollisions(tank1);
+    //tank.checkForCollisions(tank1);
     tank.checkForCollisions(new PVector(width, height));
-    
+    tank.detectObject();
   }
 
-  tank0.detectObject();
+  
 }
 
-//======================================
+// DISPLAY ======================================
 void displayHomeBase() {
   team.display();
 }
@@ -255,7 +251,7 @@ void displayGUI() {
   if (pause) {
     textSize(36);
     fill(30);
-    text("...Paused! (\'p\'-continues)\n(upp/ner-change velocity)", width/1.7-150, height/2.5);
+    text("...Paused! (\'p\'-continues)\n(up/down/left/right to move)\n('d' for debug)", width/1.7-150, height/2.5);
   }
   
   if (gameOver) {
@@ -265,7 +261,7 @@ void displayGUI() {
   }  
 }
 
-//======================================
+// KEY PRESSED ======================================
 void keyPressed() {
   //System.out.println("keyPressed!");
 
@@ -289,7 +285,6 @@ void keyPressed() {
 }
 
 void keyReleased() {
-  //System.out.println("keyReleased!");
     if (key == CODED) {
       switch(keyCode) {
       case LEFT:
@@ -313,13 +308,8 @@ void keyReleased() {
     if (key == 'p') {
       pause = !pause;
     }
-}
-
-// Mousebuttons
-void mousePressed() {
-  println("---------------------------------------------------------");
-  println("*** mousePressed() - Musknappen har tryckts ned.");
-  
-  mouse_pressed = true;
-  
+    
+    if (key == 'd') {
+      debugMode = !debugMode;
+    }
 }

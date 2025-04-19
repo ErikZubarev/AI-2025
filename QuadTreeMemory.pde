@@ -43,7 +43,6 @@ void updateExploredStatus(Boundry viewArea) {
         return;
     }
 
-
     if (!boundry.intersects(viewArea)) {
         if (subdivided) {
             for (QuadTreeMemory child : children) {
@@ -169,33 +168,36 @@ void checkChildren() {
   }
 
   // ==================================================
-  void draw() {
-    noFill();
-    strokeWeight(1);
-
-    if (explored) {
-      if (!subdivided) { 
-         fill(0, 0, 255, 20); 
-      }
-      stroke(0, 0, 255, 150);
-    } else {
-      stroke(100, 100, 100, 100);
-    }
-
-    rect(boundry.x, boundry.y, boundry.width, boundry.height);
-
-    if (subdivided) {
-      for (QuadTreeMemory child : children) {
-         if (child != null) { 
-             child.draw(); 
-         }
-      }
-    }
-
-    if (holding != null) {
-        fill(0, 255, 0, 255);
-        noStroke();
-        ellipse(boundry.x + boundry.width/2, boundry.y + boundry.height/2, 5, 5);
+  void display() {
+    if(!debugMode){
+      pushMatrix();
+        noFill();
+        strokeWeight(1);
+    
+        if (explored) {
+          if (!subdivided) { 
+             fill(0, 0, 255, 20); 
+          }
+          stroke(0, 0, 255, 150);
+        } else {
+          stroke(100, 100, 100, 100);
+        }
+    
+        rect(boundry.x, boundry.y, boundry.width, boundry.height);
+    
+        if (subdivided) {
+          for (QuadTreeMemory child : children) {
+             if (child != null) { 
+                 child.display(); 
+             }
+          }
+        }
+    
+        if (holding != null) {
+            fill(0, 255, 0, 255);
+            ellipse(boundry.x + boundry.width/2, boundry.y + boundry.height/2, 5, 5);
+        }
+      popMatrix();
     }
   }
 }
