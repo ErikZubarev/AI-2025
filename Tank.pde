@@ -74,33 +74,28 @@ class Tank extends Sprite {
   
   //======================================
   void moveForward() {
-      //println("*** Tank.moveForward()");
       this.velocity.x = cos(this.angle) * this.maxspeed; 
       this.velocity.y = sin(this.angle) * this.maxspeed; 
       
   }
 
   void moveBackward() {
-      //println("*** Tank.moveBackward()");
       this.velocity.x = -cos(this.angle) * this.maxspeed; 
       this.velocity.y = -sin(this.angle) * this.maxspeed;
       
   }
 
     void rotateLeft() {
-      //println("*** Tank.rotateLeft()");
       this.angle -= radians(5); 
       
   }
 
   void rotateRight() {
-      //println("*** Tank.rotateRight()");
       this.angle += radians(5); 
       
   }
   
   void stopMoving() {
-      //println("*** Tank.stopMoving()");
       this.velocity.x = 0;
       this.velocity.y = 0;
   }
@@ -154,8 +149,6 @@ class Tank extends Sprite {
   
   //====================================== 
   void drawTank(float x, float y) {
-      //fill(this.col, 50); 
-
       pushMatrix();
       translate(x, y);
       rotate(this.angle); // Apply rotation

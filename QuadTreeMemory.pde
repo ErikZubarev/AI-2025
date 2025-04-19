@@ -34,7 +34,6 @@ class QuadTreeMemory{
     children[2] = new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h), lowerDepth);
     children[3] = new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h), lowerDepth);
 
-    //printArray(children);
     subdivided = true;
   }
     
@@ -152,7 +151,6 @@ void checkChildren() {
   // ==================================================
   ArrayList<Sprite> query(Boundry area){
     ArrayList<Sprite> found = new ArrayList<Sprite>();
-    println("test");
     
     if(!boundry.intersects(area)){
       return found;
@@ -169,7 +167,6 @@ void checkChildren() {
       }
     }
     
-    printArray(found);
     
     return found;
   }
