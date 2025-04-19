@@ -169,7 +169,7 @@ class Tank extends Sprite {
   }
   
   void drawViewArea(){
-    viewArea.drawArea();
+    viewArea.drawArea(this);
   }
   
   // INNER CLASS VIEWAREA =============================================================================
@@ -232,23 +232,32 @@ class Tank extends Sprite {
     }
   
   
-    void drawArea() {
+    void drawArea(Tank t) {
       float agentX = position.x; 
       float agentY = position.y;
       float centerX = agentX + cos(this.viewAngle) * (this.viewLength / 2.0);
       float centerY = agentY + sin(this.viewAngle) * (this.viewLength / 2.0);
   
+      if(debugMode){
+        pushMatrix();
+          translate(centerX, centerY);
+          rotate(this.viewAngle);  
+          strokeWeight(1);
+          fill(255, 255, 0, 100);  
+          rectMode(CENTER);
+          rect(0, 0, this.viewLength, this.viewWidth);
+          rectMode(CORNER);
+        popMatrix();
+      }
       pushMatrix();
-        translate(centerX, centerY);
+        translate(agentX, agentY);
         rotate(this.viewAngle);
-  
-        rectMode(CENTER);
-        strokeWeight(1);
-        fill(255, 255, 0, 100);
-        rect(0, 0, this.viewLength, this.viewWidth);
+        
+        strokeWeight(0.5);
+        fill(15, 15, 15, 50);
+        quad(0, 0 - t.tankwidth/4, 0, 0 + t.tankwidth/4, 0+viewLength, 0+viewWidth/2, 0+viewLength, 0-viewWidth/2);
       popMatrix();
   
-       rectMode(CORNER); // Reset rectMode
     }
   }
 }
