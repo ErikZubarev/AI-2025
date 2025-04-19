@@ -141,6 +141,8 @@ void checkChildren() {
     if(insertedIntoChild){
       holding = null;
     }
+    
+    checkChildren();
   }
   
   // ==================================================
@@ -190,10 +192,10 @@ void checkChildren() {
       }
     }
 
-    if (holding != null && holding.position != null) {
-        fill(0, 255, 0, 150);
+    if (holding != null) {
+        fill(0, 255, 0, 255);
         noStroke();
-        ellipse(holding.position.x, holding.position.y, 5, 5);
+        ellipse(boundry.x + boundry.width/2, boundry.y + boundry.height/2, 5, 5);
     }
   }
 }
