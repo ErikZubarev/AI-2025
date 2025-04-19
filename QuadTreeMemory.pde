@@ -38,37 +38,41 @@ class QuadTreeMemory{
   }
     
   // ==================================================  
-  void updateExploredStatus(Boundry viewArea){
-    
-    if(explored){
-      return;
+void updateExploredStatus(Boundry viewArea) {
+    if (explored) {
+        return;
+    }
+
+
+    if (!boundry.intersects(viewArea)) {
+        if (subdivided) {
+            for (QuadTreeMemory child : children) {
+                if(child != null) {
+                    child.updateExploredStatus(viewArea);
+                }
+            }
+            //checkChildren();
+        }
+        return;
+    }
+
+    if (depth <= 0) {
+        explored = true;
+        return;
+    }
+
+    if (!subdivided) {
+        subdivide();
     }
     
-    if(!boundry.intersects(viewArea)){
-      return;
+    // Update all children
+    for (int i = 0; i < children.length; i++) {
+        children[i].updateExploredStatus(viewArea);
     }
     
-    if(depth <= 0){
-      explored = true;
-      return;
-    }
-    
-    if(boundry.isWithin(viewArea)){
-      this.explored = true;
-      checkChildren();
-      return;
-    }
-    
-    if(!subdivided){
-      subdivide();
-    }
-    
-    for(int i = 0; i < children.length; i++){
-      children[i].updateExploredStatus(viewArea);
-    }
-    
-    checkChildren();
-  }
+    //checkChildren();
+}
+
   
   // ==================================================  
 void checkChildren() {
@@ -82,12 +86,11 @@ void checkChildren() {
     for (QuadTreeMemory child : children) {
         if (!child.explored || child.holding != item) {
             allExplored = false;
-            break; // Exit the loop immediately since the conditions are not satisfied
+            break; 
         }
     }
 
     if (allExplored) {
-        println("Pruning node (all children explored) at depth " + depth + " - Coords: " + boundry.x + "," + boundry.y); // Debug info
         this.explored = true;
         removeChildren();     
     }
@@ -103,7 +106,7 @@ void checkChildren() {
   
   // ==================================================
   void insert(Sprite obj, Boundry area){
-    boolean bingBang = false;
+     boolean bingBang = false;
      ArrayList<Sprite> found = query(area);
      
      if(found.size() != 0){
@@ -113,39 +116,33 @@ void checkChildren() {
          }
        }
      }
-     
-    
-    if(holding != null){
-      return;
-    }
+
 
     if(!boundry.intersects(obj.boundry)){
       return;
     }
     
-    if(depth <= 0){
-      holding = obj;
-      return;
-    }
-    
-    if(boundry.isWithin(obj.boundry)){
+    if(depth <= 0 || boundry.isWithin(obj.boundry)){
       holding = obj;
       return;
     }
     
     if(!subdivided){
+      println("subdivided specifically here");
       subdivide();
     }
     
-    // Check which child object fits into
+    boolean insertedIntoChild = false;
     for(int i = 0; i < children.length; i++){
-      if (children[i].boundry.intersects(obj.boundry)){
+      if (children[i].boundry.intersects(area)){
         children[i].insert(obj, area);
-        holding = null;
+        insertedIntoChild = true;
       }
     }
     
-    checkChildren();
+    if(insertedIntoChild){
+      holding = null;
+    }
   }
   
   // ==================================================
