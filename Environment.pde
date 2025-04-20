@@ -101,9 +101,9 @@ void setup() {
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
 
-  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img);
-  tank1 = new Tank("ally", team0_tank1_startpos, red_tank_img);
-  tank2 = new Tank("ally", team0_tank2_startpos, red_tank_img);
+  tank0 = new Tank("player", team0_tank0_startpos, red_tank_img);
+  tank1 = new Tank("ally1", team0_tank1_startpos, red_tank_img);
+  tank2 = new Tank("ally2", team0_tank2_startpos, red_tank_img);
 
   allTanks[0] = tank0;                         // Symbol samma som index!
   allTanks[1] = tank1;
@@ -135,7 +135,10 @@ void draw() {
   
   if (!gameOver && !pause) {
     updateTanksLogic();
-    checkForCollisions();
+    //Applies to all tanks
+    //checkForCollisions(); 
+    //Only doing for tank0 atm
+    tank0.detectObject();
     landmineCounter++;
     tank0.memory.display();
   }

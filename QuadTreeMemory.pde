@@ -38,7 +38,7 @@ class QuadTreeMemory{
   }
     
   // ==================================================  
-void updateExploredStatus(Boundry viewArea) {
+  void updateExploredStatus(Boundry viewArea) {
     if (explored) {
         return;
     }
@@ -74,7 +74,7 @@ void updateExploredStatus(Boundry viewArea) {
 
   
   // ==================================================  
-void checkChildren() {
+  void checkChildren() {
     if (!subdivided) {
         return;
     }
@@ -105,18 +105,9 @@ void checkChildren() {
   }
   
   // ==================================================
-  void insert(Sprite obj, Boundry area){
-     boolean bingBang = false;
-     ArrayList<Sprite> found = query(area);
-     
-     if(found.size() != 0){
-       for(Sprite bing : found){
-         if(bing == obj){
-           bingBang = true;
-         }
-       }
-     }
-
+  void insert(Sprite obj){
+    
+    
 
     if(!boundry.intersects(obj.boundry)){
       return;
@@ -127,11 +118,20 @@ void checkChildren() {
       return;
     }
     
+    //La till så den kollar om den är subvidied och explored så subdividar vi och tvingar barnen vara explored
+    if(!subdivided && explored){
+      subdivide();
+      for(QuadTreeMemory child : children){
+        child.explored = true;
+      }
+      
+    }
+    
     boolean insertedIntoChild = false;
     if(subdivided){
       for(int i = 0; i < children.length; i++){
-        if (children[i].boundry.intersects(area)){
-          children[i].insert(obj, area);
+        if (children[i].boundry.intersects(obj.boundry)){
+          children[i].insert(obj);
           insertedIntoChild = true;
         }
       }
@@ -141,7 +141,8 @@ void checkChildren() {
       holding = null;
     }
     
-    checkChildren();
+    //tror detta fuckar upp det??
+    //checkChildren();
   }
   
   // ==================================================
