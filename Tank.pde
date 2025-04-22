@@ -11,307 +11,248 @@ class Tank extends Sprite {
   int state;
   boolean isInTransition;
   boolean goHome;
-  
   QuadTreeMemory memory;
   ViewArea viewArea;
-  Thread currentPathThread;
-  boolean pathNeedsRecalculation = false;
-  ArrayList<PVector> path;
+  ArrayList<PVector> currentPath;
+  int currentWaypointIndex;
 
-  
-  //======================================  
-  Tank(String _name, PVector _startpos, PImage sprite ) {
+  Tank(String _name, PVector _startpos, PImage sprite) {
     this.name         = _name;
     this.tankwidth    = sprite.width;
     this.tankheight   = sprite.height;
     this.img          = sprite;
-
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     position          = new PVector(this.startpos.x, this.startpos.y);
     this.velocity     = new PVector(0, 0);
     this.angle        = 0;
-
-    this.state        = 0; //0(still), 1(moving)
+    this.state        = 0;
     this.maxspeed     = 2;
     this.isInTransition = false;
-    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 6); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
+    this.memory       = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
     this.viewArea     = new ViewArea(position.x, position.y, angle);
-    boundry           = new Boundry(position.x - tankheight/2, position.y  - tankheight/2, this.tankheight, this.tankheight);
+    boundry           = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.goHome       = false;
   }
-  
-  //======================================
+
   void detectObject() {
-  for (Sprite obj : placedPositions) {
-    if (viewArea.intersects(obj.boundry)) {
-      if (obj != this) {
-        if (obj instanceof Landmine && goHome) {
-          // Check if the landmine is already in memory
-          ArrayList<Sprite> foundObjects = memory.query(obj.boundry);
-          boolean alreadyKnown = foundObjects.contains(obj);
-
-          if (!alreadyKnown) {
-            println("New landmine detected!");
-            stopCurrentPath();
-            memory.insert(obj); // Insert the landmine into memory
-            stopMoving(); // Stop the tank immediately
-            pathNeedsRecalculation = true;
-            goHome();  // Let this check the flag
-            return; // Exit the method after handling the landmine
-          }
-        }
-
-        if (obj instanceof Tank && !goHome) {
-          Tank tank = (Tank) obj;
-          if (tank.name.equals("enemy")) {
-            println("Enemy Found!!");
-            tank0.goHome();
-          }
-        }
-
-        memory.insert(obj); // Insert other objects into memory
-      }
-    }
-  }
-  memory.updateExploredStatus(viewArea);
-}
-  
-  void goHome() {
-    if (!pathNeedsRecalculation && goHome) return;
-
-    goHome = true;
-    pathNeedsRecalculation = false;
-
-    GBFS solver = new GBFS(position, startpos, memory);
-    path = solver.solve();
-
-    if (!path.isEmpty()) {
-      printArray(path);
-      followPath(path);
-    }
-  }
-
-void followPath(ArrayList<PVector> path) {
-  currentPathThread = new Thread(() -> {
-    println("Thread started: " + Thread.currentThread().getName()); // Debug: Thread started
-    try {
-      for (PVector waypoint : path) {
-        while (position.dist(waypoint) > 7) {
-          // Check for interruption the safe way
-          if (Thread.currentThread().isInterrupted()) {
-            println("Thread interrupted: " + Thread.currentThread().getName()); // Debug: Thread interrupted
-            throw new InterruptedException();
-          }
-
-          float targetAngle = atan2(waypoint.y - position.y, waypoint.x - position.x);
-          float angleDifference = atan2(sin(targetAngle - angle), cos(targetAngle - angle));
-
-          if (abs(angleDifference) > radians(5)) {
-            if (angleDifference > 0) rotateRight();
-            else rotateLeft();
-          } else {
-            moveForward();
-          }
-
-          position.add(velocity);
-          updateBoundry();
-
-          // Use sleep instead of delay for proper interrupt support
-          try {
-            Thread.sleep(25);
-            } catch (InterruptedException e) {
-            println("Thread sleep interrupted: " + Thread.currentThread().getName()); // Debug: Sleep interrupted
-            path.clear(); // Reset the path ArrayList
-            printArray("Path after clear: " + path);
-            throw e; // Properly break on interrupt
+    for (Sprite obj : placedPositions) {
+      if (viewArea.intersects(obj.boundry)) {
+        if (obj != this) {
+          //Logic for checking if its a unknown mine and handling course correction
+          if (obj instanceof Landmine && goHome) {
+            ArrayList<Sprite> foundObjects = memory.query(obj.boundry);
+            boolean alreadyKnown = foundObjects.contains(obj);
+            //Its a unknown mine so we add it to memory and recalculate path
+            if (!alreadyKnown) {
+              println("New landmine detected!");
+              memory.insert(obj);
+              calculatePath();
+              return;
             }
+          }
+          if (obj instanceof Tank && !goHome) {
+            Tank tank = (Tank) obj;
+            if (tank.name.equals("enemy")) {
+              println("Enemy Found!!");
+              goHome();
+            }
+          }
+          memory.insert(obj);
         }
-        stopMoving(); // stop between waypoints
       }
-    } catch (InterruptedException e) {
-      println("Thread caught InterruptedException: " + Thread.currentThread().getName()); // Debug: Exception caught
-      stopMoving();
-    } finally {
-      println("Thread finished: " + Thread.currentThread().getName()); // Debug: Thread finished
-      goHome = false;
-      currentPathThread = null;
     }
-  });
-  currentPathThread.start();
-}
-
-
-  void stopCurrentPath() {
-  println("Start of stop");
-  if (currentPathThread != null && currentPathThread.isAlive()) {
-    println("Inside of stop");
-    currentPathThread.interrupt();  // this tells the thread to stop
+    memory.updateExploredStatus(viewArea);
   }
-}
+
+  void goHome() {
+    if (!goHome) {
+      goHome = true;
+      calculatePath();
+    }
+  }
+
+  void calculatePath() {
+    GBFS solver = new GBFS(position, startpos, memory);
+    currentPath = solver.solve();
+    currentWaypointIndex = 0;
+  }
+
+  //Helper method for calculating movement during pathing
+  void moveTowards(PVector target) {
+    float targetAngle = atan2(target.y - position.y, target.x - position.x);
+    float angleDifference = atan2(sin(targetAngle - angle), cos(targetAngle - angle));
+    if (abs(angleDifference) > radians(5)) {
+      if (angleDifference > 0) {
+        angle += radians(5);
+      } else {
+        angle -= radians(5);
+      }
+      velocity.set(0, 0);
+    } else {
+      velocity.set(cos(angle) * maxspeed, sin(angle) * maxspeed);
+    }
+  }
+
+  void update() {
+    if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
+      PVector waypoint = currentPath.get(currentWaypointIndex);
+      moveTowards(waypoint);
+    } else {
+      switch (state) {
+        case 0:
+          velocity.set(0, 0);
+          break;
+        case 1:
+          velocity.set(cos(angle) * maxspeed, sin(angle) * maxspeed);
+          break;
+        case 2:
+          velocity.set(-cos(angle) * maxspeed, -sin(angle) * maxspeed);
+          break;
+      }
+    }
+    updateCollision();
+    if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
+      PVector waypoint = currentPath.get(currentWaypointIndex);
+      if (position.dist(waypoint) < 7) {
+        currentWaypointIndex++;
+        if (currentWaypointIndex >= currentPath.size()) {
+          goHome = false;
+          velocity.set(0, 0);
+        }
+      }
+    }
+    viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
+    borgars();
+  }
 
   void updateBoundry() {
     boundry.x = position.x - tankheight / 2;
     boundry.y = position.y - tankheight / 2;
   }
-  
-  void borgars() {
-    float r = tankwidth / 2;  // Half of tank width to keep it within bounds
 
+  void borgars() {
+    float r = tankwidth / 2;
     position.x = constrain(position.x, r, width - r);
     position.y = constrain(position.y, r, height - r);
   }
-  
-  void updateCollision(){
+
+  void updateCollision() {
     float candidateX = position.x + velocity.x;
     float candidateY = position.y + velocity.y;
-    
-    if(!collisionAt(candidateX, position.y)){
+    if (!collisionAt(candidateX, position.y)) {
       position.x = candidateX;
     }
-    
-    if(!collisionAt(position.x, candidateY)){
-      position.y = candidateY; 
+    if (!collisionAt(position.x, candidateY)) {
+      position.y = candidateY;
     }
   }
-  
-  boolean collisionAt(float x, float y){
-    PVector candidate = new PVector(x,y);
+
+  boolean collisionAt(float x, float y) {
+    PVector candidate = new PVector(x, y);
     PVector backup = position.copy();
     position.set(candidate);
     updateBoundry();
-    
     for (Sprite s : placedPositions) {
       if (s != this && boundry.intersects(s.boundry)) {
         position.set(backup);
-        updateBoundry(); 
+        updateBoundry();
         return true;
       }
     }
     position.set(backup);
-    updateBoundry(); 
+    updateBoundry();
     return false;
   }
-  
-  
-  //======================================
+
   void moveForward() {
-      this.velocity.x = cos(this.angle) * this.maxspeed; 
-      this.velocity.y = sin(this.angle) * this.maxspeed; 
-      
+    this.velocity.x = cos(this.angle) * this.maxspeed;
+    this.velocity.y = sin(this.angle) * this.maxspeed;
   }
 
   void moveBackward() {
-      this.velocity.x = -cos(this.angle) * this.maxspeed; 
-      this.velocity.y = -sin(this.angle) * this.maxspeed;
-      
+    this.velocity.x = -cos(this.angle) * this.maxspeed;
+    this.velocity.y = -sin(this.angle) * this.maxspeed;
   }
 
-    void rotateLeft() {
-      this.angle -= radians(5); 
-      
+  void rotateLeft() {
+    this.angle -= radians(5);
   }
 
   void rotateRight() {
-      this.angle += radians(5); 
-      
-  }
-  
-  void stopMoving() {
-      this.velocity.x = 0;
-      this.velocity.y = 0;
+    this.angle += radians(5);
   }
 
-  //======================================
-  void action(String _action) {
-      switch (_action) {
-          case "move":
-              moveForward();
-              break;
-          case "reverse":  
-              moveBackward();
-              break;
-          case "rotateLeft":
-              rotateLeft();
-              break;
-          case "rotateRight":
-              rotateRight();
-              break;
-          case "stop": 
-              stopMoving();
-              break;
-      }
+  void stopMoving() {
+    this.velocity.x = 0;
+    this.velocity.y = 0;
   }
-  
-  //======================================
-  void update() {
-    switch (state) {
-      case 0:
-        action("stop");
+
+  void action(String _action) {
+    switch (_action) {
+      case "move":
+        moveForward();
         break;
-      case 1:
-        action("move");
+      case "reverse":
+        moveBackward();
         break;
-      case 2:
-        action("reverse");
+      case "rotateLeft":
+        rotateLeft();
+        break;
+      case "rotateRight":
+        rotateRight();
+        break;
+      case "stop":
+        stopMoving();
         break;
     }
-    
-    updateCollision();
-    viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
-    borgars();
   }
 
-  //====================================== 
   void display() {
     pushMatrix();
-      translate(this.position.x, this.position.y);
-      drawTank(0, 0);
-      if(debugMode){
-        fill(230);
-        stroke(0);
-        strokeWeight(1);
-        rect(0+40, 0-40, 100, 40);
-        fill(30);
-        textSize(15);
-        text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 40+5, -20-5);
-      }
+    translate(this.position.x, this.position.y);
+    drawTank(0, 0);
+    if (debugMode) {
+      fill(230);
+      stroke(0);
+      strokeWeight(1);
+      rect(0 + 40, 0 - 40, 100, 40);
+      fill(30);
+      textSize(15);
+      text(this.name + "\n( " + this.position.x + ", " + this.position.y + " )", 40 + 5, -20 - 5);
+    }
     popMatrix();
     boundry.draw();
   }
 
   void displayPathHome() {
-  if (path == null || path.isEmpty()) {
-    return; // No path to display
+    if (currentPath == null || currentPath.isEmpty()) {
+      return;
+    }
+    stroke(0, 255, 0);
+    strokeWeight(2);
+    noFill();
+    beginShape();
+    for (PVector waypoint : currentPath) {
+      vertex(waypoint.x, waypoint.y);
+    }
+    endShape();
   }
 
-  stroke(0, 255, 0); // Green color for the path
-  strokeWeight(2);
-  noFill();
-
-  beginShape();
-  for (PVector waypoint : path) {
-    vertex(waypoint.x, waypoint.y);
-  }
-  endShape();
-  
-}
-  
   void drawTank(float x, float y) {
     pushMatrix();
-      strokeWeight(0);
-      translate(x, y);
-      rotate(this.angle); // Apply rotation
-      imageMode(CENTER);
-      image(img, x, y);
-      imageMode(CORNER);
+    strokeWeight(0);
+    translate(x, y);
+    rotate(this.angle);
+    imageMode(CENTER);
+    image(img, x, y);
+    imageMode(CORNER);
     popMatrix();
   }
-  
-  void drawViewArea(){
+
+  void drawViewArea() {
     viewArea.drawArea(this);
   }
-  
-  // INNER CLASS VIEWAREA =============================================================================
+
   class ViewArea extends Boundry {
     float viewAngle;
   
@@ -400,3 +341,4 @@ void followPath(ArrayList<PVector> path) {
     }
   }
 }
+
