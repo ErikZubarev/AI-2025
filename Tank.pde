@@ -29,9 +29,9 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.maxspeed     = 2;
     this.isInTransition = false;
-    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 5); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
+    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 6); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
     this.viewArea     = new ViewArea(position.x, position.y, angle);
-    boundry          = new Boundry(position.x - tankwidth/2, position.y  - tankheight/2, this.tankheight, this.tankheight);
+    boundry           = new Boundry(position.x - tankheight/2, position.y  - tankheight/2, this.tankheight, this.tankheight);
   }
   
   //======================================
@@ -47,7 +47,7 @@ class Tank extends Sprite {
   }
     
   void updateBoundry() {
-    boundry.x = position.x - tankwidth / 2;
+    boundry.x = position.x - tankheight / 2;
     boundry.y = position.y - tankheight / 2;
   }
   
@@ -56,6 +56,37 @@ class Tank extends Sprite {
 
     position.x = constrain(position.x, r, width - r);
     position.y = constrain(position.y, r, height - r);
+  }
+  
+  void updateCollision(){
+    float candidateX = position.x + velocity.x;
+    float candidateY = position.y + velocity.y;
+    
+    if(!collisionAt(candidateX, position.y)){
+      position.x = candidateX;
+    }
+    
+    if(!collisionAt(position.x, candidateY)){
+      position.y = candidateY; 
+    }
+  }
+  
+  boolean collisionAt(float x, float y){
+    PVector candidate = new PVector(x,y);
+    PVector backup = position.copy();
+    position.set(candidate);
+    updateBoundry();
+    
+    for (Sprite s : placedPositions) {
+      if (s != this && boundry.intersects(s.boundry)) {
+        position.set(backup);
+        updateBoundry(); 
+        return true;
+      }
+    }
+    position.set(backup);
+    updateBoundry(); 
+    return false;
   }
   
   
@@ -109,14 +140,9 @@ class Tank extends Sprite {
   }
   
   //======================================
-  //Här är det tänkt att agenten har möjlighet till egna val. 
-  
   void update() {
-    PVector previousPosition = position.copy();
-    
     switch (state) {
       case 0:
-        // still/idle
         action("stop");
         break;
       case 1:
@@ -127,22 +153,12 @@ class Tank extends Sprite {
         break;
     }
     
-    this.position.add(velocity);
-    updateBoundry();
-      for(Sprite s : placedPositions) {
-        if (s != this && boundry.intersects(s.boundry)) {
-          position = previousPosition;
-          updateBoundry();
-          stopMoving();
-          break; 
-        }
-      }
+    updateCollision();
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
     borgars();
   }
-  
-  //====================================== 
 
+  //====================================== 
   void display() {
     pushMatrix();
       translate(this.position.x, this.position.y);
