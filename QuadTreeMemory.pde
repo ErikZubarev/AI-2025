@@ -108,6 +108,7 @@ class QuadTreeMemory{
   void insert(Sprite obj){
     
     
+    
 
     if(!boundry.intersects(obj.boundry)){
       return;

@@ -10,9 +10,14 @@ class Tank extends Sprite {
   float angle;
   int state;
   boolean isInTransition;
+  boolean goHome;
   
   QuadTreeMemory memory;
   ViewArea viewArea;
+  Thread currentPathThread;
+  boolean pathNeedsRecalculation = false;
+  ArrayList<PVector> path;
+
   
   //======================================  
   Tank(String _name, PVector _startpos, PImage sprite ) {
@@ -29,23 +34,119 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.maxspeed     = 2;
     this.isInTransition = false;
-    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 5); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
+    this.memory       = new QuadTreeMemory(new Boundry(0,0,800,800), 6); // (0,0) start position to (800,800) px play area, depth of 5 -> minimum 25 x 25 px grid area
     this.viewArea     = new ViewArea(position.x, position.y, angle);
-    boundry          = new Boundry(position.x - tankwidth/2, position.y  - tankheight/2, this.tankheight, this.tankheight);
+    boundry           = new Boundry(position.x - tankwidth/2, position.y  - tankheight/2, this.tankheight, this.tankheight);
+    this.goHome       = false;
   }
   
   //======================================
-  void detectObject(){
-    for(Sprite obj : placedPositions){
-      if(viewArea.intersects(obj.boundry)){
-        if(obj != this){
-          memory.insert(obj);
+  void detectObject() {
+  for (Sprite obj : placedPositions) {
+    if (viewArea.intersects(obj.boundry)) {
+      if (obj != this) {
+        if (obj instanceof Landmine && goHome) {
+          // Check if the landmine is already in memory
+          ArrayList<Sprite> foundObjects = memory.query(obj.boundry);
+          boolean alreadyKnown = foundObjects.contains(obj);
+
+          if (!alreadyKnown) {
+            println("New landmine detected!");
+            stopCurrentPath();
+            memory.insert(obj); // Insert the landmine into memory
+            stopMoving(); // Stop the tank immediately
+            pathNeedsRecalculation = true;
+            goHome();  // Let this check the flag
+            return; // Exit the method after handling the landmine
+          }
         }
+
+        if (obj instanceof Tank && !goHome) {
+          Tank tank = (Tank) obj;
+          if (tank.name.equals("enemy")) {
+            println("Enemy Found!!");
+            tank0.goHome();
+          }
+        }
+
+        memory.insert(obj); // Insert other objects into memory
       }
     }
-    memory.updateExploredStatus(viewArea);
   }
-    
+  memory.updateExploredStatus(viewArea);
+}
+  
+  void goHome() {
+    if (!pathNeedsRecalculation && goHome) return;
+
+    goHome = true;
+    pathNeedsRecalculation = false;
+
+    GBFS solver = new GBFS(position, startpos, memory);
+    path = solver.solve();
+
+    if (!path.isEmpty()) {
+      printArray(path);
+      followPath(path);
+    }
+  }
+
+void followPath(ArrayList<PVector> path) {
+  currentPathThread = new Thread(() -> {
+    println("Thread started: " + Thread.currentThread().getName()); // Debug: Thread started
+    try {
+      for (PVector waypoint : path) {
+        while (position.dist(waypoint) > 7) {
+          // Check for interruption the safe way
+          if (Thread.currentThread().isInterrupted()) {
+            println("Thread interrupted: " + Thread.currentThread().getName()); // Debug: Thread interrupted
+            throw new InterruptedException();
+          }
+
+          float targetAngle = atan2(waypoint.y - position.y, waypoint.x - position.x);
+          float angleDifference = atan2(sin(targetAngle - angle), cos(targetAngle - angle));
+
+          if (abs(angleDifference) > radians(5)) {
+            if (angleDifference > 0) rotateRight();
+            else rotateLeft();
+          } else {
+            moveForward();
+          }
+
+          position.add(velocity);
+          updateBoundry();
+
+          // Use sleep instead of delay for proper interrupt support
+          try {
+            Thread.sleep(25);
+            } catch (InterruptedException e) {
+            println("Thread sleep interrupted: " + Thread.currentThread().getName()); // Debug: Sleep interrupted
+            path.clear(); // Reset the path ArrayList
+            printArray("Path after clear: " + path);
+            throw e; // Properly break on interrupt
+            }
+        }
+        stopMoving(); // stop between waypoints
+      }
+    } catch (InterruptedException e) {
+      println("Thread caught InterruptedException: " + Thread.currentThread().getName()); // Debug: Exception caught
+      stopMoving();
+    } finally {
+      println("Thread finished: " + Thread.currentThread().getName()); // Debug: Thread finished
+      goHome = false;
+      currentPathThread = null;
+    }
+  });
+  currentPathThread.start();
+}
+
+
+  void stopCurrentPath() {
+  if (currentPathThread != null && currentPathThread.isAlive()) {
+    currentPathThread.interrupt();  // this tells the thread to stop
+  }
+}
+
   void updateBoundry() {
     boundry.x = position.x - tankwidth / 2;
     boundry.y = position.y - tankheight / 2;
@@ -159,6 +260,23 @@ class Tank extends Sprite {
     popMatrix();
     boundry.draw();
   }
+
+  void displayPathHome() {
+  if (path == null || path.isEmpty()) {
+    return; // No path to display
+  }
+
+  stroke(0, 255, 0); // Green color for the path
+  strokeWeight(2);
+  noFill();
+
+  beginShape();
+  for (PVector waypoint : path) {
+    vertex(waypoint.x, waypoint.y);
+  }
+  endShape();
+  
+}
   
   void drawTank(float x, float y) {
     pushMatrix();

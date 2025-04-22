@@ -2,6 +2,7 @@ import java.util.Random;
 
 // GLOBAL VARIABLES ====================================
 boolean left, right, up, down;
+boolean mouse_pressed;
 boolean debugMode;
 Random random = new Random();
 
@@ -133,6 +134,9 @@ void draw() {
   
   checkForInput();
   
+  tank0.displayPathHome();
+  
+  
   if (!gameOver && !pause) {
     updateTanksLogic();
     //Applies to all tanks
@@ -149,11 +153,10 @@ void draw() {
   displayGUI();
   
 
-  if (landmineCounter == 1000) {
-    deployLandmine();
-    landmineCounter = 0; 
-  }
-  
+  //if (landmineCounter == 250) {
+  //  deployLandmine();
+  //  landmineCounter = 0; 
+  //}
   displayMines();
   dog.update();
   dog.display();
@@ -181,6 +184,8 @@ void deployLandmine() {
 
   dog.startRun(targetPos);
 }
+
+
 
 //======================================
 void checkForInput() {
@@ -313,4 +318,21 @@ void keyReleased() {
     if (key == 'd') {
       debugMode = !debugMode;
     }
+}
+
+//For debuggin mine placement 
+void mousePressed() {
+  println("---------------------------------------------------------");
+  println("*** mousePressed() - Musknappen har tryckts ned.");
+  
+  mouse_pressed = true;
+  
+  PVector mousePos = new PVector(mouseX, mouseY);
+  deployLandmine(mousePos);
+}
+
+
+void deployLandmine(PVector targetPos) {
+  
+  dog.startRun(targetPos);
 }
