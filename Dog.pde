@@ -16,7 +16,7 @@ class Dog extends Sprite {
   Dog(PImage[] runningFrames, PImage[] laughingFrames) {
     this.runningFrames = runningFrames;
     this.laughingFrames = laughingFrames;
-    this.pos = new PVector(-100, -100); 
+    this.pos = new PVector(-100, -100);
   }
 
   void startRun(PVector target) {
@@ -24,10 +24,18 @@ class Dog extends Sprite {
     PVector dogStart = new PVector(0, 0);
 
     switch (side) {
-      case 0: dogStart = new PVector(0, random(800)); break;       // Left
-      case 1: dogStart = new PVector(800, random(800)); break;     // Right
-      case 2: dogStart = new PVector(random(800), 0); break;       // Top
-      case 3: dogStart = new PVector(random(800), 800); break;     // Bottom
+    case 0:
+      dogStart = new PVector(0, random(800));
+      break;       // Left
+    case 1:
+      dogStart = new PVector(800, random(800));
+      break;     // Right
+    case 2:
+      dogStart = new PVector(random(800), 0);
+      break;       // Top
+    case 3:
+      dogStart = new PVector(random(800), 800);
+      break;     // Bottom
     }
 
     this.exit = new PVector(dogStart.x * -1, dogStart.y * -1); // Opposite direction
@@ -50,40 +58,40 @@ class Dog extends Sprite {
     }
 
     switch (state) {
-      case RUNNING_TO_TARGET:
-        if (pos.dist(target) > 5) {
-          pos.add(velocity);
-        } else {
-          state = DogState.LAUGHING;
-        }
-        break;
-
-      case LAUGHING:
-        if (laughTimer < LAUGH_DURATION) {
-          laughTimer++;
-        } else {
-          if (!hasDroppedMine) {
-            Landmine mine = new Landmine(landmineImg, target);
-            allMines.add(mine);
-            placedPositions.add(mine);
-            hasDroppedMine = true;
-          }
-          state = DogState.EXITING;
-          velocity = PVector.sub(exit, pos).normalize().mult(speed);
-          facingLeft = velocity.x < 0;
-        }
-        break;
-
-      case EXITING:
+    case RUNNING_TO_TARGET:
+      if (pos.dist(target) > 5) {
         pos.add(velocity);
-        if (pos.x < -100 || pos.x > 900 || pos.y < -100 || pos.y > 900) {
-          state = DogState.ENTERING;
-        }
-        break;
+      } else {
+        state = DogState.LAUGHING;
+      }
+      break;
 
-      case ENTERING:
-        // Do nothing, waiting for next startRun
-        break;
+    case LAUGHING:
+      if (laughTimer < LAUGH_DURATION) {
+        laughTimer++;
+      } else {
+        if (!hasDroppedMine) {
+          Landmine mine = new Landmine(landmineImg, target);
+          allMines.add(mine);
+          placedPositions.add(mine);
+          hasDroppedMine = true;
+        }
+        state = DogState.EXITING;
+        velocity = PVector.sub(exit, pos).normalize().mult(speed);
+        facingLeft = velocity.x < 0;
+      }
+      break;
+
+    case EXITING:
+      pos.add(velocity);
+      if (pos.x < -100 || pos.x > 900 || pos.y < -100 || pos.y > 900) {
+        state = DogState.ENTERING;
+      }
+      break;
+
+    case ENTERING:
+      // Do nothing, waiting for next startRun
+      break;
     }
   }
 

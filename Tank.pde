@@ -99,15 +99,15 @@ class Tank extends Sprite {
       moveTowards(waypoint);
     } else {
       switch (state) {
-        case 0:
-          velocity.set(0, 0);
-          break;
-        case 1:
-          velocity.set(cos(angle) * maxspeed, sin(angle) * maxspeed);
-          break;
-        case 2:
-          velocity.set(-cos(angle) * maxspeed, -sin(angle) * maxspeed);
-          break;
+      case 0:
+        velocity.set(0, 0);
+        break;
+      case 1:
+        velocity.set(cos(angle) * maxspeed, sin(angle) * maxspeed);
+        break;
+      case 2:
+        velocity.set(-cos(angle) * maxspeed, -sin(angle) * maxspeed);
+        break;
       }
     }
     updateCollision();
@@ -189,21 +189,21 @@ class Tank extends Sprite {
 
   void action(String _action) {
     switch (_action) {
-      case "move":
-        moveForward();
-        break;
-      case "reverse":
-        moveBackward();
-        break;
-      case "rotateLeft":
-        rotateLeft();
-        break;
-      case "rotateRight":
-        rotateRight();
-        break;
-      case "stop":
-        stopMoving();
-        break;
+    case "move":
+      moveForward();
+      break;
+    case "reverse":
+      moveBackward();
+      break;
+    case "rotateLeft":
+      rotateLeft();
+      break;
+    case "rotateRight":
+      rotateRight();
+      break;
+    case "stop":
+      stopMoving();
+      break;
     }
   }
 
@@ -255,47 +255,51 @@ class Tank extends Sprite {
 
   class ViewArea extends Boundry {
     float viewAngle;
-  
+
     final float viewLength = 200;
-    final float viewWidth = 100;  
-  
+    final float viewWidth = 100;
+
     public ViewArea(float agentStartX, float agentStartY, float agentStartAngle) {
       super(agentStartX, agentStartY, 100, 200);
       this.viewAngle = agentStartAngle;
       updateViewArea(agentStartX, agentStartY, agentStartAngle);
     }
-  
+
     public void updateViewArea(float agentX, float agentY, float agentAngle) {
       this.viewAngle = agentAngle; // Store the current angle
-  
+
       float centerX = agentX + cos(this.viewAngle) * (this.viewLength / 2.0);
       float centerY = agentY + sin(this.viewAngle) * (this.viewLength / 2.0);
-  
+
       PVector[] corners = new PVector[4];
       float angleRad = this.viewAngle;
       float cosA = cos(angleRad);
       float sinA = sin(angleRad);
       float halfL = this.viewLength / 2.0;
       float halfW = this.viewWidth / 2.0;
-  
-  
-      float relX_TR = +halfL; float relY_TR = -halfW;
+
+
+      float relX_TR = +halfL;
+      float relY_TR = -halfW;
       corners[0] = new PVector(centerX + relX_TR * cosA - relY_TR * sinA,
-                               centerY + relX_TR * sinA + relY_TR * cosA);
+        centerY + relX_TR * sinA + relY_TR * cosA);
       // Top-Left Corner
-      float relX_TL = +halfL; float relY_TL = +halfW;
+      float relX_TL = +halfL;
+      float relY_TL = +halfW;
       corners[1] = new PVector(centerX + relX_TL * cosA - relY_TL * sinA,
-                               centerY + relX_TL * sinA + relY_TL * cosA);
+        centerY + relX_TL * sinA + relY_TL * cosA);
       // Bottom-Left Corner
-      float relX_BL = -halfL; float relY_BL = +halfW;
+      float relX_BL = -halfL;
+      float relY_BL = +halfW;
       corners[2] = new PVector(centerX + relX_BL * cosA - relY_BL * sinA,
-                               centerY + relX_BL * sinA + relY_BL * cosA);
+        centerY + relX_BL * sinA + relY_BL * cosA);
       // Bottom-Right Corner
-      float relX_BR = -halfL; float relY_BR = -halfW;
+      float relX_BR = -halfL;
+      float relY_BR = -halfW;
       corners[3] = new PVector(centerX + relX_BR * cosA - relY_BR * sinA,
-                               centerY + relX_BR * sinA + relY_BR * cosA);
-  
-  
+        centerY + relX_BR * sinA + relY_BR * cosA);
+
+
       float minX = corners[0].x, maxX = corners[0].x;
       float minY = corners[0].y, maxY = corners[0].y;
       for (int i = 1; i < 4; i++) {
@@ -304,41 +308,39 @@ class Tank extends Sprite {
         minY = min(minY, corners[i].y);
         maxY = max(maxY, corners[i].y);
       }
-  
-      this.x = minX;          
-      this.y = minY;            
+
+      this.x = minX;
+      this.y = minY;
       this.width = maxX - minX;
-      this.height = maxY - minY; 
+      this.height = maxY - minY;
     }
-  
-  
+
+
     void drawArea(Tank t) {
-      float agentX = position.x; 
+      float agentX = position.x;
       float agentY = position.y;
       float centerX = agentX + cos(this.viewAngle) * (this.viewLength / 2.0);
       float centerY = agentY + sin(this.viewAngle) * (this.viewLength / 2.0);
-  
-      if(debugMode){
+
+      if (debugMode) {
         pushMatrix();
-          translate(centerX, centerY);
-          rotate(this.viewAngle);  
-          strokeWeight(1);
-          fill(255, 255, 0, 100);  
-          rectMode(CENTER);
-          rect(0, 0, this.viewLength, this.viewWidth);
-          rectMode(CORNER);
+        translate(centerX, centerY);
+        rotate(this.viewAngle);
+        strokeWeight(1);
+        fill(255, 255, 0, 100);
+        rectMode(CENTER);
+        rect(0, 0, this.viewLength, this.viewWidth);
+        rectMode(CORNER);
         popMatrix();
       }
       pushMatrix();
-        translate(agentX, agentY);
-        rotate(this.viewAngle);
-        
-        strokeWeight(0.5);
-        fill(15, 15, 15, 50);
-        quad(0, 0 - t.tankwidth/4, 0, 0 + t.tankwidth/4, 0+viewLength, 0+viewWidth/2, 0+viewLength, 0-viewWidth/2);
+      translate(agentX, agentY);
+      rotate(this.viewAngle);
+
+      strokeWeight(0.5);
+      fill(15, 15, 15, 50);
+      quad(0, 0 - t.tankwidth/4, 0, 0 + t.tankwidth/4, 0+viewLength, 0+viewWidth/2, 0+viewLength, 0-viewWidth/2);
       popMatrix();
-  
     }
   }
 }
-

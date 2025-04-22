@@ -43,7 +43,8 @@ class GBFS {
         float hB = heuristic(b);
         return Float.compare(hA, hB);
       }
-    });
+    }
+    );
 
     HashMap<QuadTreeMemory, QuadTreeMemory> cameFrom = new HashMap<QuadTreeMemory, QuadTreeMemory>();
     HashSet<QuadTreeMemory> closedSet = new HashSet<QuadTreeMemory>();
@@ -113,13 +114,13 @@ class GBFS {
   // Helper: Check if a Boundry contains a given point.
   private boolean containsPoint(Boundry b, PVector point) {
     return (point.x >= b.x && point.x <= b.x + b.width &&
-            point.y >= b.y && point.y <= b.y + b.height);
+      point.y >= b.y && point.y <= b.y + b.height);
   }
 
   // Helper: Compute the heuristic value for a node (Euclidean distance from its center to the goal).
   private float heuristic(QuadTreeMemory node) {
     PVector center = new PVector(node.boundry.x + node.boundry.width / 2,
-                                 node.boundry.y + node.boundry.height / 2);
+      node.boundry.y + node.boundry.height / 2);
     return PVector.dist(center, goal);
   }
 
@@ -161,7 +162,7 @@ class GBFS {
     ArrayList<PVector> path = new ArrayList<PVector>();
     while (current != null) {
       PVector center = new PVector(current.boundry.x + current.boundry.width / 2,
-                                   current.boundry.y + current.boundry.height / 2);
+        current.boundry.y + current.boundry.height / 2);
       path.add(0, center);
       current = cameFrom.get(current);
     }
