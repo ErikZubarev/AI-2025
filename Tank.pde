@@ -3,18 +3,12 @@ class Tank extends Sprite {
   PVector startpos;
   String name;
   PImage img;
-  int tankwidth;
-  int tankheight;
-  float speed;
-  float maxspeed;
-  float angle;
-  int state;
-  boolean isInTransition;
-  boolean goHome;
+  int tankwidth, tankheight, state, currentWaypointIndex;
+  float speed, maxspeed, angle;
+  boolean isInTransition, goHome;
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<PVector> currentPath;
-  int currentWaypointIndex;
 
   Tank(String _name, PVector _startpos, PImage sprite) {
     this.name         = _name;
@@ -110,6 +104,7 @@ class Tank extends Sprite {
         break;
       }
     }
+
     updateCollision();
     if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
       PVector waypoint = currentPath.get(currentWaypointIndex);

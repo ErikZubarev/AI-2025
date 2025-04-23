@@ -106,9 +106,6 @@ class QuadTreeMemory {
   // ==================================================
   void insert(Sprite obj) {
 
-
-
-
     if (!boundry.intersects(obj.boundry)) {
       return;
     }
@@ -140,7 +137,7 @@ class QuadTreeMemory {
       holding = null;
     }
 
-    //tror detta fuckar upp det??
+    //Osäker om vi vill alltid pruna barn som alla håller samma grej eller inte.
     //checkChildren();
   }
 
