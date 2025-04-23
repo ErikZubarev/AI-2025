@@ -4,14 +4,12 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Comparator;
 
-// GBFS class that takes in a start, goal, QuadTreeMemory structure, and tank boundry.
 class GBFS {
   PVector start;
   PVector goal;
   QuadTreeMemory memory;
-  Boundry tankBoundry; // Tank's size as a Boundry object
+  Boundry tankBoundry; 
 
-  // List to hold all applicable nodes from the QuadTreeMemory.
   ArrayList<QuadTreeMemory> applicableNodes;
 
   GBFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
@@ -21,13 +19,9 @@ class GBFS {
     this.tankBoundry = tankBoundry;
     this.applicableNodes = new ArrayList<QuadTreeMemory>();
 
-    // Pre-collect all leaf nodes that are explored, free, and large enough for the tank.
     collectApplicableNodes(memory, applicableNodes);
   }
 
-  // The method which runs the Greedy Best First Search and returns
-  // an ArrayList of PVectors corresponding to the center points
-  // of the nodes along the solution path.
   public ArrayList<PVector> solve() {
     QuadTreeMemory startNode = findContainingNode(applicableNodes, start);
     QuadTreeMemory goalNode = findContainingNode(applicableNodes, goal);
@@ -37,25 +31,24 @@ class GBFS {
       return new ArrayList<PVector>();
     }
 
-    PriorityQueue<QuadTreeMemory> openList = new PriorityQueue<QuadTreeMemory>(new Comparator<QuadTreeMemory>() {
+    PriorityQueue<QuadTreeMemory> frontier = new PriorityQueue<QuadTreeMemory>(new Comparator<QuadTreeMemory>() {
       public int compare(QuadTreeMemory a, QuadTreeMemory b) {
         float hA = heuristic(a);
         float hB = heuristic(b);
         return Float.compare(hA, hB);
       }
-    }
-    );
+     });
 
     HashMap<QuadTreeMemory, QuadTreeMemory> cameFrom = new HashMap<QuadTreeMemory, QuadTreeMemory>();
     HashSet<QuadTreeMemory> closedSet = new HashSet<QuadTreeMemory>();
 
-    openList.add(startNode);
+    frontier.add(startNode);
     cameFrom.put(startNode, null);
 
     QuadTreeMemory current = null;
 
-    while (!openList.isEmpty()) {
-      current = openList.poll();
+    while (!frontier.isEmpty()) {
+      current = frontier.poll();
 
       if (current == goalNode) {
         return reconstructPath(cameFrom, current);
@@ -71,7 +64,7 @@ class GBFS {
         if (isNeighbor(current, neighbor)) {
           if (!cameFrom.containsKey(neighbor)) {
             cameFrom.put(neighbor, current);
-            openList.add(neighbor);
+            frontier.add(neighbor);
           }
         }
       }
@@ -81,8 +74,7 @@ class GBFS {
     return new ArrayList<PVector>();
   }
 
-  // Helper: Collect leaf nodes that are explored, free, and large enough for the tank.
-  private void collectApplicableNodes(QuadTreeMemory node, ArrayList<QuadTreeMemory> list) {
+  private void collectApplicableNodes(QuadTreeMemory node, ArrayList<QuadTreeMemory> list) {    
     if (node.subdivided) {
       for (QuadTreeMemory child : node.children) {
         if (child != null) {
@@ -96,12 +88,10 @@ class GBFS {
     }
   }
 
-  // Helper: Check if a node is large enough for the tank.
   private boolean isLargeEnough(QuadTreeMemory node) {
     return node.boundry.width >= tankBoundry.width && node.boundry.height >= tankBoundry.height;
   }
 
-  // Helper: Find the applicable node that contains the given point.
   private QuadTreeMemory findContainingNode(ArrayList<QuadTreeMemory> nodes, PVector point) {
     for (QuadTreeMemory node : nodes) {
       if (containsPoint(node.boundry, point)) {
@@ -111,20 +101,17 @@ class GBFS {
     return null;
   }
 
-  // Helper: Check if a Boundry contains a given point.
   private boolean containsPoint(Boundry b, PVector point) {
     return (point.x >= b.x && point.x <= b.x + b.width &&
       point.y >= b.y && point.y <= b.y + b.height);
   }
 
-  // Helper: Compute the heuristic value for a node (Euclidean distance from its center to the goal).
   private float heuristic(QuadTreeMemory node) {
     PVector center = new PVector(node.boundry.x + node.boundry.width / 2,
       node.boundry.y + node.boundry.height / 2);
     return PVector.dist(center, goal);
   }
 
-  // Helper: Determine if two QuadTreeMemory nodes are neighbors with enough clearance for the tank.
   private boolean isNeighbor(QuadTreeMemory a, QuadTreeMemory b) {
     PVector centerA = new PVector(a.boundry.x + a.boundry.width / 2, a.boundry.y + a.boundry.height / 2);
     PVector centerB = new PVector(b.boundry.x + b.boundry.width / 2, b.boundry.y + b.boundry.height / 2);
@@ -141,7 +128,6 @@ class GBFS {
       return false;
     }
 
-    // Ensure there’s enough clearance for the tank to move between nodes
     if (dx > 0 && dy == 0) { // Horizontal movement
       float minHeight = min(a.boundry.height, b.boundry.height);
       return minHeight >= tankBoundry.height;
@@ -154,10 +140,9 @@ class GBFS {
       return minWidth >= tankBoundry.width && minHeight >= tankBoundry.height;
     }
 
-    return true; // Overlapping or identical nodes are fine
+    return true;
   }
 
-  // Helper: Reconstruct the path from start to goal node using the parent map.
   private ArrayList<PVector> reconstructPath(HashMap<QuadTreeMemory, QuadTreeMemory> cameFrom, QuadTreeMemory current) {
     ArrayList<PVector> path = new ArrayList<PVector>();
     while (current != null) {
