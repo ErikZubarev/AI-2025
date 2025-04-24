@@ -3,7 +3,7 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Comparator;
 
-public class GBFSv2 {
+public class GBFS {
     private PVector start;
     private PVector goal;
     private QuadTreeMemory memory;
@@ -11,7 +11,7 @@ public class GBFSv2 {
     private final float stepSize = 20; //Distance between PVectors
     private final float tolerance = 50; //Acceptable distance from goal
 
-    public GBFSv2(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
+    public GBFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
         this.start = start.copy();
         this.goal = goal.copy();
         this.memory = memory;
