@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 class Landmine extends Sprite {
   String  name;
   PImage  img;

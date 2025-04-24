@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 class Boundry {
   float x, y, width, height;
 

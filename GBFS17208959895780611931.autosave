@@ -115,14 +115,12 @@ public class GBFS {
             return false;
         }
         
-        // Check if the candidate position isnt occupied by a obstacle
         Boundry candidateBoundary = new Boundry(candidate.x - halfWidth, candidate.y - halfHeight, tankBoundry.width, tankBoundry.height);
-        ArrayList<Sprite> obstacles = memory.query(candidateBoundary);
+        
         if (!obstacles.isEmpty()) {
          return false; 
         }
 
-        // Check if the candidate position is in a explored area
         Boundry pos = new Boundry(candidate.x, candidate.y, 1, 1);
         if(!memory.isExplored(pos)){
             return false;
@@ -140,13 +138,13 @@ public class GBFS {
         
         ArrayList<PVector> smoothedPath = new ArrayList<>();
         int currentIndex = 0;
-        smoothedPath.add(originalPath.get(currentIndex)); // Starting point
+        smoothedPath.add(originalPath.get(currentIndex));  // Starting point
     
         while (currentIndex < originalPath.size() - 1) {
             // Start by trying the farthest possible jump
-            int nextIndex = currentIndex + 1; // Default to next point
+            int nextIndex = originalPath.size() - 1;
             for (int j = originalPath.size() - 1; j > currentIndex; j--) {
-                if (isSegmentClearAndExplored(originalPath.get(currentIndex), originalPath.get(j))) {
+                if (isSegmentClear(originalPath.get(currentIndex), originalPath.get(j))) {
                     nextIndex = j;
                     break;
                 }
@@ -159,34 +157,27 @@ public class GBFS {
     }
       
     // ==================================================================================================
-    private boolean isSegmentClearAndExplored(PVector start, PVector end) {
-        Boundry tempBoundry = new Boundry(
-            start.x - tankBoundry.width / 2,
-            start.y - tankBoundry.height / 2,
-            tankBoundry.width,
-            tankBoundry.height
-        );
+    private boolean isSegmentClear(PVector start, PVector end) {
+      Boundry tempBoundry = new Boundry(
+        start.x - tankBoundry.width / 2,
+        start.y - tankBoundry.height / 2,
+        tankBoundry.width,
+        tankBoundry.height
+      );
   
-        float distance = start.dist(end);
-        int steps = (int)(distance / 5) + 1; // Divide straight line into segments
-        for (int i = 0; i <= steps; i++) {
-            float t = i / (float) steps;
-            PVector point = PVector.lerp(start, end, t); // New segment to check
-            tempBoundry.x = point.x - tankBoundry.width / 2;
-            tempBoundry.y = point.y - tankBoundry.height / 2;
+      float distance = start.dist(end);
+      int steps = (int)(distance / 5) + 1; // Divide straight line into segments
+      for (int i = 0; i <= steps; i++) {
+        float t = i / (float) steps;
+        PVector point = PVector.lerp(start, end, t); // new segment to check
+        tempBoundry.x = point.x - tankBoundry.width / 2;
+        tempBoundry.y = point.y - tankBoundry.height / 2;
   
-            // Check for obstacles
-            ArrayList<Sprite> obstacles = memory.query(tempBoundry);
-            if (!obstacles.isEmpty()) {
-                return false;
-            }
-            
-            // Check if the point is explored
-            Boundry pointBoundry = new Boundry(point.x, point.y, 1, 1);
-            if (!memory.isExplored(pointBoundry)) {
-                return false;
-            }
+        ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Check for obstacles on the segment
+        if (!obstacles.isEmpty()) {
+          return false;
         }
-        return true;
+      }
+      return true;
     }
 }

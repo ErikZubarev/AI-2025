@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 import java.util.Random;
 
 // GLOBAL VARIABLES ====================================

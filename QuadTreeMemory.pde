@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 class QuadTreeMemory {
   public Sprite holding;
   public QuadTreeMemory[] children;
@@ -99,6 +101,29 @@ class QuadTreeMemory {
 
     return found;
   }
+
+  // Recursive method for checking if a point (represented by a boundry but has width and height set as 1) is within a explored part of the tree.
+  public boolean isExplored(Boundry pos) {
+    if (!boundry.intersects(pos)) {
+        return false;
+    }
+
+    // If this node is explored and the position is within its boundary, return true
+    if (explored && pos.isWithin(boundry)) {
+        return true;
+    }
+
+    // If the node is subdivided, recursively check all children
+    if (subdivided) {
+        for (QuadTreeMemory child : children) {
+            if (child != null && child.isExplored(pos)) {
+                return true; 
+            }
+        }
+    }
+
+    return false;
+}
   
   // Helper classes ==================================================
   private void pruneChildren() {

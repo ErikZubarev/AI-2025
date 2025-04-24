@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 class Dog extends Sprite {
   PImage[] runningFrames, laughingFrames;
   PVector pos, velocity;

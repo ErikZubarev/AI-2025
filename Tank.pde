@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 class Tank extends Sprite {
   PVector velocity;
   PVector startpos;

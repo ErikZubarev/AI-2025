@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 class Tree extends Sprite {
 
   String  name;
