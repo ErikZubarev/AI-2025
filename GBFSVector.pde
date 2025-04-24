@@ -75,14 +75,10 @@ class GBFSVector {
         }
       }
     } else {
-      if (node.explored && node.holding == null && isLargeEnough(node)) {
+      if (node.explored && node.holding == null) {
         list.add(node);
       }
     }
-  }
-
-  private boolean isLargeEnough(QuadTreeMemory node) {
-    return node.boundry.width >= tankBoundry.width && node.boundry.height >= tankBoundry.height;
   }
 
   private QuadTreeMemory findContainingNode(ArrayList<QuadTreeMemory> nodes, PVector point) {
@@ -116,11 +112,11 @@ class GBFSVector {
     Boundry bb = b.boundry;
 
     // Horizontal adjacency
-    if (Math.abs(ba.x + ba.width - bb.x) < 1e-5 || Math.abs(bb.x + bb.width - ba.x) < 1e-5) {
+    if (Math.abs(ba.x + ba.width - bb.x) < 1e-5 || Math.abs(bb.x + bb.width - ba.x) < 1e-5) { //if the distance between right side of a and left side of b < 1e-5 and vice versa, 1e-5 because float point number
       float yOverlapMin = Math.max(ba.y, bb.y);
       float yOverlapMax = Math.min(ba.y + ba.height, bb.y + bb.height);
       float overlapHeight = yOverlapMax - yOverlapMin;
-      if (overlapHeight >= tankBoundry.height) {
+      if (overlapHeight >= tankBoundry.height) { //if a and b boundries together >= tank width
         return true;
       }
     }

@@ -160,25 +160,6 @@ class QuadTreeMemory {
 
     return found;
   }
-  
-  // ==================================================
-  Sprite query(Sprite obj) {
-    if (!boundry.intersects(obj.boundry)) {
-      return null;
-    }
-
-    if (holding != null && obj.boundry.intersects(holding.boundry)) {
-      return holding;
-    }
-
-    for (QuadTreeMemory child : children) {
-      if (child != null && child.query(obj) != null) {
-        return child.query(obj);
-      }
-    }
-    
-    return null;
-  }
 
   // ==================================================
   void display() {

@@ -25,8 +25,6 @@ class Boundry {
       );
   }
 
-
-
   void draw() {
     if (debugMode) {
       pushMatrix();
