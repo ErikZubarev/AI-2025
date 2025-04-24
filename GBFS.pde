@@ -103,9 +103,15 @@ public class GBFS {
         float halfWidth = tankBoundry.width / 2;
         float halfHeight = tankBoundry.height / 2;
         
+        // Check if the candidate tank's boundary is entirely within the play area (0,0) to (800,800)
+        if (candidate.x - halfWidth < 0 || candidate.y - halfHeight < 0 ||
+            candidate.x + halfWidth > 800 || candidate.y + halfHeight > 800) {
+            return false;
+        }
+        
         Boundry candidateBoundary = new Boundry(candidate.x - halfWidth, candidate.y - halfHeight, tankBoundry.width, tankBoundry.height);
-
         ArrayList<Sprite> obstacles = memory.query(candidateBoundary);
         return obstacles.isEmpty();
     }
+
 }
