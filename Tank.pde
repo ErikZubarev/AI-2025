@@ -9,7 +9,8 @@ class Tank extends Sprite {
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<PVector> currentPath;
-  GBFS solver;
+  //GBFS solver;
+  BFS solver;
 
   Tank(String _name, PVector _startpos, PImage sprite) {
     this.name         = _name;
@@ -66,7 +67,8 @@ class Tank extends Sprite {
   }
 
   void calculatePath() {
-    solver = new GBFS(position, startpos, memory, boundry);
+    //solver = new GBFS(position, startpos, memory, boundry);
+    solver = new BFS(position, startpos, memory, boundry);
     currentPath = solver.solve();
     currentWaypointIndex = 0;
   }

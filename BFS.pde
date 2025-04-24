@@ -1,8 +1,8 @@
 import java.util.HashSet;
-import java.util.PriorityQueue;
+import java.util.LinkedList;
 import java.util.Comparator;
 
-public class GBFS {
+public class BFS {
     private PVector start;
     private PVector goal;
     private QuadTreeMemory memory;
@@ -10,7 +10,7 @@ public class GBFS {
     private final float stepSize = 20; //Distance between PVectors
     private final float tolerance = 50; //Acceptable distance from goal
 
-    public GBFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
+    public BFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
         this.start = start.copy();
         this.goal = goal.copy();
         this.memory = memory;
@@ -32,15 +32,7 @@ public class GBFS {
     public ArrayList<PVector> solve() {
         ArrayList<PVector> path = new ArrayList<PVector>();
 
-        //Very cool lambda class that uses the heuristic as input to the priority queue
-        //Euclidean Heuristic - straight line distance
-        PriorityQueue<Node> frontier = new PriorityQueue<Node>(new Comparator<Node>() {
-            public int compare(Node a, Node b) {
-                float da = PVector.dist(a.pos, goal); 
-                float db = PVector.dist(b.pos, goal);
-                return Float.compare(da, db);
-            }
-        });
+        LinkedList<Node> frontier = new LinkedList<Node>();
 
         //Set of visited nodes x,y coordinates in String
         HashSet<String> closedSet = new HashSet<String>();
@@ -48,7 +40,8 @@ public class GBFS {
         frontier.add(new Node(start, null));
 
         while (!frontier.isEmpty()) {
-            Node current = frontier.poll();
+            Node current = frontier.getFirst();
+            frontier.removeFirst();
 
             // Check if current position is within tolerance of the goal
             if (PVector.dist(current.pos, goal) <= tolerance) {
@@ -76,7 +69,7 @@ public class GBFS {
                     continue; //Skip if there is an object in the way
                 }
 
-                frontier.add(new Node(neighbor, current));
+                frontier.addFirst(new Node(neighbor, current));
             }
         }
 
