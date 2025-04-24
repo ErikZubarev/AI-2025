@@ -46,8 +46,11 @@ public class GBFS {
         HashSet<String> closedSet = new HashSet<String>();
 
         frontier.add(new Node(start, null));
+        int iterations = 0;
+        Long startTime = System.nanoTime();
 
         while (!frontier.isEmpty()) {
+            iterations++;
             Node current = frontier.poll();
 
             // Check if current position is within tolerance of the goal
@@ -57,6 +60,8 @@ public class GBFS {
                     path.add(0, tracker.pos.copy());
                     tracker = tracker.parent;
                 }
+                println("Time in nanoseconds: " + (System.nanoTime() - startTime));
+                println("Iterations: " + iterations);
                 return smoothPath(path);
             }
 
@@ -156,7 +161,7 @@ public class GBFS {
         tempBoundry.x = point.x - tankBoundry.width / 2;
         tempBoundry.y = point.y - tankBoundry.height / 2;
   
-        ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Check for obsticles on the segment
+        ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Check for obstacles on the segment
         if (!obstacles.isEmpty()) {
           return false;
         }
