@@ -66,7 +66,8 @@ class Tank extends Sprite {
   }
 
   void calculatePath() {
-    GBFS solver = new GBFS(position, startpos, memory, boundry);
+    //GBFS solver = new GBFS(position, startpos, memory, boundry);
+    GBFSVector solver = new GBFSVector(position, startpos, memory, boundry);
     currentPath = solver.solve();
     currentWaypointIndex = 0;
   }
