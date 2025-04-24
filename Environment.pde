@@ -31,7 +31,7 @@ Tank tank3, tank4, tank5;
 
 boolean gameOver;
 boolean pause;
-//Positions for obstacles
+//Positions for every entitiy
 ArrayList<Sprite> placedPositions = new ArrayList<Sprite>();
 
 //Landmine assets

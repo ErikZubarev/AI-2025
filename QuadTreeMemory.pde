@@ -1,13 +1,14 @@
 class QuadTreeMemory {
-  Sprite holding;
-  QuadTreeMemory[] children;
-  boolean subdivided;
-  boolean explored;
-  Boundry boundry;
-  int depth;
+  public Sprite holding;
+  public QuadTreeMemory[] children;
+  public boolean explored;
+  public Boundry boundry;
+  
+  private int depth;
+  private boolean subdivided;
 
   // Constructor ======================================
-  QuadTreeMemory(Boundry boundry, int depth) {
+  public QuadTreeMemory(Boundry boundry, int depth) {
     this.boundry = boundry;
     subdivided = false;
     explored = false;
@@ -15,42 +16,9 @@ class QuadTreeMemory {
     children = new QuadTreeMemory[4];
   }
 
-  // ==================================================
-  void subdivide() {
-    if (depth <= 0) {
-      return;
-    }
-
-    float x = boundry.x;
-    float y = boundry.y;
-    float half_w = boundry.width /2;
-    float half_h = boundry.height /2;
-    int lowerDepth = depth-1;
-
-
-    children[0] = new QuadTreeMemory(new Boundry(x, y, half_w, half_h), lowerDepth);
-    children[1] = new QuadTreeMemory(new Boundry(x + half_w, y, half_w, half_h), lowerDepth);
-    children[2] = new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h), lowerDepth);
-    children[3] = new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h), lowerDepth);
-
-    subdivided = true;
-  }
-
-  // ==================================================
-  void updateExploredStatus(Boundry viewArea) {
-    if (explored) {
-      return;
-    }
-
-    if (!boundry.intersects(viewArea)) {
-      if (subdivided) {
-        for (QuadTreeMemory child : children) {
-          if (child != null) {
-            child.updateExploredStatus(viewArea);
-          }
-        }
-        pruneChildren();
-      }
+  // Public classes ==================================================
+  public void updateExploredStatus(Boundry viewArea) {
+    if (explored || !boundry.intersects(viewArea)) {
       return;
     }
 
@@ -71,9 +39,69 @@ class QuadTreeMemory {
     pruneChildren();
   }
 
+  // ==================================================
+  public void insert(Sprite obj) {
+    if(holding == obj){
+      return;
+    }
+    
+    if (!boundry.intersects(obj.boundry)) {
+      return;
+    }
+
+    if (depth <= 0 || boundry.isWithin(obj.boundry)) {
+      holding = obj;
+      return;
+    }
+
+    if (!subdivided && explored) {
+      subdivide();
+      for (QuadTreeMemory child : children) {
+        child.explored = true; //Make sure children are safe 
+      }
+    }
+
+    boolean passedDown = false;
+    if (subdivided) {
+      for (int i = 0; i < children.length; i++) {
+        if (children[i].boundry.intersects(obj.boundry)) {
+          children[i].insert(obj);
+          passedDown = true;
+        }
+      }
+    }
+
+    if (passedDown) {
+      holding = null;
+    }  
+    //pruneChildren(); // Removes ability to add mines to memory, do not uncomment
+  }
 
   // ==================================================
-  void pruneChildren() {
+  public ArrayList<Sprite> query(Boundry area) {
+    ArrayList<Sprite> found = new ArrayList<Sprite>();
+
+    if (!boundry.intersects(area)) {
+      return found;
+    }
+
+
+    if (holding != null && area.intersects(holding.boundry)) {
+      found.add(holding);
+    }
+
+    for (QuadTreeMemory child : children) {
+      if (child != null) {
+        found.addAll(child.query(area));
+      }
+    }
+
+
+    return found;
+  }
+  
+  // Helper classes ==================================================
+  private void pruneChildren() {
     if (!subdivided) {
       return;
     }
@@ -95,74 +123,39 @@ class QuadTreeMemory {
       return;
     }
   }
+  
   // ==================================================
-  void removeChildren() {
+  private void removeChildren() {
     for (int i = 0; i < children.length; i++) {
       children[i] = null;
     }
 
     subdivided = false;
   }
-
+  
   // ==================================================
-  void insert(Sprite obj) {
-    
-    if (!boundry.intersects(obj.boundry)) {
+  private void subdivide() {
+    if (depth <= 0) {
       return;
     }
 
-    if (depth <= 0 || boundry.isWithin(obj.boundry)) {
-      holding = obj;
-      return;
-    }
+    float x = boundry.x;
+    float y = boundry.y;
+    float half_w = boundry.width /2;
+    float half_h = boundry.height /2;
+    int lowerDepth = depth-1;
 
-    if (!subdivided && explored) {
-      subdivide();
-      for (QuadTreeMemory child : children) {
-        child.explored = true;
-      }
-    }
 
-    boolean insertedIntoChild = false;
-    if (subdivided) {
-      for (int i = 0; i < children.length; i++) {
-        if (children[i].boundry.intersects(obj.boundry)) {
-          children[i].insert(obj);
-          insertedIntoChild = true;
-        }
-      }
-    }
+    children[0] = new QuadTreeMemory(new Boundry(x, y, half_w, half_h), lowerDepth);
+    children[1] = new QuadTreeMemory(new Boundry(x + half_w, y, half_w, half_h), lowerDepth);
+    children[2] = new QuadTreeMemory(new Boundry(x, y + half_h, half_w, half_h), lowerDepth);
+    children[3] = new QuadTreeMemory(new Boundry(x + half_w, y + half_h, half_w, half_h), lowerDepth);
 
-    if (insertedIntoChild) {
-      holding = null;
-    }  
+    subdivided = true;
   }
 
   // ==================================================
-  ArrayList<Sprite> query(Boundry area) {
-    ArrayList<Sprite> found = new ArrayList<Sprite>();
-
-    if (!boundry.intersects(area)) {
-      return found;
-    }
-
-
-    if (holding != null && area.intersects(holding.boundry)) {
-      found.add(holding);
-    }
-
-    for (QuadTreeMemory child : children) {
-      if (child != null) {
-        found.addAll(child.query(area));
-      }
-    }
-
-
-    return found;
-  }
-
-  // ==================================================
-  void display() {
+  public void display() {
     if (debugMode) {
       pushMatrix();
       noFill();

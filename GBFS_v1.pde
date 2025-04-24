@@ -4,14 +4,14 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Comparator;
 
-class GBFSVector {
+class GBFS {
   PVector start;
   PVector goal;
   QuadTreeMemory memory;
   Boundry tankBoundry;
   ArrayList<QuadTreeMemory> applicableNodes;
 
-  GBFSVector(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
+  GBFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
     this.start = start.copy();
     this.goal = goal.copy();
     this.memory = memory;
@@ -20,6 +20,7 @@ class GBFSVector {
     collectApplicableNodes(memory, applicableNodes);
   }
 
+  // Solve problem =========================================================================================
   public ArrayList<PVector> solve() {
     // First, try a straight-line path
     if (isSegmentClear(start, goal)) {
@@ -29,7 +30,7 @@ class GBFSVector {
       return path;
     }
 
-    // If straight line is blocked, run GBFS with PVector waypoints
+    // Very cool lambda class that ranks nodes based on fScore
     PriorityQueue<Node> frontier = new PriorityQueue<Node>(new Comparator<Node>() {
       public int compare(Node a, Node b) {
         return Float.compare(a.fScore, b.fScore);
@@ -92,7 +93,7 @@ class GBFSVector {
     }
   }
 
-  // Check if a segment between two points is clear
+  // Check if a segment between two points is clear => Tank can travel euclidean distance
   private boolean isSegmentClear(PVector start, PVector end) {
     Boundry tempBoundry = new Boundry(
       start.x - tankBoundry.width / 2,
@@ -102,14 +103,14 @@ class GBFSVector {
     );
 
     float distance = start.dist(end);
-    int steps = (int)(distance / 5) + 1;
+    int steps = (int)(distance / 5) + 1; // Divide line into segments
     for (int i = 0; i <= steps; i++) {
-      float t = i / (float)steps;
-      PVector point = PVector.lerp(start, end, t);
+      float t = i / (float) steps;
+      PVector point = PVector.lerp(start, end, t); // new segment to check
       tempBoundry.x = point.x - tankBoundry.width / 2;
       tempBoundry.y = point.y - tankBoundry.height / 2;
 
-      ArrayList<Sprite> obstacles = memory.query(tempBoundry);
+      ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Check for obsticles on the segment
       if (!obstacles.isEmpty()) {
         return false;
       }
@@ -117,7 +118,6 @@ class GBFSVector {
     return true;
   }
 
-  // Collect free, explored nodes large enough for the tank
   private void collectApplicableNodes(QuadTreeMemory node, ArrayList<QuadTreeMemory> list) {
     if (node.subdivided) {
       for (QuadTreeMemory child : node.children) {
@@ -132,6 +132,7 @@ class GBFSVector {
     }
   }
 
+  //To make sure tank does not try to fit into a tiny area
   private boolean isLargeEnough(QuadTreeMemory node) {
     return node.boundry.width >= tankBoundry.width && node.boundry.height >= tankBoundry.height;
   }
@@ -140,7 +141,7 @@ class GBFSVector {
   private ArrayList<PVector> getNeighborWaypoints(PVector current) {
     ArrayList<PVector> neighbors = new ArrayList<PVector>();
 
-    // Add goal as a candidate (allows direct path if clear)
+    // Add goal as a candidate (allows direct euclidean distance path if clear)
     neighbors.add(goal.copy());
 
     // Find nodes near the current position
@@ -159,6 +160,7 @@ class GBFSVector {
         neighbors.add(new PVector(b.x + b.width, b.y)); // Top-right
         neighbors.add(new PVector(b.x, b.y + b.height)); // Bottom-left
         neighbors.add(new PVector(b.x + b.width, b.y + b.height)); // Bottom-right
+        
         // Add closest point to goal within the node
         neighbors.add(getClosestPointInNode(node, goal));
       }
@@ -167,13 +169,15 @@ class GBFSVector {
     return neighbors;
   }
 
+  //Return the best x,y position to reach the goal within a node
   private PVector getClosestPointInNode(QuadTreeMemory node, PVector goal) {
     Boundry b = node.boundry;
-    float closestX = constrain(goal.x, b.x, b.x + b.width);
-    float closestY = constrain(goal.y, b.y, b.y + b.height);
+    float closestX = constrain(goal.x, b.x, b.x + b.width); //Optimal x position within node
+    float closestY = constrain(goal.y, b.y, b.y + b.height); //Optimal y position within node
     return new PVector(closestX, closestY);
   }
 
+  //Euclidean distance heuristic
   private float heuristic(PVector position) {
     return position.dist(goal);
   }

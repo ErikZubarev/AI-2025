@@ -3,22 +3,22 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Comparator;
 
-public class GBFSV3 {
-
-    // Instance variables
+public class GBFSv2 {
     private PVector start;
     private PVector goal;
     private QuadTreeMemory memory;
     private Boundry tankBoundry;
+    private final float stepSize = 20; //Distance between PVectors
+    private final float tolerance = 50; //Acceptable distance from goal
 
-
-    public GBFSV3(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
+    public GBFSv2(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
         this.start = start.copy();
         this.goal = goal.copy();
         this.memory = memory;
         this.tankBoundry = tankBoundry;
     }
 
+    //Simpler to handle class than QuadTreeMemory
     private class Node {
         PVector pos;
         Node parent;
@@ -29,28 +29,29 @@ public class GBFSV3 {
         }
     }
 
-
+    // Solve problem ====================================================================================
     public ArrayList<PVector> solve() {
-      float stepSize = 20;
-      float tolerance = 50;
         ArrayList<PVector> path = new ArrayList<PVector>();
 
-        PriorityQueue<Node> openSet = new PriorityQueue<Node>(new Comparator<Node>() {
+        //Very cool lambda class that uses the heuristic as input to the priority queue
+        //Euclidean Heuristic - straight line distance
+        PriorityQueue<Node> frontier = new PriorityQueue<Node>(new Comparator<Node>() {
             public int compare(Node a, Node b) {
-                float da = PVector.dist(a.pos, goal);
+                float da = PVector.dist(a.pos, goal); 
                 float db = PVector.dist(b.pos, goal);
                 return Float.compare(da, db);
             }
         });
 
+        //Set of visited nodes x,y coordinates in String
         HashSet<String> closedSet = new HashSet<String>();
 
-        openSet.add(new Node(start, null));
+        frontier.add(new Node(start, null));
 
-        while (!openSet.isEmpty()) {
-            Node current = openSet.poll();
+        while (!frontier.isEmpty()) {
+            Node current = frontier.poll();
 
-            // Check if current position is within tolerance of the goal.
+            // Check if current position is within tolerance of the goal
             if (PVector.dist(current.pos, goal) <= tolerance) {
                 Node tracker = current;
                 while (tracker != null) {
@@ -73,17 +74,18 @@ public class GBFSV3 {
                     continue;
 
                 if (!isSafe(neighbor)) {
-                    continue;
+                    continue; //Skip if there is an object in the way
                 }
 
-                openSet.add(new Node(neighbor, current));
+                frontier.add(new Node(neighbor, current));
             }
         }
 
-        println("No valid path");
+        println("No valid path found");
         return path;
     }
 
+    // Helper classes ===============================================================================
     private ArrayList<PVector> generateNeighbors(PVector pos, float step) {
         ArrayList<PVector> neighbors = new ArrayList<PVector>();
         for (int dx = -1; dx <= 1; dx++) {
@@ -95,7 +97,8 @@ public class GBFSV3 {
         }
         return neighbors;
     }
-
+    
+    // ==============================================================================================
     private boolean isSafe(PVector candidate) {
         float halfWidth = tankBoundry.width / 2;
         float halfHeight = tankBoundry.height / 2;

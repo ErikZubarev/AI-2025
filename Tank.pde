@@ -9,9 +9,7 @@ class Tank extends Sprite {
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<PVector> currentPath;
-  //GBFSVector solver;
-  //GBFS solver;
-  GBFSV3 solver;
+  GBFS solver;
 
   Tank(String _name, PVector _startpos, PImage sprite) {
     this.name         = _name;
@@ -35,7 +33,7 @@ class Tank extends Sprite {
     for (Sprite obj : placedPositions) {
       if (viewArea.intersects(obj.boundry)) {
         if (obj != this) {
-          if (obj instanceof Landmine && goHome) {
+          if (obj instanceof Landmine && goHome) { //Dynamically check if a landmine appeared
             ArrayList<Sprite> foundObjects = memory.query(obj.boundry);
             boolean alreadyKnown = foundObjects.contains(obj);
             //Its a unknown mine so we add it to memory and recalculate path
@@ -54,7 +52,6 @@ class Tank extends Sprite {
             }
           }
           memory.insert(obj);
-          memory.pruneChildren();
         }
       }
     }
@@ -69,9 +66,7 @@ class Tank extends Sprite {
   }
 
   void calculatePath() {
-    //solver = new GBFSVector(position, startpos, memory, boundry);
-    //solver = new GBFS(position, startpos, memory, boundry);
-    solver = new GBFSV3(position, startpos, memory, boundry);
+    solver = new GBFS(position, startpos, memory, boundry);
     currentPath = solver.solve();
     currentWaypointIndex = 0;
   }
