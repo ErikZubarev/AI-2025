@@ -58,7 +58,7 @@ public class GBFS {
                     path.add(0, tracker.pos.copy());
                     tracker = tracker.parent;
                 }
-                return path;
+                return smoothPath(path);
             }
 
             String key = current.pos.x + "," + current.pos.y;
@@ -113,5 +113,43 @@ public class GBFS {
         ArrayList<Sprite> obstacles = memory.query(candidateBoundary);
         return obstacles.isEmpty();
     }
-
+    
+    private ArrayList<PVector> smoothPath(ArrayList<PVector> originalPath) {
+        if (originalPath.size() <= 2) {
+            return originalPath;
+        }
+        
+        ArrayList<PVector> smoothedPath = new ArrayList<>();
+        int currentIndex = 0;
+        smoothedPath.add(originalPath.get(currentIndex));  // Starting point
+    
+        while (currentIndex < originalPath.size() - 1) {
+            // Start by trying the farthest possible jump
+            int nextIndex = originalPath.size() - 1;
+            for (int j = originalPath.size() - 1; j > currentIndex; j--) {
+                if (isSegmentCollisionFree(originalPath.get(currentIndex), originalPath.get(j))) {
+                    nextIndex = j;
+                    break;
+                }
+            }
+            smoothedPath.add(originalPath.get(nextIndex));
+            currentIndex = nextIndex;
+        }
+        
+        return smoothedPath;
+    }
+      
+    // ==================================================================================================
+    private boolean isSegmentCollisionFree(PVector start, PVector end) {
+        float distance = PVector.dist(start, end);
+        int steps = (int)(distance / (stepSize / 2));
+        for (int i = 0; i <= steps; i++) {
+            float t = i / (float) steps;
+            PVector point = PVector.lerp(start, end, t);
+            if (!isSafe(point)) { 
+                return false;
+            }
+        }
+        return true;
+    }
 }
