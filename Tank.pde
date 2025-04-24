@@ -22,7 +22,7 @@ class Tank extends Sprite {
     this.state        = 0;
     this.maxspeed     = 2;
     this.isInTransition = false;
-    this.memory       = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
+    this.memory       = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 7);
     this.viewArea     = new ViewArea(position.x, position.y, angle);
     boundry           = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.goHome       = false;
@@ -32,7 +32,6 @@ class Tank extends Sprite {
     for (Sprite obj : placedPositions) {
       if (viewArea.intersects(obj.boundry)) {
         if (obj != this) {
-          //Logic for checking if its a unknown mine and handling course correction
           if (obj instanceof Landmine && goHome) {
             ArrayList<Sprite> foundObjects = memory.query(obj.boundry);
             boolean alreadyKnown = foundObjects.contains(obj);
@@ -52,6 +51,7 @@ class Tank extends Sprite {
             }
           }
           memory.insert(obj);
+          memory.pruneChildren();
         }
       }
     }
@@ -224,11 +224,12 @@ class Tank extends Sprite {
     if (currentPath == null || currentPath.isEmpty()) {
       return;
     }
-    stroke(0, 255, 0);
-    strokeWeight(2);
+    stroke(255, 255, 0);
+    strokeWeight(5);
     noFill();
     beginShape();
     for (PVector waypoint : currentPath) {
+      circle(waypoint.x,waypoint.y, 20);
       vertex(waypoint.x, waypoint.y);
     }
     endShape();

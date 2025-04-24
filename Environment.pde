@@ -137,17 +137,6 @@ void draw() {
 
   tank0.displayPathHome();
 
-
-  if (!gameOver && !pause) {
-    updateTanksLogic();
-    //Applies to all tanks
-    //checkForCollisions();
-    //Only doing for tank0 atm
-    tank0.detectObject();
-    landmineCounter++;
-    tank0.memory.display();
-  }
-
   displayHomeBase();
   displayTrees();
   displayTanks();
@@ -161,6 +150,16 @@ void draw() {
   displayMines();
   dog.update();
   dog.display();
+  
+    if (!gameOver && !pause) {
+    updateTanksLogic();
+    //Applies to all tanks
+    //checkForCollisions();
+    //Only doing for tank0 atm
+    tank0.detectObject();
+    landmineCounter++;
+    tank0.memory.display();
+  }
 }
 
 // HELPER METHODS ======================================

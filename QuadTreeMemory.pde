@@ -49,7 +49,7 @@ class QuadTreeMemory {
             child.updateExploredStatus(viewArea);
           }
         }
-        checkChildren();
+        pruneChildren();
       }
       return;
     }
@@ -64,16 +64,16 @@ class QuadTreeMemory {
     }
 
     // Update all children
-    for (int i = 0; i < children.length; i++) {
-      children[i].updateExploredStatus(viewArea);
+    for (QuadTreeMemory child : children) {
+      child.updateExploredStatus(viewArea);
     }
 
-    checkChildren();
+    pruneChildren();
   }
 
 
   // ==================================================
-  void checkChildren() {
+  void pruneChildren() {
     if (!subdivided) {
       return;
     }
@@ -92,6 +92,7 @@ class QuadTreeMemory {
       this.explored = true;
       this.holding = item;
       removeChildren();
+      return;
     }
   }
   // ==================================================
@@ -105,7 +106,7 @@ class QuadTreeMemory {
 
   // ==================================================
   void insert(Sprite obj) {
-
+    
     if (!boundry.intersects(obj.boundry)) {
       return;
     }
@@ -115,7 +116,6 @@ class QuadTreeMemory {
       return;
     }
 
-    //La till så den kollar om den är subvidied och explored så subdividar vi och tvingar barnen vara explored
     if (!subdivided && explored) {
       subdivide();
       for (QuadTreeMemory child : children) {
@@ -135,10 +135,7 @@ class QuadTreeMemory {
 
     if (insertedIntoChild) {
       holding = null;
-    }
-
-    //Osäker om vi vill alltid pruna barn som alla håller samma grej eller inte.
-    //checkChildren();
+    }  
   }
 
   // ==================================================
@@ -162,6 +159,25 @@ class QuadTreeMemory {
 
 
     return found;
+  }
+  
+  // ==================================================
+  Sprite query(Sprite obj) {
+    if (!boundry.intersects(obj.boundry)) {
+      return null;
+    }
+
+    if (holding != null && obj.boundry.intersects(holding.boundry)) {
+      return holding;
+    }
+
+    for (QuadTreeMemory child : children) {
+      if (child != null && child.query(obj) != null) {
+        return child.query(obj);
+      }
+    }
+    
+    return null;
   }
 
   // ==================================================
