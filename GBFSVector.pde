@@ -12,8 +12,8 @@ class GBFSVector {
   ArrayList<QuadTreeMemory> applicableNodes;
 
   GBFSVector(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
-    this.start = start;
-    this.goal = goal;
+    this.start = start.copy();
+    this.goal = goal.copy();
     this.memory = memory;
     this.tankBoundry = tankBoundry;
     this.applicableNodes = new ArrayList<QuadTreeMemory>();
@@ -21,44 +21,58 @@ class GBFSVector {
   }
 
   public ArrayList<PVector> solve() {
-    QuadTreeMemory startNode = findContainingNode(applicableNodes, start);
-    QuadTreeMemory goalNode = findContainingNode(applicableNodes, goal);
-
-    if (startNode == null || goalNode == null) {
-      println("Start or goal not in an applicable node.");
-      return new ArrayList<PVector>();
+    // First, try a straight-line path
+    if (isSegmentClear(start, goal)) {
+      ArrayList<PVector> path = new ArrayList<PVector>();
+      path.add(start.copy());
+      path.add(goal.copy());
+      return path;
     }
 
-    PriorityQueue<QuadTreeMemory> frontier = new PriorityQueue<QuadTreeMemory>(new Comparator<QuadTreeMemory>() {
-      public int compare(QuadTreeMemory a, QuadTreeMemory b) {
-        float hA = heuristic(a);
-        float hB = heuristic(b);
-        return Float.compare(hA, hB);
+    // If straight line is blocked, run GBFS with PVector waypoints
+    PriorityQueue<Node> frontier = new PriorityQueue<Node>(new Comparator<Node>() {
+      public int compare(Node a, Node b) {
+        return Float.compare(a.fScore, b.fScore);
       }
     });
 
-    HashMap<QuadTreeMemory, QuadTreeMemory> cameFrom = new HashMap<QuadTreeMemory, QuadTreeMemory>();
-    HashSet<QuadTreeMemory> closedSet = new HashSet<QuadTreeMemory>();
+    HashMap<PVector, PVector> cameFrom = new HashMap<PVector, PVector>();
+    HashSet<PVector> closedSet = new HashSet<PVector>();
+    HashMap<PVector, Float> fScore = new HashMap<PVector, Float>();
 
-    frontier.add(startNode);
-    cameFrom.put(startNode, null);
+    // Initialize with start position
+    frontier.add(new Node(start, heuristic(start)));
+    cameFrom.put(start, null);
+    fScore.put(start, heuristic(start));
 
     while (!frontier.isEmpty()) {
-      QuadTreeMemory current = frontier.poll();
-      if (current == goalNode) {
+      Node currentNode = frontier.poll();
+      PVector current = currentNode.position;
+
+      if (current.dist(goal) < 5) { // Close enough to goal
         return reconstructPath(cameFrom, current);
       }
+
       closedSet.add(current);
 
-      for (QuadTreeMemory neighbor : applicableNodes) {
-        if (neighbor == current || closedSet.contains(neighbor)) {
+      // Get candidate waypoints (from quadtree nodes and neighbors)
+      ArrayList<PVector> neighbors = getNeighborWaypoints(current);
+      for (PVector neighbor : neighbors) {
+        if (closedSet.contains(neighbor)) {
           continue;
         }
-        if (isNeighbor(current, neighbor)) {
-          if (!cameFrom.containsKey(neighbor)) {
-            cameFrom.put(neighbor, current);
-            frontier.add(neighbor);
-          }
+
+        // Check if the segment from current to neighbor is clear
+        if (!isSegmentClear(current, neighbor)) {
+          continue;
+        }
+
+        float tentativeFScore = heuristic(neighbor);
+
+        if (!fScore.containsKey(neighbor) || tentativeFScore < fScore.get(neighbor)) {
+          cameFrom.put(neighbor, current);
+          fScore.put(neighbor, tentativeFScore);
+          frontier.add(new Node(neighbor, tentativeFScore));
         }
       }
     }
@@ -67,6 +81,43 @@ class GBFSVector {
     return new ArrayList<PVector>();
   }
 
+  // Helper class for priority queue
+  private class Node {
+    PVector position;
+    float fScore;
+
+    Node(PVector position, float fScore) {
+      this.position = position.copy();
+      this.fScore = fScore;
+    }
+  }
+
+  // Check if a segment between two points is clear
+  private boolean isSegmentClear(PVector start, PVector end) {
+    Boundry tempBoundry = new Boundry(
+      start.x - tankBoundry.width / 2,
+      start.y - tankBoundry.height / 2,
+      tankBoundry.width,
+      tankBoundry.height
+    );
+
+    float distance = start.dist(end);
+    int steps = (int)(distance / 5) + 1;
+    for (int i = 0; i <= steps; i++) {
+      float t = i / (float)steps;
+      PVector point = PVector.lerp(start, end, t);
+      tempBoundry.x = point.x - tankBoundry.width / 2;
+      tempBoundry.y = point.y - tankBoundry.height / 2;
+
+      ArrayList<Sprite> obstacles = memory.query(tempBoundry);
+      if (!obstacles.isEmpty()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Collect free, explored nodes large enough for the tank
   private void collectApplicableNodes(QuadTreeMemory node, ArrayList<QuadTreeMemory> list) {
     if (node.subdivided) {
       for (QuadTreeMemory child : node.children) {
@@ -85,23 +136,35 @@ class GBFSVector {
     return node.boundry.width >= tankBoundry.width && node.boundry.height >= tankBoundry.height;
   }
 
-  private QuadTreeMemory findContainingNode(ArrayList<QuadTreeMemory> nodes, PVector point) {
-    for (QuadTreeMemory node : nodes) {
-      if (containsPoint(node.boundry, point)) {
-        return node;
+  // Generate neighbor waypoints (e.g., corners of nearby nodes)
+  private ArrayList<PVector> getNeighborWaypoints(PVector current) {
+    ArrayList<PVector> neighbors = new ArrayList<PVector>();
+
+    // Add goal as a candidate (allows direct path if clear)
+    neighbors.add(goal.copy());
+
+    // Find nodes near the current position
+    Boundry queryBoundry = new Boundry(
+      current.x - tankBoundry.width,
+      current.y - tankBoundry.height,
+      tankBoundry.width * 2,
+      tankBoundry.height * 2
+    );
+
+    for (QuadTreeMemory node : applicableNodes) {
+      if (node.boundry.intersects(queryBoundry)) {
+        // Add corners of the node
+        Boundry b = node.boundry;
+        neighbors.add(new PVector(b.x, b.y)); // Top-left
+        neighbors.add(new PVector(b.x + b.width, b.y)); // Top-right
+        neighbors.add(new PVector(b.x, b.y + b.height)); // Bottom-left
+        neighbors.add(new PVector(b.x + b.width, b.y + b.height)); // Bottom-right
+        // Add closest point to goal within the node
+        neighbors.add(getClosestPointInNode(node, goal));
       }
     }
-    return null;
-  }
 
-  private boolean containsPoint(Boundry b, PVector point) {
-    return (point.x >= b.x && point.x <= b.x + b.width &&
-            point.y >= b.y && point.y <= b.y + b.height);
-  }
-
-  private float heuristic(QuadTreeMemory node) {
-    PVector closestPoint = getClosestPointInNode(node, goal);
-    return PVector.dist(closestPoint, goal);
+    return neighbors;
   }
 
   private PVector getClosestPointInNode(QuadTreeMemory node, PVector goal) {
@@ -111,38 +174,14 @@ class GBFSVector {
     return new PVector(closestX, closestY);
   }
 
-  private boolean isNeighbor(QuadTreeMemory a, QuadTreeMemory b) {
-    Boundry ba = a.boundry;
-    Boundry bb = b.boundry;
-
-    // Horizontal adjacency
-    if (Math.abs(ba.x + ba.width - bb.x) < 1e-5 || Math.abs(bb.x + bb.width - ba.x) < 1e-5) {
-      float yOverlapMin = Math.max(ba.y, bb.y);
-      float yOverlapMax = Math.min(ba.y + ba.height, bb.y + bb.height);
-      float overlapHeight = yOverlapMax - yOverlapMin;
-      if (overlapHeight >= tankBoundry.height) {
-        return true;
-      }
-    }
-
-    // Vertical adjacency
-    if (Math.abs(ba.y + ba.height - bb.y) < 1e-5 || Math.abs(bb.y + bb.height - ba.y) < 1e-5) {
-      float xOverlapMin = Math.max(ba.x, bb.x);
-      float xOverlapMax = Math.min(ba.x + ba.width, bb.x + bb.width);
-      float overlapWidth = xOverlapMax - xOverlapMin;
-      if (overlapWidth >= tankBoundry.width) {
-        return true;
-      }
-    }
-
-    return false;
+  private float heuristic(PVector position) {
+    return position.dist(goal);
   }
 
-  private ArrayList<PVector> reconstructPath(HashMap<QuadTreeMemory, QuadTreeMemory> cameFrom, QuadTreeMemory current) {
+  private ArrayList<PVector> reconstructPath(HashMap<PVector, PVector> cameFrom, PVector current) {
     ArrayList<PVector> path = new ArrayList<PVector>();
     while (current != null) {
-      PVector waypoint = getClosestPointInNode(current, goal);
-      path.add(0, waypoint); // Add to start of list to reverse the path
+      path.add(0, current.copy());
       current = cameFrom.get(current);
     }
     return path;
