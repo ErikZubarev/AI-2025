@@ -127,7 +127,7 @@ public class GBFS {
             // Start by trying the farthest possible jump
             int nextIndex = originalPath.size() - 1;
             for (int j = originalPath.size() - 1; j > currentIndex; j--) {
-                if (isSegmentCollisionFree(originalPath.get(currentIndex), originalPath.get(j))) {
+                if (isSegmentClear(originalPath.get(currentIndex), originalPath.get(j))) {
                     nextIndex = j;
                     break;
                 }
@@ -140,16 +140,27 @@ public class GBFS {
     }
       
     // ==================================================================================================
-    private boolean isSegmentCollisionFree(PVector start, PVector end) {
-        float distance = PVector.dist(start, end);
-        int steps = (int)(distance / (stepSize / 2));
-        for (int i = 0; i <= steps; i++) {
-            float t = i / (float) steps;
-            PVector point = PVector.lerp(start, end, t);
-            if (!isSafe(point)) { 
-                return false;
-            }
+    private boolean isSegmentClear(PVector start, PVector end) {
+      Boundry tempBoundry = new Boundry(
+        start.x - tankBoundry.width / 2,
+        start.y - tankBoundry.height / 2,
+        tankBoundry.width,
+        tankBoundry.height
+      );
+  
+      float distance = start.dist(end);
+      int steps = (int)(distance / 5) + 1; // Divide line into segments
+      for (int i = 0; i <= steps; i++) {
+        float t = i / (float) steps;
+        PVector point = PVector.lerp(start, end, t); // new segment to check
+        tempBoundry.x = point.x - tankBoundry.width / 2;
+        tempBoundry.y = point.y - tankBoundry.height / 2;
+  
+        ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Check for obsticles on the segment
+        if (!obstacles.isEmpty()) {
+          return false;
         }
-        return true;
+      }
+      return true;
     }
 }
