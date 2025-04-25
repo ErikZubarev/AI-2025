@@ -32,13 +32,16 @@ public class BFS {
 
   // Solve problem ====================================================================================
   public ArrayList<PVector> solve() {
+    //final path backwards
     ArrayList<PVector> path = new ArrayList<PVector>();
 
+    //Nodes to be explored
     LinkedList<Node> frontier = new LinkedList<Node>();
 
     //Set of visited nodes x,y coordinates in String
     HashSet<String> closedSet = new HashSet<String>();
 
+    //Add startnode to frontier
     frontier.add(new Node(start, null));
     int iterations = 0;
     Long startTime = System.nanoTime();
@@ -62,12 +65,14 @@ public class BFS {
         return smoothPath(path);
       }
 
+      //Create position and add it to visited nodes
       String key = current.pos.x + "," + current.pos.y;
       if (closedSet.contains(key)) {
         continue;
       }
       closedSet.add(key);
 
+      //Create neighbours and iterate through neighbors
       ArrayList<PVector> neighbors = generateNeighbors(current.pos, stepSize);
       for (PVector neighbor : neighbors) {
         String neighborKey = neighbor.x + "," + neighbor.y;
@@ -75,9 +80,9 @@ public class BFS {
           continue;
 
         if (!isSafe(neighbor)) {
-          continue; //Skip if there is an object in the way
+          continue; //Skip if there is an object in the way or area isnt explored
         }
-
+        //Add neigbour to frontier with curretn node as its parent
         frontier.add(new Node(neighbor, current));
       }
     }
@@ -87,6 +92,11 @@ public class BFS {
   }
 
   // Helper classes ===============================================================================
+  //Creates neighbours via going out in the step in each cardinal direction in a 3x3 grid
+  //Visualization N = neihbour X = current
+  //  N N N
+  //  N X N
+  //  N N N 
   private ArrayList<PVector> generateNeighbors(PVector pos, float step) {
     ArrayList<PVector> neighbors = new ArrayList<PVector>();
     for (int dx = -1; dx <= 1; dx++) {

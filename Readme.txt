@@ -53,8 +53,8 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
    - Alternativt, klicka med musen för att manuellt placera en landmina på musens position.
 
 4. Byt mellan GBFS och BFS algoritmen.
-    - Från början används BFS. Om du vill bytta till GBFS så gå till Tank.pde filen och kommentera ut rad 15 och av-kommentera rad 14 som skapar objekt av algoritmerna.
-    Samt att kommentera ut rad 73 och av-kommentera rad 72
+    - Från början används BFS. Om du vill bytta till GBFS så gå till Tank.pde filen och kommentera ut rad 16 och av-kommentera rad 15 som skapar objekt av algoritmerna.
+    Samt att kommentera ut rad 74 och av-kommentera rad 73
 
 5. Debug-läge  
    - Aktivera debug-läge (`d`) för att se gränser, utforskade områden och QuadTree-strukturen.

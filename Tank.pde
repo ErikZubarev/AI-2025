@@ -11,6 +11,7 @@ class Tank extends Sprite {
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<PVector> currentPath;
+  //*****Uncomment and comment the below lines to change between GBFS and BFS
   //GBFS solver;
   BFS solver;
 
@@ -69,6 +70,7 @@ class Tank extends Sprite {
   }
 
   void calculatePath() {
+    //*****Uncomment and comment the below lines to change between GBFS and BFS
     //solver = new GBFS(position, startpos, memory, boundry);
     solver = new BFS(position, startpos, memory, boundry);
     currentPath = solver.solve();
