@@ -57,7 +57,7 @@ public class BFS {
         }
         println("Time in nanoseconds: " + (System.nanoTime() - startTime));
         println("Iterations: " + iterations);
-        printArray(path);
+        println("Path length: " + path.size());
         //return path;
         return smoothPath(path);
       }

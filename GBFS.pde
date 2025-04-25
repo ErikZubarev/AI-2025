@@ -63,7 +63,9 @@ public class GBFS {
                     tracker = tracker.parent;
                 }
                 println("Time in nanoseconds: " + (System.nanoTime() - startTime));
-                println("Iterations: " + iterations);
+                println("Iterations: " + iterations);        
+                println("Path length: " + path.size());
+
                 return smoothPath(path);
             }
 
