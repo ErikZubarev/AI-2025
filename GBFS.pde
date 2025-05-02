@@ -119,29 +119,35 @@ public class GBFS {
     private boolean isSafe(PVector candidate) {
         float halfWidth = tankBoundry.width / 2;
         float halfHeight = tankBoundry.height / 2;
-        
-        // Check if tank boundary is entirely within the play area size(800,800)
-        if (candidate.x - halfWidth < 0 || candidate.y - halfHeight < 0 ||
-            candidate.x + halfWidth > 800 || candidate.y + halfHeight > 800) {
+        float safetyMargin = 5.0f; 
+    
+        if (candidate.x - halfWidth - safetyMargin < 0 ||
+            candidate.y - halfHeight - safetyMargin < 0 ||
+            candidate.x + halfWidth + safetyMargin > 800 ||
+            candidate.y + halfHeight + safetyMargin > 800) {
             return false;
         }
-        
-        // Check if the candidate position isnt occupied by a obstacle
-        Boundry candidateBoundary = new Boundry(candidate.x - halfWidth, candidate.y - halfHeight, tankBoundry.width, tankBoundry.height);
+    
+        Boundry candidateBoundary = new Boundry(
+            candidate.x - halfWidth - safetyMargin,
+            candidate.y - halfHeight - safetyMargin,
+            tankBoundry.width + 2 * safetyMargin,
+            tankBoundry.height + 2 * safetyMargin
+        );
+    
         ArrayList<Sprite> obstacles = memory.query(candidateBoundary);
         if (!obstacles.isEmpty()) {
-         return false; 
-        }
-
-        // Check if the candidate position is in a explored area
-        Boundry pos = new Boundry(candidate.x, candidate.y, 1, 1);
-        if(!memory.isExplored(pos)){
             return false;
         }
-
+    
+        Boundry pos = new Boundry(candidate.x, candidate.y, 1, 1);
+        if (!memory.isExplored(pos)) {
+            return false;
+        }
+    
         return true;
-
     }
+
     
     // ================================================================================================
     private ArrayList<PVector> smoothPath(ArrayList<PVector> originalPath) {
