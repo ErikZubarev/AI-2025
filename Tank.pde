@@ -11,6 +11,10 @@ class Tank extends Sprite {
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<PVector> currentPath;
+  int lastFired = 0;
+  int fireCooldown = 3000;
+  int health = 3;
+  boolean immobilized = false;
   //*****Uncomment and comment the below lines to change between GBFS and BFS
   //GBFS solver;
   BFS solver;
@@ -176,11 +180,11 @@ class Tank extends Sprite {
   }
 
   void rotateLeft() {
-    this.angle -= radians(5);
+    this.angle -= radians(3);
   }
 
   void rotateRight() {
-    this.angle += radians(5);
+    this.angle += radians(3);
   }
 
   void stopMoving() {
@@ -188,19 +192,59 @@ class Tank extends Sprite {
     this.velocity.y = 0;
   }
 
+  //Fires cannon via creating cannoball refersnce and passing to Enviroment to keep track of
+  //Only keeps track of timing for when it next can shoot via milis()
+  void fireCannon() {
+    int currentTime = millis();
+    if (currentTime - lastFired >= fireCooldown) {
+      println("fired");
+      CannonBall cannonBall = new CannonBall(position.copy(), angle, this);
+      addCannonBall(cannonBall);
+      lastFired = currentTime;
+    } else {
+      println("Cannon is on cooldown!");
+    }
+  }
+
+  //Recudes health. when tank is hit it reduces health. if its hit and has 2 hp i.e its about to take its second hit we immobalize it
+  void reduceHealth() {
+    if (health == 2) {
+      immobilized = true;
+    }
+    health--;
+  }
+
+  //added some if statements for the movement so if the are immobalized the cant move but still rotate for shooting.
+  //if health drops to zero it can rotate anymore.
   void action(String _action) {
     switch (_action) {
     case "move":
-      moveForward();
+      if (!immobilized)
+        moveForward();
+      else
+        println("Taken too much damage!");
+
       break;
     case "reverse":
-      moveBackward();
+      if (!immobilized)
+        moveBackward();
+      else
+        println("Taken too much damage!");
+
       break;
     case "rotateLeft":
-      rotateLeft();
+      if (health > 0)
+        rotateLeft();
+      else
+        println("Dead!");
+
       break;
     case "rotateRight":
-      rotateRight();
+      if (health > 0)
+        rotateRight();
+      else
+        println("Dead!");
+
       break;
     case "stop":
       stopMoving();
@@ -223,6 +267,7 @@ class Tank extends Sprite {
     }
     popMatrix();
     boundry.draw();
+    displayHealth();
   }
 
   void displayPathHome() {
@@ -234,7 +279,7 @@ class Tank extends Sprite {
     noFill();
     beginShape();
     for (PVector waypoint : currentPath) {
-      circle(waypoint.x,waypoint.y, 20);
+      circle(waypoint.x, waypoint.y, 20);
       vertex(waypoint.x, waypoint.y);
     }
     endShape();
@@ -249,6 +294,20 @@ class Tank extends Sprite {
     image(img, x, y);
     imageMode(CORNER);
     popMatrix();
+  }
+
+
+  //Currently on red circles. change out with with health sprite
+  void displayHealth() {
+    float circleSpacing = 15;
+    float startX = position.x - (health - 1) * circleSpacing / 2;
+    float startY = position.y - tankheight / 2 - 10;
+
+    fill(255, 0, 0);
+    noStroke();
+    for (int i = 0; i < health; i++) {
+      ellipse(startX + i * circleSpacing, startY, 10, 10);
+    }
   }
 
   void drawViewArea() {
