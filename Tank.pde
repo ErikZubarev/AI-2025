@@ -7,7 +7,7 @@ class Tank extends Sprite {
   PImage img;
   int tankwidth, tankheight, state, currentWaypointIndex;
   float speed, maxspeed, angle;
-  boolean isInTransition, goHome;
+  boolean isInTransition, goHome, reported;
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<PVector> currentPath;
@@ -15,9 +15,10 @@ class Tank extends Sprite {
   int fireCooldown = 3000;
   int health = 3;
   boolean immobilized = false;
+  long reportTimer = 0L;
   //*****Uncomment and comment the below lines to change between GBFS and BFS
-  //GBFS solver;
-  BFS solver;
+  GBFS solver;
+  //BFS solver;
 
   Tank(String _name, PVector _startpos, PImage sprite) {
     this.name         = _name;
@@ -25,7 +26,7 @@ class Tank extends Sprite {
     this.tankheight   = sprite.height;
     this.img          = sprite;
     this.startpos     = new PVector(_startpos.x, _startpos.y);
-    position          = new PVector(this.startpos.x, this.startpos.y);
+    this.position     = new PVector(this.startpos.x, this.startpos.y);
     this.velocity     = new PVector(0, 0);
     this.angle        = 0;
     this.state        = 0;
@@ -33,8 +34,9 @@ class Tank extends Sprite {
     this.isInTransition = false;
     this.memory       = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
     this.viewArea     = new ViewArea(position.x, position.y, angle);
-    boundry           = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
+    this.boundry      = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.goHome       = false;
+    this.reported     = false;
   }
 
   void detectObject() {
@@ -52,7 +54,7 @@ class Tank extends Sprite {
               return;
             }
           }
-          if (obj instanceof Tank && !goHome) {
+          if (obj instanceof Tank && !goHome && !reported) {
             Tank tank = (Tank) obj;
             if (tank.name.equals("enemy")) {
               println("Enemy Found!!");
@@ -75,8 +77,8 @@ class Tank extends Sprite {
 
   void calculatePath() {
     //*****Uncomment and comment the below lines to change between GBFS and BFS
-    //solver = new GBFS(position, startpos, memory, boundry);
-    solver = new BFS(position, startpos, memory, boundry);
+    solver = new GBFS(position, startpos, memory, boundry);
+    //solver = new BFS(position, startpos, memory, boundry);
     currentPath = solver.solve();
     currentWaypointIndex = 0;
   }
@@ -101,7 +103,16 @@ class Tank extends Sprite {
     if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
       PVector waypoint = currentPath.get(currentWaypointIndex);
       moveTowards(waypoint);
-    } else {
+    } 
+    else if(reportTimer != 0L){
+      displayReportTimer();
+      long now = System.currentTimeMillis();
+      if(now - reportTimer >= 3000){
+        reported = true;
+        reportTimer = 0L;
+      }
+    }
+    else {
       switch (state) {
       case 0:
         velocity.set(0, 0);
@@ -116,16 +127,19 @@ class Tank extends Sprite {
     }
 
     updateCollision();
+    
     if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
       PVector waypoint = currentPath.get(currentWaypointIndex);
       if (position.dist(waypoint) < 7) {
         currentWaypointIndex++;
         if (currentWaypointIndex >= currentPath.size()) {
+          reportTimer = System.currentTimeMillis();
           goHome = false;
           velocity.set(0, 0);
         }
       }
     }
+    
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
     borgars();
   }
@@ -251,20 +265,44 @@ class Tank extends Sprite {
       break;
     }
   }
+  
+  void displayReportTimer(){
+    pushMatrix();
+      translate(this.position.x, this.position.y);
+      textSize(12);
+      fill(0);
+      text("Reporting!!", 25, 40);
+      
+      fill(255);
+      rect(35, -25, 7, 50, 2);
+
+      // Calculate the progress of the line (percentage of 3000ms elapsed)
+      long now = System.currentTimeMillis();
+      float progress = constrain((now - reportTimer) / 3000.0, 0, 1);
+    
+      // Draw the filling line inside the rectangle
+      stroke(0);
+      strokeWeight(2);
+      float lineHeight = progress * 40; 
+      line(38, 20, 38, 20 - lineHeight); 
+
+      
+    popMatrix();
+  }
 
   void display() {
     pushMatrix();
-    translate(this.position.x, this.position.y);
-    drawTank(0, 0);
-    if (debugMode) {
-      fill(230);
-      stroke(0);
-      strokeWeight(1);
-      rect(0 + 40, 0 - 40, 100, 40);
-      fill(30);
-      textSize(15);
-      text(this.name + "\n( " + this.position.x + ", " + this.position.y + " )", 40 + 5, -20 - 5);
-    }
+      translate(this.position.x, this.position.y);
+      drawTank(0, 0);
+      if (debugMode) {
+        fill(230);
+        stroke(0);
+        strokeWeight(1);
+        rect(0 + 40, 0 - 40, 100, 40);
+        fill(30);
+        textSize(15);
+        text(this.name + "\n( " + this.position.x + ", " + this.position.y + " )", 40 + 5, -20 - 5);
+      }
     popMatrix();
     boundry.draw();
     displayHealth();
@@ -287,12 +325,12 @@ class Tank extends Sprite {
 
   void drawTank(float x, float y) {
     pushMatrix();
-    strokeWeight(0);
-    translate(x, y);
-    rotate(this.angle);
-    imageMode(CENTER);
-    image(img, x, y);
-    imageMode(CORNER);
+      strokeWeight(0);
+      translate(x, y);
+      rotate(this.angle);
+      imageMode(CENTER);
+      image(img, x, y);
+      imageMode(CORNER);
     popMatrix();
   }
 
