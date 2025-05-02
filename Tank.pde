@@ -54,6 +54,7 @@ class Tank extends Sprite {
         memory.insert(obj); 
       }
     }
+    memory.pruneChildren(base);
   }
 
   void detectObject() {
@@ -83,6 +84,8 @@ class Tank extends Sprite {
       }
     }
     memory.updateExploredStatus(viewArea);
+    memory.pruneChildren(viewArea);
+
   }
 
   void goHome() {

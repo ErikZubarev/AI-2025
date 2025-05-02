@@ -37,8 +37,6 @@ class QuadTreeMemory {
     for (QuadTreeMemory child : children) {
       child.updateExploredStatus(viewArea);
     }
-
-    pruneChildren();
   }
 
   // ==================================================
@@ -74,6 +72,7 @@ class QuadTreeMemory {
     }
 
     if (passedDown) {
+      explored = false;
       holding = null;
     }  
     //pruneChildren(); // Removes ability to add mines to memory, do not uncomment
@@ -102,7 +101,7 @@ class QuadTreeMemory {
     return found;
   }
 
-  // Recursive method for checking if a point (represented by a boundry but has width and height set as 1) is within a explored part of the tree.
+  // ==================================================
   public boolean isExplored(Boundry pos) {
     if (!boundry.intersects(pos)) {
         return false;
@@ -126,37 +125,51 @@ class QuadTreeMemory {
 }
   
   // Helper classes ==================================================
-  private void pruneChildren() {
-    if (!subdivided) {
-      return;
-    }
+  public void pruneChildren(Boundry view) {
+      if(!boundry.intersects(view)){
+        return;
+      }
+      if (!subdivided) {
+          return;
+      }
+      
+      // First, recursively call pruneChildren on each child (bottom-up processing).
+      for (QuadTreeMemory child : children) {
+          if (child != null) {
+              child.pruneChildren(view); 
+          }
+      }
+      
+      // Now check if all children are uniform:
+      boolean canPrune = true;
+      boolean first = true;
+      Sprite commonHolding = null;   
 
-    boolean allExplored = true;
-    Sprite item = children[0].holding;
-
-    for (QuadTreeMemory child : children) {
-      if (!child.explored || child.holding != item) {
-        allExplored = false;
-        break;
+      for (QuadTreeMemory child : children) {
+          if (!child.explored) {
+              canPrune = false;
+              break;
+          }
+          if (first) {
+              commonHolding = child.holding;
+              first = false;
+          } else {
+              if (child.holding != commonHolding) {
+                  canPrune = false;
+                  break;
+              }
+          }
+      }
+      
+      // If pruning conditions are met, merge children upward.
+      if (canPrune) {
+          holding = commonHolding;
+          explored = true;
+          subdivided = false;
+          children = new QuadTreeMemory[4];
       }
     }
-
-    if (allExplored) {
-      this.explored = true;
-      this.holding = item;
-      removeChildren();
-      return;
-    }
-  }
   
-  // ==================================================
-  private void removeChildren() {
-    for (int i = 0; i < children.length; i++) {
-      children[i] = null;
-    }
-
-    subdivided = false;
-  }
   
   // ==================================================
   private void subdivide() {
