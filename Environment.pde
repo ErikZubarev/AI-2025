@@ -50,6 +50,7 @@ PVector newLandMinePos;
 int landmineCounter = 0;
 PVector dogExit;
 
+Long startGameTimer, currentGameTimer, startPauseTimer, currentPauseTime, totalPauseTime;
 
 // SETUP ============================================================================
 void setup() {
@@ -60,6 +61,11 @@ void setup() {
 
   gameOver       = false;
   pause          = true;
+  startGameTimer = System.currentTimeMillis();
+  startPauseTimer = System.currentTimeMillis();
+  currentGameTimer = 0L;
+  totalPauseTime = 0L;
+  currentPauseTime = 0L;
 
   //MINE STUFF
   landmineImg = loadImage("landmine.png");
@@ -136,13 +142,14 @@ void draw() {
   background(200);
 
   checkForInput();
+  
+  currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
 
   tank0.displayPathHome();
 
   displayHomeBase();
   displayTrees();
   displayTanks();
-  displayGUI();
 
 
   if (landmineCounter == 1000) {
@@ -153,7 +160,7 @@ void draw() {
   dog.update();
   dog.display();
   
-    if (!gameOver && !pause) {
+  if (!gameOver && !pause) {
     updateTanksLogic();
     //Applies to all tanks
     //checkForCollisions();
@@ -161,7 +168,13 @@ void draw() {
     tank0.detectObject();
     landmineCounter++;
     tank0.memory.display();
+    currentPauseTime = totalPauseTime; // Save prev pause time
   }
+  else if(pause){
+    totalPauseTime = currentPauseTime + System.currentTimeMillis() - startPauseTimer; // Update current prev pause + current pause time
+  }
+  
+  displayGUI();
 }
 
 // HELPER METHODS ======================================
@@ -253,17 +266,36 @@ void displayMines() {
 }
 
 void displayGUI() {
+  displayTimer();
+  
   if (pause) {
     textSize(36);
     fill(30);
     text("...Paused! (\'p\'-continues)\n(up/down/left/right to move)\n('d' for debug)", width/1.7-150, height/2.5);
   }
-
+  
+  if(currentGameTimer >= 180){
+    textSize(36);
+    fill(30);
+    text("Time ran out!", width/2-150, height/3);
+    gameOver = true;
+  }
+  
   if (gameOver) {
     textSize(36);
     fill(30);
     text("Game Over!", width/2-150, height/2);
   }
+}
+
+void displayTimer(){
+  long min = floor(currentGameTimer/60);
+  long sec = currentGameTimer % 60;
+  String time = min + ":" + (sec < 10? "0"+sec : ""+sec);
+  
+  textSize(36);
+  fill(30);
+  text(time, width/2, 50);
 }
 
 // KEY PRESSED ======================================
@@ -309,6 +341,7 @@ void keyReleased() {
   }
 
   if (key == 'p') {
+    startPauseTimer = System.currentTimeMillis();
     pause = !pause;
   }
 
