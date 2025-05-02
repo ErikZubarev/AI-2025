@@ -120,14 +120,16 @@ void setup() {
   allTanks[0] = tank0;                         // Symbol samma som index!
   allTanks[1] = tank1;
   allTanks[2] = tank2;
-  
-  for(Tank t : allTanks){
-    team0.members.add(t);
-  }
 
   placedPositions.add(tank0);
   placedPositions.add(tank1);
   placedPositions.add(tank2);
+  
+  for(Tank t : allTanks){
+    if(t == null) continue;
+    team0.members.add(t);
+    t.putBaseIntoMemory();  
+  }
 
   // Team1 randomly placed in the lower right quadrant
   for (int i = 0; i < 3; i++) {
@@ -140,6 +142,7 @@ void setup() {
     placedPositions.add(newTank);
     allTanks[3 + i] = newTank;
     team1.members.add(newTank);
+    newTank.putBaseIntoMemory();
   }
 }
 

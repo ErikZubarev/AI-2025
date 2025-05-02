@@ -37,8 +37,6 @@ class Tank extends Sprite {
     this.boundry      = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.goHome       = false;
     this.reported     = false;
-    
-    putBaseIntoMemory();
   }
   
   void putBaseIntoMemory(){
@@ -49,12 +47,13 @@ class Tank extends Sprite {
       base = new Boundry(width - 151, height - 351, 150, 350);
     }
     
+    memory.updateExploredStatus(base);
     for (Sprite obj : placedPositions) {
       if (base.intersects(obj.boundry) && obj != this) {
+        if(name=="player") println(base.intersects(obj.boundry));
         memory.insert(obj); 
       }
     }
-    memory.updateExploredStatus(base);
   }
 
   void detectObject() {
