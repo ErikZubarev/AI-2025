@@ -70,17 +70,17 @@ void setup() {
 
   //MINE STUFF
   landmineImg = loadImage("landmine.png");
-  landmineImg.resize(50, 50);
+  //landmineImg.resize(50, 50);
 
   //LOADS IN THE FRAMES OF THE ANIMATIONS SINCE GIFS CANT BE USED
   for (int i = 0; i < runningFrames.length; i++) {
     PImage img = loadImage("dog_run_" + i + ".png");
-    img.resize(50, 75);
+    //img.resize(50, 75);
     runningFrames[i] = img;
   }
   for (int i = 0; i < laughingFrames.length; i++) {
     PImage img = loadImage("dog_laugh_" + i + ".png");
-    img.resize(50, 75);
+    //img.resize(50, 75);
     laughingFrames[i] = img;
   }
   //Instantiate dog with its frames
