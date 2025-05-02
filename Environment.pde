@@ -11,6 +11,9 @@ Random random = new Random();
 PImage tree_img;
 PImage blue_tank_img;
 PImage red_tank_img;
+PImage bomb;
+PImage[] healthImages = new PImage[3];
+
 PVector tree1_pos, tree2_pos, tree3_pos;
 Tree tree0, tree1, tree2;
 Team team0, team1;
@@ -51,6 +54,8 @@ PVector newLandMinePos;
 int landmineCounter = 0;
 PVector dogExit;
 
+PImage[] explosionImages = new PImage[5];
+
 Long startGameTimer, currentGameTimer, startPauseTimer, currentPauseTime, totalPauseTime;
 
 // SETUP ============================================================================
@@ -67,6 +72,16 @@ void setup() {
   currentGameTimer = 0L;
   totalPauseTime = 0L;
   currentPauseTime = 0L;
+  
+  bomb = loadImage("bomb.png");
+
+  for (int i = 0; i < healthImages.length; i++){
+    healthImages[i] = loadImage("health"+i);
+  }
+  
+  for (int i = 0; i < explosionImages.length; i++){
+    explosionImages[i] = loadImage("explosion"+i);
+  }
 
   //MINE STUFF
   landmineImg = loadImage("landmine.png");

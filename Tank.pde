@@ -357,15 +357,12 @@ class Tank extends Sprite {
 
   //Currently on red circles. change out with with health sprite
   void displayHealth() {
-    float circleSpacing = 15;
-    float startX = position.x - (health - 1) * circleSpacing / 2;
-    float startY = position.y - tankheight / 2 - 10;
 
-    fill(255, 0, 0);
-    noStroke();
-    for (int i = 0; i < health; i++) {
-      ellipse(startX + i * circleSpacing, startY, 10, 10);
-    }
+    float x = position.x;
+    float y = position.y - tankheight / 2 - 10;
+    
+    image(healthImages[0], x, y);
+
   }
 
   void drawViewArea() {
