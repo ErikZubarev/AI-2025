@@ -36,7 +36,7 @@ class QuadTreeMemory {
     // Update all children
     for (QuadTreeMemory child : children) {
       child.updateExploredStatus(viewArea);
-    }
+    }    
   }
 
   // ==================================================
@@ -75,7 +75,6 @@ class QuadTreeMemory {
       explored = false;
       holding = null;
     }  
-    //pruneChildren(); // Removes ability to add mines to memory, do not uncomment
   }
 
   // ==================================================
