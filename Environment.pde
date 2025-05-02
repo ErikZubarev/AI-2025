@@ -13,7 +13,7 @@ PImage blue_tank_img;
 PImage red_tank_img;
 PVector tree1_pos, tree2_pos, tree3_pos;
 Tree tree0, tree1, tree2;
-Team team;
+Team team0, team1;
 
 Tree[] allTrees   = new Tree[3];
 Tank[] allTanks   = new Tank[6];
@@ -100,7 +100,8 @@ void setup() {
   }
 
   //Team
-  team = new Team();
+  team0 = new Team();
+  team1 = new Team();
 
   //Tank Images
   red_tank_img = loadImage("redtank.png");
@@ -119,6 +120,10 @@ void setup() {
   allTanks[0] = tank0;                         // Symbol samma som index!
   allTanks[1] = tank1;
   allTanks[2] = tank2;
+  
+  for(Tank t : allTanks){
+    team0.members.add(t);
+  }
 
   placedPositions.add(tank0);
   placedPositions.add(tank1);
@@ -134,6 +139,7 @@ void setup() {
     Tank newTank = new Tank("enemy", newTankPos, blue_tank_img);
     placedPositions.add(newTank);
     allTanks[3 + i] = newTank;
+    team1.members.add(newTank);
   }
 }
 
@@ -290,7 +296,7 @@ void checkForCollisions() {
 
 // DISPLAY ======================================
 void displayHomeBase() {
-  team.display();
+  team0.display();
 }
 
 

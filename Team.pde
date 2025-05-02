@@ -1,6 +1,8 @@
 //Anton Lundqvist
 //Erik Zubarev
 class Team {
+  ArrayList<Tank> members = new ArrayList<>();
+  
   void display() {
     pushMatrix();
     strokeWeight(1);
