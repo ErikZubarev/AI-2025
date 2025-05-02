@@ -18,6 +18,7 @@ Team team;
 Tree[] allTrees   = new Tree[3];
 Tank[] allTanks   = new Tank[6];
 ArrayList<Landmine> allMines = new ArrayList<Landmine>();
+ArrayList<CannonBall> allCannonBalls = new ArrayList<CannonBall>();
 
 // Team0
 PVector team0_tank0_startpos;
@@ -162,6 +163,8 @@ void draw() {
   
   if (!gameOver && !pause) {
     updateTanksLogic();
+    displayCannonBalls();
+    updateCannonBalls();
     //Applies to all tanks
     //checkForCollisions();
     //Only doing for tank0 atm
@@ -199,6 +202,51 @@ void deployLandmine() {
   dog.startRun(targetPos);
 }
 
+// ===============================================
+
+void addCannonBall(CannonBall cannonBall) {
+  allCannonBalls.add(cannonBall);
+}
+
+void updateCannonBalls() {
+  for (int i = allCannonBalls.size() - 1; i >= 0; i--) {
+    CannonBall cannonBall = allCannonBalls.get(i);
+    cannonBall.moveForward();
+    if (checkCollision(cannonBall)) {
+      allCannonBalls.remove(i);
+    }
+  }
+}
+
+void displayCannonBalls() {
+  for (CannonBall cannonBall : allCannonBalls) {
+    cannonBall.display();
+  }
+}
+
+boolean checkCollision(CannonBall cannonBall) {
+  for (Sprite obj : placedPositions) {
+    if (obj instanceof Tree) {
+      if (cannonBall.boundry.intersects(obj.boundry)) {
+        println("Tree hit!");
+        cannonBall.drawExplosion();
+        return true;
+      }
+    }
+
+    if (obj instanceof Tank) {
+      Tank tank = (Tank) obj;
+      if (cannonBall.boundry.intersects(tank.boundry) && cannonBall.shooter != tank) {
+        println("Tank hit!");
+        tank.reduceHealth();
+        cannonBall.drawExplosion();
+        return true;
+      }
+    }
+  }
+  return false;
+}
+// ===============================================
 
 
 //======================================
@@ -347,6 +395,10 @@ void keyReleased() {
 
   if (key == 'd') {
     debugMode = !debugMode;
+  }
+
+  if (key == 's') {
+    tank0.fireCannon();
   }
 }
 
