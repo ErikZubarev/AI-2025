@@ -76,11 +76,13 @@ void setup() {
   bomb = loadImage("bomb.png");
 
   for (int i = 0; i < healthImages.length; i++){
-    healthImages[i] = loadImage("health"+i);
+    PImage img = loadImage("health"+i+".png");
+    healthImages[i] = img;
   }
   
   for (int i = 0; i < explosionImages.length; i++){
-    explosionImages[i] = loadImage("explosion"+i);
+    PImage img = loadImage("explosion"+i+".png");
+    explosionImages[i] = img;
   }
 
   //MINE STUFF

@@ -357,11 +357,10 @@ class Tank extends Sprite {
 
   //Currently on red circles. change out with with health sprite
   void displayHealth() {
-
-    float x = position.x;
-    float y = position.y - tankheight / 2 - 10;
     
-    image(healthImages[0], x, y);
+    float x = position.x;
+    float y = position.y - tankheight / 2 - 20;
+    image(healthImages[health-1], x, y);
 
   }
 
