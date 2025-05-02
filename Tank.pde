@@ -7,7 +7,7 @@ class Tank extends Sprite {
   PImage img;
   int tankwidth, tankheight, state, currentWaypointIndex;
   float speed, maxspeed, angle;
-  boolean isInTransition, goHome, reported;
+  boolean isInTransition, goHome, reported, reloading;
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<PVector> currentPath;
@@ -16,6 +16,9 @@ class Tank extends Sprite {
   int health = 3;
   boolean immobilized = false;
   long reportTimer = 0L;
+  long reloadTimer = 0L;
+  
+
   //*****Uncomment and comment the below lines to change between GBFS and BFS
   GBFS solver;
   //BFS solver;
@@ -37,6 +40,7 @@ class Tank extends Sprite {
     this.boundry      = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.goHome       = false;
     this.reported     = false;
+    this.reloading    = false;
   }
   
   void putBaseIntoMemory(){
@@ -120,11 +124,8 @@ class Tank extends Sprite {
   }
 
   void update() {
-    if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
-      PVector waypoint = currentPath.get(currentWaypointIndex);
-      moveTowards(waypoint);
-    } 
-    else if(reportTimer != 0L){
+
+    if(reportTimer != 0L){
       displayReportTimer();
       long now = System.currentTimeMillis();
       if(now - reportTimer >= 3000){
@@ -132,7 +133,19 @@ class Tank extends Sprite {
         reportTimer = 0L;
       }
     }
-    else {
+
+    if(reloadTimer != 0L){
+      long now = System.currentTimeMillis();
+      if(now - reloadTimer >= 3000){
+        reloading = false;
+        reloadTimer = 0L;
+      }
+    }
+
+    if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
+      PVector waypoint = currentPath.get(currentWaypointIndex);
+      moveTowards(waypoint);
+    } else {
       switch (state) {
       case 0:
         velocity.set(0, 0);
@@ -229,12 +242,12 @@ class Tank extends Sprite {
   //Fires cannon via creating cannoball refersnce and passing to Enviroment to keep track of
   //Only keeps track of timing for when it next can shoot via milis()
   void fireCannon() {
-    int currentTime = millis();
-    if (currentTime - lastFired >= fireCooldown) {
+    if (!reloading) {
       println("fired");
       CannonBall cannonBall = new CannonBall(position.copy(), angle, this);
       addCannonBall(cannonBall);
-      lastFired = currentTime;
+      reloading = true;
+      reloadTimer = System.currentTimeMillis();
     } else {
       println("Cannon is on cooldown!");
     }
@@ -245,7 +258,10 @@ class Tank extends Sprite {
     if (health == 2) {
       immobilized = true;
     }
-    health--;
+    
+    if (health != 0){
+      health--;
+    }
   }
 
   //added some if statements for the movement so if the are immobalized the cant move but still rotate for shooting.
@@ -310,6 +326,30 @@ class Tank extends Sprite {
     popMatrix();
   }
 
+  void displayReloadTimer(){
+    pushMatrix();
+      translate(this.position.x, this.position.y);
+      textSize(12);
+      fill(0);
+      text("Reloading!!", 25, 40);
+      
+      fill(255);
+      rect(35, -25, 7, 50, 2);
+
+      // Calculate the progress of the line (percentage of 3000ms elapsed)
+      long now = System.currentTimeMillis();
+      float progress = constrain((now - reloadTimer) / 3000.0, 0, 1);
+    
+      // Draw the filling line inside the rectangle
+      stroke(0);
+      strokeWeight(2);
+      float lineHeight = progress * 40; 
+      line(38, 20, 38, 20 - lineHeight); 
+
+      
+    popMatrix();
+  }
+
   void display() {
     pushMatrix();
       translate(this.position.x, this.position.y);
@@ -326,6 +366,9 @@ class Tank extends Sprite {
     popMatrix();
     boundry.draw();
     displayHealth();
+    if(reloading){
+      displayReloadTimer();
+    }
   }
 
   void displayPathHome() {
@@ -355,12 +398,12 @@ class Tank extends Sprite {
   }
 
 
-  //Currently on red circles. change out with with health sprite
+
   void displayHealth() {
     
-    float x = position.x;
-    float y = position.y - tankheight / 2 - 20;
-    image(healthImages[health-1], x, y);
+    float x = position.x - tankwidth / 2 - 10;
+    float y = position.y - tankheight / 2 - 30;
+    image(healthImages[health], x, y);
 
   }
 

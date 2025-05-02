@@ -12,7 +12,7 @@ PImage tree_img;
 PImage blue_tank_img;
 PImage red_tank_img;
 PImage bomb;
-PImage[] healthImages = new PImage[3];
+PImage[] healthImages = new PImage[4];
 
 PVector tree1_pos, tree2_pos, tree3_pos;
 Tree tree0, tree1, tree2;
