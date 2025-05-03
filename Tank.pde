@@ -302,6 +302,9 @@ class Tank extends Sprite {
     }
   }
   
+  // =================================================
+  // ===  DISPLAY / DRAW METHODS                   ===
+  // =================================================
   void displayReportTimer(){
     pushMatrix();
       translate(this.position.x, this.position.y);
@@ -411,6 +414,10 @@ class Tank extends Sprite {
     viewArea.drawArea(this);
   }
 
+
+  // =================================================
+  // ===  INNER CLASS                              ===
+  // =================================================
   class ViewArea extends Boundry {
     float viewAngle;
 

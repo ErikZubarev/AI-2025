@@ -7,6 +7,7 @@ class CannonBall extends Sprite {
   int width, height;
   float maxSpeed, angle;
   Tank shooter;
+  long timer;
 
   CannonBall(PVector startPos, float angle, Tank shooter) {
     this.startPos = startPos;
@@ -21,6 +22,7 @@ class CannonBall extends Sprite {
     //boundry        = new Boundry(startPos.x - _image.width/2, startPos.y - _image.height/2, _image.width, _image.height);
     boundry        = new Boundry(startPos.x - 20, startPos.y - 20, 20, 20);
     this.shooter = shooter;
+    timer = System.currentTimeMillis();
   }
 
   void moveForward() {
@@ -32,16 +34,25 @@ class CannonBall extends Sprite {
   }
 
   void display() {
-    fill(0);
-    noStroke();
-    ellipse(position.x, position.y, 20, 20);
+    pushMatrix();
+      translate(position.x, position.y);
+      rotate(this.angle);
+      imageMode(CENTER);
+      image(bomb, 0, 0);
+      imageMode(CORNER);
+    popMatrix();
   }
 
   //This is a explostion for when the ball contacts something. currently its only show for like one frame lol
-  void drawExplosion() {
-    noFill();
-    stroke(255, 165, 0); // Orange color
-    strokeWeight(2);
-    ellipse(position.x, position.y, 30, 30); // Slightly larger than the ellipse
+  void drawExplosion() {      
+    pushMatrix();
+      translate(position.x,position.y);
+      imageMode(CENTER);
+      for(PImage img : explosionImages){
+        image(img, 0,0);
+      }
+      imageMode(CORNER);
+    popMatrix();
+
   }
 }
