@@ -20,4 +20,6 @@ class Landmine extends Sprite {
     boundry.draw();
     imageMode(CORNER);
   }
+
+  
 }

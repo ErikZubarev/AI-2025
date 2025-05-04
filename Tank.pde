@@ -205,6 +205,8 @@ class Tank extends Sprite {
     position.set(candidate);
     updateBoundry();
     for (Sprite s : placedPositions) {
+      if(s instanceof Landmine)
+        continue;
       if (s != this && boundry.intersects(s.boundry)) {
         position.set(backup);
         updateBoundry();

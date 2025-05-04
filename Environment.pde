@@ -1,6 +1,7 @@
 //Anton Lundqvist
 //Erik Zubarev
 import java.util.Random;
+import java.util.Iterator;
 
 // GLOBAL VARIABLES ====================================
 boolean left, right, up, down;
@@ -72,15 +73,15 @@ void setup() {
   currentGameTimer = 0L;
   totalPauseTime = 0L;
   currentPauseTime = 0L;
-  
+
   bomb = loadImage("bomb.png");
 
-  for (int i = 0; i < healthImages.length; i++){
+  for (int i = 0; i < healthImages.length; i++) {
     PImage img = loadImage("health"+i+".png");
     healthImages[i] = img;
   }
-  
-  for (int i = 0; i < explosionImages.length; i++){
+
+  for (int i = 0; i < explosionImages.length; i++) {
     PImage img = loadImage("explosion"+i+".png");
     explosionImages[i] = img;
   }
@@ -141,11 +142,11 @@ void setup() {
   placedPositions.add(tank0);
   placedPositions.add(tank1);
   placedPositions.add(tank2);
-  
-  for(Tank t : allTanks){
-    if(t == null) continue;
+
+  for (Tank t : allTanks) {
+    if (t == null) continue;
     team0.members.add(t);
-    t.putBaseIntoMemory();  
+    t.putBaseIntoMemory();
   }
 
   // Team1 randomly placed in the lower right quadrant
@@ -169,7 +170,7 @@ void draw() {
   background(200);
 
   checkForInput();
-  
+
   currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
 
   tank0.displayPathHome();
@@ -186,11 +187,12 @@ void draw() {
   displayMines();
   dog.update();
   dog.display();
-  
+
   if (!gameOver && !pause) {
     updateTanksLogic();
     displayCannonBalls();
     updateCannonBalls();
+    checkLandMineCollision();
     //Applies to all tanks
     //checkForCollisions();
     //Only doing for tank0 atm
@@ -198,11 +200,10 @@ void draw() {
     landmineCounter++;
     tank0.memory.display();
     currentPauseTime = totalPauseTime; // Save prev pause time
-  }
-  else if(pause){
+  } else if (pause) {
     totalPauseTime = currentPauseTime + System.currentTimeMillis() - startPauseTimer; // Update current prev pause + current pause time
   }
-  
+
   displayGUI();
 }
 
@@ -271,6 +272,23 @@ boolean checkCollision(CannonBall cannonBall) {
     }
   }
   return false;
+}
+
+void checkLandMineCollision() {
+  Iterator<Landmine> mineIterator = allMines.iterator();
+  while (mineIterator.hasNext()) {
+    Landmine landmine = mineIterator.next();
+    for (Tank tank : allTanks) {
+      if (tank != null && landmine.boundry.intersects(tank.boundry)) {
+        // Remove the landmine safely using the iterator
+        mineIterator.remove();
+        placedPositions.remove(landmine);
+        tank.reduceHealth();
+        println("Landmine removed!");
+        break; // Exit the inner loop since the landmine is already removed
+      }
+    }
+  }
 }
 // ===============================================
 
@@ -341,20 +359,20 @@ void displayMines() {
 
 void displayGUI() {
   displayTimer();
-  
+
   if (pause) {
     textSize(36);
     fill(30);
     text("...Paused! (\'p\'-continues)\n(up/down/left/right to move)\n('d' for debug)", width/1.7-150, height/2.5);
   }
-  
-  if(currentGameTimer >= 180){
+
+  if (currentGameTimer >= 180) {
     textSize(36);
     fill(30);
     text("Time ran out!", width/2-150, height/3);
     gameOver = true;
   }
-  
+
   if (gameOver) {
     textSize(36);
     fill(30);
@@ -362,11 +380,11 @@ void displayGUI() {
   }
 }
 
-void displayTimer(){
+void displayTimer() {
   long min = floor(currentGameTimer/60);
   long sec = currentGameTimer % 60;
   String time = min + ":" + (sec < 10? "0"+sec : ""+sec);
-  
+
   textSize(36);
   fill(30);
   text(time, width/2, 50);
@@ -425,6 +443,10 @@ void keyReleased() {
 
   if (key == 's') {
     tank0.fireCannon();
+  }
+
+  if(key == 'z'){
+    tank1.state = 1;
   }
 }
 

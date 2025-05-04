@@ -20,6 +20,13 @@ class QuadTreeMemory {
 
   // Public classes ==================================================
   public void updateExploredStatus(Boundry viewArea) {
+    
+    if (holding != null) {
+        if (!placedPositions.contains(holding) || !holding.boundry.intersects(boundry)) {
+            holding = null; 
+        }
+    }
+
     if (explored || !boundry.intersects(viewArea)) {
       return;
     }
@@ -38,6 +45,7 @@ class QuadTreeMemory {
       child.updateExploredStatus(viewArea);
     }    
   }
+
 
   // ==================================================
   public void insert(Sprite obj) {
