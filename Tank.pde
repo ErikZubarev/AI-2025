@@ -17,6 +17,8 @@ class Tank extends Sprite {
   boolean immobilized = false;
   long reportTimer = 0L;
   long reloadTimer = 0L;
+  PVector enemy;
+  Radio radio;
   
 
   //*****Uncomment and comment the below lines to change between GBFS and BFS
@@ -41,6 +43,7 @@ class Tank extends Sprite {
     this.goHome       = false;
     this.reported     = false;
     this.reloading    = false;
+    this.radio        = new Radio();
   }
   
   void putBaseIntoMemory(){
@@ -76,11 +79,15 @@ class Tank extends Sprite {
               return;
             }
           }
-          if (obj instanceof Tank && !goHome && !reported) {
+          if (obj instanceof Tank && !goHome) {
             Tank tank = (Tank) obj;
             if (tank.name.equals("enemy")) {
               println("Enemy Found!!");
-              goHome();
+              radio.reportEnemy(tank.position);
+              if(!reported){
+                goHome();
+              }
+              
             }
           }
           memory.insert(obj);
@@ -107,6 +114,8 @@ class Tank extends Sprite {
     currentWaypointIndex = 0;
   }
 
+  
+
   //Helper method for calculating movement during pathing
   void moveTowards(PVector target) {
     float targetAngle = atan2(target.y - position.y, target.x - position.x);
@@ -125,11 +134,16 @@ class Tank extends Sprite {
 
   void update() {
 
+    if(reported){
+      //radio.commandAllies(this, allTanks);
+    }
+
     if(reportTimer != 0L){
       displayReportTimer();
       long now = System.currentTimeMillis();
       if(now - reportTimer >= 3000){
         reported = true;
+
         reportTimer = 0L;
       }
     }
