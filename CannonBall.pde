@@ -9,6 +9,7 @@ class CannonBall extends Sprite {
   Tank shooter;
   long timer;
 
+  // ==================================================================================================
   CannonBall(PVector startPos, float angle, Tank shooter) {
     this.startPos = startPos;
     this.angle = angle;
@@ -25,14 +26,15 @@ class CannonBall extends Sprite {
     timer = System.currentTimeMillis();
   }
 
+  // ==================================================================================================
   void moveForward() {
-    // Update position by adding velocity
     this.position.add(this.velocity);
     //Update boundry, use image height and width instead of 20
     boundry.x = position.x - 20 / 2;
     boundry.y = position.y - 20 / 2;
   }
 
+  // ==================================================================================================
   void display() {
     pushMatrix();
       translate(position.x, position.y);

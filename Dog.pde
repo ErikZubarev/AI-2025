@@ -21,6 +21,7 @@ class Dog extends Sprite {
     this.pos = new PVector(-100, -100);
   }
 
+  // ==================================================================================================
   void startRun(PVector target) {
     int side = int(random(4));
     PVector dogStart = new PVector(0, 0);
@@ -50,6 +51,7 @@ class Dog extends Sprite {
     this.laughTimer = 0;
   }
 
+  // ==================================================================================================
   void update() {
     // Animate frames
     frameCounter++;
@@ -97,6 +99,7 @@ class Dog extends Sprite {
     }
   }
 
+  // ==================================================================================================
   void display() {
     imageMode(CENTER);
     pushMatrix();

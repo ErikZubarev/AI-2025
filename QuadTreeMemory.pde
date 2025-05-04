@@ -9,7 +9,6 @@ class QuadTreeMemory {
   private int depth;
   private boolean subdivided;
 
-  // Constructor ======================================
   public QuadTreeMemory(Boundry boundry, int depth) {
     this.boundry = boundry;
     subdivided = false;
@@ -18,18 +17,20 @@ class QuadTreeMemory {
     children = new QuadTreeMemory[4];
   }
 
-  // Public classes ==================================================
+  // =================================================
+  // ===  MAIN METHODS
+  // =================================================
+  // ==================================================================================================
   public void updateExploredStatus(Boundry viewArea) {
-    
+    // Remove items from memory if they are no longer there
     if (holding != null) {
-        if (!placedPositions.contains(holding) || !holding.boundry.intersects(boundry)) {
-            holding = null; 
-        }
+      if (!placedPositions.contains(holding) || !holding.boundry.intersects(boundry)) {
+          holding = null; 
+      }
     }
 
-    if (explored || !boundry.intersects(viewArea)) {
+    if (explored || !boundry.intersects(viewArea))
       return;
-    }
 
     if (depth <= 0) {
       explored = true;
@@ -40,22 +41,18 @@ class QuadTreeMemory {
       subdivide();
     }
 
-    // Update all children
     for (QuadTreeMemory child : children) {
       child.updateExploredStatus(viewArea);
     }    
   }
 
-
-  // ==================================================
+  // ==================================================================================================
   public void insert(Sprite obj) {
-    if(holding == obj){
+    if(holding == obj)
       return;
-    }
     
-    if (!boundry.intersects(obj.boundry)) {
+    if (!boundry.intersects(obj.boundry))
       return;
-    }
 
     if (depth <= 0 || boundry.isWithin(obj.boundry)) {
       holding = obj;
@@ -72,10 +69,8 @@ class QuadTreeMemory {
     boolean passedDown = false;
     if (subdivided) {
       for (int i = 0; i < children.length; i++) {
-        if (children[i].boundry.intersects(obj.boundry)) {
-          children[i].insert(obj);
-          passedDown = true;
-        }
+        children[i].insert(obj);
+        passedDown = true;
       }
     }
 
@@ -85,7 +80,7 @@ class QuadTreeMemory {
     }  
   }
 
-  // ==================================================
+  // ==================================================================================================
   public ArrayList<Sprite> query(Boundry area) {
     ArrayList<Sprite> found = new ArrayList<Sprite>();
 
@@ -107,8 +102,49 @@ class QuadTreeMemory {
 
     return found;
   }
+  
+  // ==================================================================================================
+  public void pruneChildren(Boundry view) {
+      if(!boundry.intersects(view) || !subdivided)
+        return;
 
-  // ==================================================
+      // First, recursively call pruneChildren on each child (bottom-up processing).
+      for (QuadTreeMemory child : children) {
+        if (child != null) {
+          child.pruneChildren(view); 
+        }
+      }
+      
+      // Now check if all children are uniform:
+      boolean canPrune = true;
+      Sprite commonHolding = children[0].holding;   
+
+      for (QuadTreeMemory child : children) {
+        if (!child.explored) {
+          canPrune = false;
+          break;
+        }
+        
+        if (child.holding != commonHolding) {
+          canPrune = false;
+          break;
+        }
+      }
+      
+      // If pruning conditions are met, merge children upward.
+      if (canPrune) {
+        holding = commonHolding;
+        explored = true;
+        subdivided = false;
+        children = new QuadTreeMemory[4];
+      }
+    }
+ 
+  // =================================================
+  // ===  HELPER METHODS
+  // =================================================
+
+  // ==================================================================================================
   public boolean isExplored(Boundry pos) {
     if (!boundry.intersects(pos)) {
         return false;
@@ -129,56 +165,9 @@ class QuadTreeMemory {
     }
 
     return false;
-}
-  
-  // Helper classes ==================================================
-  public void pruneChildren(Boundry view) {
-      if(!boundry.intersects(view)){
-        return;
-      }
-      if (!subdivided) {
-          return;
-      }
-      
-      // First, recursively call pruneChildren on each child (bottom-up processing).
-      for (QuadTreeMemory child : children) {
-          if (child != null) {
-              child.pruneChildren(view); 
-          }
-      }
-      
-      // Now check if all children are uniform:
-      boolean canPrune = true;
-      boolean first = true;
-      Sprite commonHolding = null;   
-
-      for (QuadTreeMemory child : children) {
-          if (!child.explored) {
-              canPrune = false;
-              break;
-          }
-          if (first) {
-              commonHolding = child.holding;
-              first = false;
-          } else {
-              if (child.holding != commonHolding) {
-                  canPrune = false;
-                  break;
-              }
-          }
-      }
-      
-      // If pruning conditions are met, merge children upward.
-      if (canPrune) {
-          holding = commonHolding;
-          explored = true;
-          subdivided = false;
-          children = new QuadTreeMemory[4];
-      }
-    }
-  
-  
-  // ==================================================
+  }
+   
+  // ==================================================================================================
   private void subdivide() {
     if (depth <= 0) {
       return;
@@ -199,7 +188,10 @@ class QuadTreeMemory {
     subdivided = true;
   }
 
-  // ==================================================
+  // =================================================
+  // ===  DISPLAY METHODS
+  // =================================================
+  // ==================================================================================================
   public void display() {
     if (debugMode) {
       pushMatrix();

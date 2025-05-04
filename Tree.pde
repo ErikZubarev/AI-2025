@@ -16,11 +16,6 @@ class Tree extends Sprite {
   }
 
   //**************************************************
-
-  void checkCollision() {
-  }
-
-  //**************************************************
   void display() {
     imageMode(CENTER);
     image(img, position.x, position.y);

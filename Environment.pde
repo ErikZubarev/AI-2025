@@ -1,79 +1,44 @@
 //Anton Lundqvist
 //Erik Zubarev
+
 import java.util.Random;
 import java.util.Iterator;
 
-// GLOBAL VARIABLES ====================================
-boolean left, right, up, down;
-boolean mouse_pressed;
-boolean debugMode;
-Random random = new Random();
-
-PImage tree_img;
-PImage blue_tank_img;
-PImage red_tank_img;
-PImage bomb;
-PImage[] healthImages = new PImage[4];
-
-PVector tree1_pos, tree2_pos, tree3_pos;
-Tree tree0, tree1, tree2;
-Team team0, team1;
-
-Tree[] allTrees   = new Tree[3];
-Tank[] allTanks   = new Tank[6];
-ArrayList<Landmine> allMines = new ArrayList<Landmine>();
-ArrayList<CannonBall> allCannonBalls = new ArrayList<CannonBall>();
-
-// Team0
-PVector team0_tank0_startpos;
-PVector team0_tank1_startpos;
-PVector team0_tank2_startpos;
-Tank tank0, tank1, tank2;
-
-// Team1
-PVector team1_tank0_startpos;
-PVector team1_tank1_startpos;
-PVector team1_tank2_startpos;
-Tank tank3, tank4, tank5;
-
-boolean gameOver;
-boolean pause;
-//Positions for every entitiy
-ArrayList<Sprite> placedPositions = new ArrayList<Sprite>();
-
-//Landmine assets
-enum DogState {
-  ENTERING, RUNNING_TO_TARGET, LAUGHING, EXITING
-}
-DogState dogState = DogState.ENTERING;
-
-PImage landmineImg;
-PImage[] runningFrames = new PImage[3];
-PImage[] laughingFrames = new PImage[2];
-Dog dog;
-PVector newLandMinePos;
-int landmineCounter = 0;
-PVector dogExit;
-
-PImage[] explosionImages = new PImage[5];
-
-Long startGameTimer, currentGameTimer, startPauseTimer, currentPauseTime, totalPauseTime;
-
-// SETUP ============================================================================
+// =================================================
+// ===  SETUP METHOD
+// =================================================
+// ============================================================================================
 void setup() {
   size(800, 800);
-  up             = false;
-  down           = false;
-  debugMode      = false;
-
-  gameOver       = false;
-  pause          = true;
-  startGameTimer = System.currentTimeMillis();
-  startPauseTimer = System.currentTimeMillis();
+  up               = false;
+  down             = false;
+  debugMode        = false;
+  gameOver         = false;
+  pause            = true;
+  startGameTimer   = System.currentTimeMillis();
+  startPauseTimer  = System.currentTimeMillis();
   currentGameTimer = 0L;
-  totalPauseTime = 0L;
+  totalPauseTime   = 0L;
   currentPauseTime = 0L;
-
+  landmineCounter  = 0;
+  
+  random           = new Random();
+  healthImages     = new PImage[4];
+  runningFrames    = new PImage[3];
+  laughingFrames   = new PImage[2];
+  explosionImages  = new PImage[5];
+  
+  allMines         = new ArrayList<Landmine>();
+  allCannonBalls   = new ArrayList<CannonBall>();
+  
+  placedPositions  = new ArrayList<Sprite>(); //Positions for every entitiy
+  
+  allTrees         = new Tree[3];
+  allTanks         = new Tank[6];
+  
+  dogState         = DogState.ENTERING;
+  
+ 
   bomb = loadImage("bomb.png");
 
   for (int i = 0; i < healthImages.length; i++) {
@@ -88,19 +53,17 @@ void setup() {
 
   //MINE STUFF
   landmineImg = loadImage("landmine.png");
-  //landmineImg.resize(50, 50);
 
   //LOADS IN THE FRAMES OF THE ANIMATIONS SINCE GIFS CANT BE USED
   for (int i = 0; i < runningFrames.length; i++) {
     PImage img = loadImage("dog_run_" + i + ".png");
-    //img.resize(50, 75);
     runningFrames[i] = img;
   }
   for (int i = 0; i < laughingFrames.length; i++) {
     PImage img = loadImage("dog_laugh_" + i + ".png");
-    //img.resize(50, 75);
     laughingFrames[i] = img;
   }
+  
   //Instantiate dog with its frames
   dog = new Dog(runningFrames, laughingFrames);
 
@@ -164,7 +127,11 @@ void setup() {
   }
 }
 
-// DRAW ==========================================================================================
+
+// =================================================
+// ===  DRAW METHOD
+// =================================================
+// ==========================================================================================
 void draw() {
 
   background(200);
@@ -210,6 +177,7 @@ void draw() {
 // HELPER METHODS ======================================
 
 //Created helper fucntion to check if the generated pos is too close to a existing one
+// ==================================================================================================
 boolean isOverlapping(PVector newPos, ArrayList<Sprite> existingPositions, float minDistance) {
   for (Sprite obj : existingPositions) {
     if (newPos.dist(obj.position) < minDistance) {
@@ -219,7 +187,7 @@ boolean isOverlapping(PVector newPos, ArrayList<Sprite> existingPositions, float
   return false;
 }
 
-// ===============================================
+// ==================================================================================================
 void deployLandmine() {
   PVector targetPos;
   do {
@@ -229,12 +197,12 @@ void deployLandmine() {
   dog.startRun(targetPos);
 }
 
-// ===============================================
-
+// ==================================================================================================
 void addCannonBall(CannonBall cannonBall) {
   allCannonBalls.add(cannonBall);
 }
 
+// ==================================================================================================
 void updateCannonBalls() {
   for (int i = allCannonBalls.size() - 1; i >= 0; i--) {
     CannonBall cannonBall = allCannonBalls.get(i);
@@ -245,12 +213,8 @@ void updateCannonBalls() {
   }
 }
 
-void displayCannonBalls() {
-  for (CannonBall cannonBall : allCannonBalls) {
-    cannonBall.display();
-  }
-}
 
+// ==================================================================================================
 boolean checkCollision(CannonBall cannonBall) {
   for (Sprite obj : placedPositions) {
     if (obj instanceof Tree) {
@@ -274,6 +238,7 @@ boolean checkCollision(CannonBall cannonBall) {
   return false;
 }
 
+// ==================================================================================================
 void checkLandMineCollision() {
   Iterator<Landmine> mineIterator = allMines.iterator();
   while (mineIterator.hasNext()) {
@@ -290,10 +255,45 @@ void checkLandMineCollision() {
     }
   }
 }
-// ===============================================
 
 
-//======================================
+// ==================================================================================================
+void updateTanksLogic() {
+  for (Tank tank : allTanks) {
+    tank.update();
+  }
+}
+
+// ==================================================================================================
+void checkForCollisions() {
+  for (Tank tank : allTanks) {
+    tank.detectObject();
+  }
+}
+
+// ==================================================================================================
+void keyPressed() {
+  //System.out.println("keyPressed!");
+
+  if (key == CODED) {
+    switch(keyCode) {
+    case LEFT:
+      left = true;
+      break;
+    case RIGHT:
+      right = true;
+      break;
+    case UP:
+      up = true;
+      break;
+    case DOWN:
+      down = true;
+      break;
+    }
+  }
+}
+
+// PLAYER TANK INPUTS =================================================================================
 void checkForInput() {
   if (up) {
     if (!pause && !gameOver) {
@@ -319,99 +319,7 @@ void checkForInput() {
   }
 }
 
-//======================================
-void updateTanksLogic() {
-  for (Tank tank : allTanks) {
-    tank.update();
-  }
-}
-
-void checkForCollisions() {
-  for (Tank tank : allTanks) {
-    tank.detectObject();
-  }
-}
-
-// DISPLAY ======================================
-void displayHomeBase() {
-  team0.display();
-}
-
-
-void displayTrees() {
-  for (Tree tree : allTrees) {
-    tree.display();
-  }
-}
-
-void displayTanks() {
-  for (Tank tank : allTanks) {
-    tank.display();
-  }
-  tank0.drawViewArea();
-}
-
-void displayMines() {
-  for (Landmine mine : allMines) {
-    mine.display();
-  }
-}
-
-void displayGUI() {
-  displayTimer();
-
-  if (pause) {
-    textSize(36);
-    fill(30);
-    text("...Paused! (\'p\'-continues)\n(up/down/left/right to move)\n('d' for debug)", width/1.7-150, height/2.5);
-  }
-
-  if (currentGameTimer >= 180) {
-    textSize(36);
-    fill(30);
-    text("Time ran out!", width/2-150, height/3);
-    gameOver = true;
-  }
-
-  if (gameOver) {
-    textSize(36);
-    fill(30);
-    text("Game Over!", width/2-150, height/2);
-  }
-}
-
-void displayTimer() {
-  long min = floor(currentGameTimer/60);
-  long sec = currentGameTimer % 60;
-  String time = min + ":" + (sec < 10? "0"+sec : ""+sec);
-
-  textSize(36);
-  fill(30);
-  text(time, width/2, 50);
-}
-
-// KEY PRESSED ======================================
-void keyPressed() {
-  //System.out.println("keyPressed!");
-
-  if (key == CODED) {
-    switch(keyCode) {
-    case LEFT:
-      left = true;
-      break;
-    case RIGHT:
-      right = true;
-      break;
-    case UP:
-      up = true;
-      break;
-    case DOWN:
-      down = true;
-      break;
-    }
-  }
-}
-
+// ==================================================================================================
 void keyReleased() {
   if (key == CODED) {
     switch(keyCode) {
@@ -450,7 +358,7 @@ void keyReleased() {
   }
 }
 
-//For debuggin mine placement
+// ==================================================================================================
 void mousePressed() {
   println("---------------------------------------------------------");
   println("*** mousePressed() - Musknappen har tryckts ned.");

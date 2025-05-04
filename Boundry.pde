@@ -10,6 +10,7 @@ class Boundry {
     this.width = w;
   }
 
+  // ==================================================================================================
   boolean intersects(Boundry other) {
     return !(
       this.x + this.width < other.x ||
@@ -18,6 +19,7 @@ class Boundry {
       this.y > other.y + other.height);
   }
 
+  // ==================================================================================================
   boolean isWithin(Boundry other) {
     return (
       this.x >= other.x &&
@@ -27,6 +29,7 @@ class Boundry {
       );
   }
 
+  // ==================================================================================================
   void draw() {
     if (debugMode) {
       pushMatrix();
