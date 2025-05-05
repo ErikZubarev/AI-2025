@@ -20,6 +20,7 @@ class Tank extends Sprite {
         angle;
   boolean isInTransition, 
           goHome, 
+          reporting,
           reported, 
           reloading, 
           immobilized;
@@ -51,6 +52,7 @@ class Tank extends Sprite {
     this.boundry        = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.goHome         = false;
     this.reported       = false;
+    this.reporting      = false;
     this.reloading      = false;
     this.radio          = new Radio();
     this.lastFired      = 0;
@@ -73,8 +75,19 @@ class Tank extends Sprite {
     
     checkReloading();
     checkReporting();
-    
     checkHeadingHomeLogic();
+
+    switch (state) {
+    case 0:
+      action("stop");
+      break;
+    case 1:
+      action("move");
+      break;
+    case 2:
+      action("reverse");
+      break;
+    }
 
     updateCollision();
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
@@ -97,6 +110,13 @@ class Tank extends Sprite {
         break;
       case "stop":
         stopMoving();
+        break;
+      case "reporting":
+        reporting = true;
+        stopMoving();
+        break;
+      case "fire":
+        fireCannon();
         break;
     }
   }
@@ -175,22 +195,11 @@ class Tank extends Sprite {
   
   // IS TANK GOING HOME / IS TANK AT HOME =============================================================
   void checkHeadingHomeLogic(){
+    
     // Is tank going home?
     if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
       PVector waypoint = currentPath.get(currentWaypointIndex);
       moveTowards(waypoint);
-    } else {
-      switch (state) {
-      case 0:
-        velocity.set(0, 0);
-        break;
-      case 1:
-        velocity.set(cos(angle) * maxspeed, sin(angle) * maxspeed);
-        break;
-      case 2:
-        velocity.set(-cos(angle) * maxspeed, -sin(angle) * maxspeed);
-        break;
-      }
     }
     
     // Is tank at home?
@@ -201,7 +210,7 @@ class Tank extends Sprite {
         if (currentWaypointIndex >= currentPath.size()) {
           reportTimer = System.currentTimeMillis();
           goHome = false;
-          velocity.set(0, 0);
+          action("reporting");
         }
       }
     }
@@ -217,6 +226,7 @@ class Tank extends Sprite {
     if(now - reportTimer >= 3000){
       reported = true;
       reportTimer = 0L;
+      reporting = false;
     }
   }
   
@@ -361,14 +371,14 @@ class Tank extends Sprite {
     
     if (abs(angleDifference) > radians(3)) {
       if (angleDifference > 0) 
-        rotateRight();
+        action("rotateRight");
       else
-        rotateLeft();
+        action("rotateLeft");
       
-      stopMoving();
+      state = 0; // Stop Moving
     } 
     else {
-      moveForward();
+      state = 1; // Move forward
     }
   }
 

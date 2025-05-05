@@ -276,8 +276,6 @@ void checkForCollisions() {
 
 // ==================================================================================================
 void keyPressed() {
-  //System.out.println("keyPressed!");
-
   if (key == CODED) {
     switch(keyCode) {
     case LEFT:
@@ -296,32 +294,6 @@ void keyPressed() {
   }
 }
 
-// PLAYER TANK INPUTS =================================================================================
-void checkForInput() {
-  if (up) {
-    if (!pause && !gameOver) {
-      tank0.state = 1; // moveForward
-    }
-  } else if (down) {
-    if (!pause && !gameOver) {
-      tank0.state = 2; // moveBackward
-    }
-  }
-  if (right) {
-    if (!pause && !gameOver) {
-      tank0.action("rotateRight"); // Rotate right
-    }
-  } else if (left) {
-    if (!pause && !gameOver) {
-      tank0.action("rotateLeft"); // Rotate left
-    }
-  }
-
-  if (!up && !down) {
-    tank0.state = 0;
-  }
-}
-
 // ==================================================================================================
 void keyReleased() {
   if (key == CODED) {
@@ -334,11 +306,9 @@ void keyReleased() {
       break;
     case UP:
       up = false;
-      //tank0.stopMoving();
       break;
     case DOWN:
       down = false;
-      //tank0.stopMoving();
       break;
     }
   }
@@ -353,12 +323,34 @@ void keyReleased() {
   }
 
   if (key == 's') {
-    tank0.fireCannon();
+    tank0.action("fire");
   }
 
   if(key == 'z'){
     tank1.state = 1;
   }
+}
+
+// PLAYER TANK INPUTS =================================================================================
+void checkForInput() {
+  if(pause || gameOver || tank0.goHome || tank0.reporting)
+    return;
+
+  
+  if (up) {
+    tank0.state = 1; // moveForward
+  } else if (down) {
+    tank0.state = 2; // moveBackward
+  }
+  else tank0.state = 0;
+  
+  if (right) {
+    tank0.action("rotateRight"); // Rotate right
+  } else if (left) {
+    tank0.action("rotateLeft"); // Rotate left
+  }
+
+
 }
 
 // ==================================================================================================
@@ -374,6 +366,5 @@ void mousePressed() {
 
 
 void deployLandmine(PVector targetPos) {
-
   dog.startRun(targetPos);
 }
