@@ -6,11 +6,13 @@ void displayExplosions(){
   if(allExplosions.isEmpty()) 
     return;
   
-  for(Explosion e : allExplosions){
+  Iterator<Explosion> explIterator = allExplosions.iterator();
+
+  while ( explIterator.hasNext()){
+    Explosion e = explIterator.next();
     if(!e.isDone())
       e.display();
-    else
-      allExplosions.remove(e);
+    else explIterator.remove();
   }
 }
 

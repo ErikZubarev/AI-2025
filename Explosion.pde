@@ -1,3 +1,5 @@
+//Anton Lundqvist
+//Erik Zubarev
 class Explosion{
   float x,
         y;
@@ -8,16 +10,15 @@ class Explosion{
     this.x = x;
     this.y = y;
     this.iteration = 1;
-    this.displayLength = 100;
+    this.displayLength = 25;
   }
   
   boolean isDone(){
-    return !(iteration++ < displayLength);
+    return !(++iteration < displayLength);
   }
   
   void display(){
-    int i = floor((iteration / displayLength) * explosionImages.length);
-
+    int i = floor((iteration * (explosionImages.length)) /  displayLength);
     PImage img = explosionImages[i];
     pushMatrix();
       translate(x,y);
