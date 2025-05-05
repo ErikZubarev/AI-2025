@@ -2,6 +2,19 @@
 //Erik Zubarev
 
 // ==================================================================================================
+void displayExplosions(){
+  if(allExplosions.isEmpty()) 
+    return;
+  
+  for(Explosion e : allExplosions){
+    if(!e.isDone())
+      e.display();
+    else
+      allExplosions.remove(e);
+  }
+}
+
+// ==================================================================================================
 void displayCannonBalls() {
   for (CannonBall cannonBall : allCannonBalls) {
     cannonBall.display();

@@ -50,6 +50,7 @@ long startGameTimer,
 ArrayList<Landmine> allMines;
 ArrayList<CannonBall> allCannonBalls;
 ArrayList<Sprite> placedPositions;
+ArrayList<Explosion> allExplosions;
 
 Random random;
 

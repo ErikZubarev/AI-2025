@@ -30,6 +30,7 @@ void setup() {
   
   allMines         = new ArrayList<Landmine>();
   allCannonBalls   = new ArrayList<CannonBall>();
+  allExplosions    = new ArrayList<Explosion>();
   
   placedPositions  = new ArrayList<Sprite>(); //Positions for every entitiy
   
@@ -156,6 +157,7 @@ void draw() {
   dog.display();
 
   if (!gameOver && !pause) {
+    displayExplosions();
     updateTanksLogic();
     displayCannonBalls();
     updateCannonBalls();
@@ -248,6 +250,7 @@ void checkLandMineCollision() {
         // Remove the landmine safely using the iterator
         mineIterator.remove();
         placedPositions.remove(landmine);
+        landmine.displayExplosion();
         tank.reduceHealth();
         println("Landmine removed!");
         break; // Exit the inner loop since the landmine is already removed
