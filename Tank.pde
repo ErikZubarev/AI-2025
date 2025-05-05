@@ -1,36 +1,40 @@
 //Anton Lundqvist
 //Erik Zubarev
 class Tank extends Sprite {
-  PVector velocity, 
-          startpos, 
-          enemy;
+  PVector velocity,
+    startpos,
+    enemy;
   PImage img;
-  String name;  
-  int tankwidth, 
-      tankheight, 
-      state, 
-      currentWaypointIndex, 
-      lastFired, 
-      fireCooldown, 
-      health;
-  long reportTimer, 
-       reloadTimer;
-  float speed, 
-        maxspeed, 
-        angle;
-  boolean isInTransition, 
-          goHome, 
-          reporting,
-          reported, 
-          reloading, 
-          immobilized;
+  String name;
+  int tankwidth,
+    tankheight,
+    state,
+    currentWaypointIndex,
+    lastFired,
+    fireCooldown,
+    health,
+    actionTime,
+    randomAction;
+  long reportTimer,
+    reloadTimer,
+    movementTimer;
+  float speed,
+    maxspeed,
+    angle;
+  boolean isInTransition,
+    goHome,
+    reporting,
+    reported,
+    reloading,
+    immobilized,
+    roam;
   ArrayList<PVector> currentPath;
   QuadTreeMemory memory;
   ViewArea viewArea;
 
   //*****Uncomment and comment the below lines to change between Radio and Vision sensor mode
   Radio radio;
-  
+
   //*****Uncomment and comment the below lines to change between GBFS and BFS
   GBFS solver;
   //BFS solver;
@@ -60,34 +64,38 @@ class Tank extends Sprite {
     this.health         = 3;
     this.reportTimer    = 0L;
     this.reloadTimer    = 0L;
+    this.movementTimer  = 0L;
     this.immobilized    = false;
+    this.roam           = true;
+    this.randomAction   = int(random(3));
   }
-  
+
   // =================================================
   // ===  MAIN METHODS
   // =================================================
-  
+
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
-    if(reported){
+    if (reported) {
       //radio.commandAllies(this, allTanks);
     }
-    
+
     checkReloading();
     checkReporting();
     checkHeadingHomeLogic();
+    roam();
 
-    switch (state) {
-    case 0:
-      action("stop");
-      break;
-    case 1:
-      action("move");
-      break;
-    case 2:
-      action("reverse");
-      break;
-    }
+    //switch (state) {
+    //case 0:
+    //  action("stop");
+    //  break;
+    //case 1:
+    //  action("move");
+    //  break;
+    //case 2:
+    //  action("reverse");
+    //  break;
+    //}
 
     updateCollision();
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
@@ -96,43 +104,46 @@ class Tank extends Sprite {
   // SWITCHING STATES OF TANK BASED ON ACTION ==========================================================
   void action(String _action) {
     switch (_action) {
-      case "move":
-        if (!immobilized) moveForward();
-        break;
-      case "reverse":
-        if (!immobilized) moveBackward();
-        break;
-      case "rotateLeft":
-        if (health > 0) rotateLeft();
-        break;
-      case "rotateRight":
-        if (health > 0) rotateRight();
-        break;
-      case "stop":
-        stopMoving();
-        break;
-      case "reporting":
-        reporting = true;
-        stopMoving();
-        break;
-      case "fire":
-        fireCannon();
-        break;
+    case "move":
+      if (!immobilized) moveForward();
+      break;
+    case "reverse":
+      if (!immobilized) moveBackward();
+      break;
+    case "rotateLeft":
+      if (health > 0) rotateLeft();
+      break;
+    case "rotateRight":
+      if (health > 0) rotateRight();
+      break;
+    case "stop":
+      stopMoving();
+      break;
+    case "reporting":
+      reporting = true;
+      stopMoving();
+      break;
+    case "fire":
+      fireCannon();
+      break;
     }
   }
-  
+
   // TANK VISION LOGIC ==================================================================================
   void detectObject() {
     for (Sprite obj : placedPositions) {
       if (viewArea.intersects(obj.boundry) && obj != this) { //Ignore self
         boolean unseenLandmineDetected = detectedNewLandmine(obj);
         boolean enemyDetected = detectedEnemy(obj);
-        
-        if(unseenLandmineDetected && goHome)
+
+        if (unseenLandmineDetected && goHome)
           calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
 
-        if(enemyDetected && !reported)
+        if (enemyDetected && !reported) {
+          roam = false;
           goHome();
+        }
+
 
         memory.insert(obj);
       }
@@ -140,13 +151,13 @@ class Tank extends Sprite {
     memory.updateExploredStatus(viewArea);
     memory.pruneChildren(viewArea);
   }
-  
-  
-  
+
+
+
   // =================================================
   // ===  HELPER METHODS
   // =================================================
-  // ================================================================================================== 
+  // ==================================================================================================
   void goHome() {
     if (!goHome) {
       goHome = true;
@@ -156,20 +167,20 @@ class Tank extends Sprite {
 
   // RETURN BEST PATH ================================================================================= BFS / GBFS
   void calculatePath(PVector start, PVector goal) {
-    
+
     //*****Uncomment and comment the below lines to change between GBFS and BFS
     solver = new GBFS(start, goal, memory, boundry);
     //solver = new BFS(position, startpos, memory, boundry);
-    
+
     currentPath = solver.solve();
     currentWaypointIndex = 0;
   }
-  
+
   // OBSERVE IF ENEMY IS SPOTTED ===================================================================== RADIO / VISION
-  boolean detectedEnemy(Sprite obj){
+  boolean detectedEnemy(Sprite obj) {
     if (obj instanceof Tank) {
       Tank tank = (Tank) obj;
-      
+
       if (tank.name.equals("enemy")) {
         println("Enemy Spotted!!");
         radio.reportEnemy(tank.position);
@@ -178,30 +189,30 @@ class Tank extends Sprite {
     }
     return false;
   }
-  
+
   // DYNAMICALLY CHECK IF A LANDMINE APPEARED =========================================================
-  boolean detectedNewLandmine(Sprite obj){
+  boolean detectedNewLandmine(Sprite obj) {
     if (obj instanceof Landmine) {
       ArrayList<Sprite> foundObjects = memory.query(obj.boundry);
       boolean alreadyKnown = foundObjects.contains(obj);
-      
+
       if (!alreadyKnown) {
         println("New landmine detected!");
         return true;
       }
     }
     return false;
-  }  
-  
+  }
+
   // IS TANK GOING HOME / IS TANK AT HOME =============================================================
-  void checkHeadingHomeLogic(){
-    
+  void checkHeadingHomeLogic() {
+
     // Is tank going home?
     if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
       PVector waypoint = currentPath.get(currentWaypointIndex);
       moveTowards(waypoint);
     }
-    
+
     // Is tank at home?
     if (goHome && currentPath != null && currentWaypointIndex < currentPath.size()) {
       PVector waypoint = currentPath.get(currentWaypointIndex);
@@ -215,50 +226,50 @@ class Tank extends Sprite {
       }
     }
   }
-  
+
   // IS REPORTING LOGIC ================================================================================ TODO: UPDATE THIS SO TANK CANT MOVE WHEN REPORTING
-  void checkReporting(){
-    if(reportTimer == 0L)
+  void checkReporting() {
+    if (reportTimer == 0L)
       return;
-    
+
     displayReportTimer();
     long now = System.currentTimeMillis();
-    if(now - reportTimer >= 3000){
+    if (now - reportTimer >= 3000) {
       reported = true;
       reportTimer = 0L;
       reporting = false;
     }
   }
-  
+
   // IS RELOADING LOGIC ================================================================================
-  void checkReloading(){
-    if(reloadTimer == 0L)
+  void checkReloading() {
+    if (reloadTimer == 0L)
       return;
-      
+
     long now = System.currentTimeMillis();
-    if(now - reloadTimer >= 3000){
+    if (now - reloadTimer >= 3000) {
       reloading = false;
       reloadTimer = 0L;
     }
   }
-  
+
   // PUT TEAM BASE INTO MEMORY AT THE START OF THE GAME ================================================
-  void putBaseIntoMemory(){
+  void putBaseIntoMemory() {
     Boundry base = new Boundry(0, 0, 150, 350); //Ally base
     Boundry pos = new Boundry(startpos.x, startpos.y, 1, 1);
-    
-    if(!pos.isWithin(base)){
+
+    if (!pos.isWithin(base)) {
       base = new Boundry(width - 151, height - 351, 150, 350); //Enemy base
     }
-    
+
     memory.updateExploredStatus(base);
-    
+
     for (Sprite obj : placedPositions) {
       if (base.intersects(obj.boundry) && obj != this) {
-        memory.insert(obj); 
+        memory.insert(obj);
       }
     }
-    
+
     memory.pruneChildren(base);
   }
 
@@ -295,7 +306,7 @@ class Tank extends Sprite {
     position.set(candidate);
     updateBoundry();
     for (Sprite s : placedPositions) {
-      if(s instanceof Landmine)
+      if (s instanceof Landmine)
         continue;
       if (s != this && boundry.intersects(s.boundry)) {
         position.set(backup);
@@ -307,8 +318,8 @@ class Tank extends Sprite {
     updateBoundry();
     return false;
   }
-  
-  
+
+
   // =================================================
   // ===  PERFORM ACTIONS HELPER METHODS
   // =================================================
@@ -358,64 +369,88 @@ class Tank extends Sprite {
     if (health == 2) {
       immobilized = true;
     }
-    
-    if (health != 0){
+
+    if (health != 0) {
       health--;
     }
   }
-  
+
   // AUTOMATIC MOVEMENT WHEN GOING HOME =================================================================
   void moveTowards(PVector target) {
     float targetAngle = atan2(target.y - position.y, target.x - position.x);
     float angleDifference = atan2(sin(targetAngle - angle), cos(targetAngle - angle));
-    
+
     if (abs(angleDifference) > radians(3)) {
-      if (angleDifference > 0) 
+      if (angleDifference > 0)
         action("rotateRight");
       else
         action("rotateLeft");
-      
+
       state = 0; // Stop Moving
-    } 
-    else {
+    } else {
       state = 1; // Move forward
     }
   }
 
+  // AUTOMATIC RANDOM MOVEMENT WHEN EXPLORING =================================================================
+  void roam() {
+    if (roam) {
+      long now = System.currentTimeMillis();
+      if (now - movementTimer >= actionTime) { // variable time doing the action
+        randomAction = int(random(3));
+        movementTimer = now;
+        actionTime = randomAction != 0 ? 200 : 1000; //Since if we rotate or a second we basically do a full loop i made it 200 ms instead which gives like 1/8
+      }
+
+      switch (randomAction) {
+      case 0:
+        action("move");
+        break;
+      case 1:
+        action("stop");
+        action("rotateLeft");
+        break;
+      case 2:
+        action("stop");
+        action("rotateRight");
+        break;
+      }
+    }
+  }
   // =================================================
   // ===  DISPLAY METHODS
   // =================================================
   // DISPLAY SELF ======================================================================================
   void display() {
     pushMatrix();
-      translate(this.position.x, this.position.y);
-      drawTank(0, 0);
-      if (debugMode) {
-        fill(230);
-        stroke(0);
-        strokeWeight(1);
-        rect(0 + 40, 0 - 40, 100, 40);
-        fill(30);
-        textSize(15);
-        text(this.name + "\n( " + this.position.x + ", " + this.position.y + " )", 40 + 5, -20 - 5);
-      }
+    translate(this.position.x, this.position.y);
+    drawTank(0, 0);
+    if (debugMode) {
+      fill(230);
+      stroke(0);
+      strokeWeight(1);
+      rect(0 + 40, 0 - 40, 100, 40);
+      fill(30);
+      textSize(15);
+      text(this.name + "\n( " + this.position.x + ", " + this.position.y + " )", 40 + 5, -20 - 5);
+    }
     popMatrix();
     boundry.draw();
     displayHealth();
-    if(reloading){
+    if (reloading) {
       displayReloadTimer();
     }
   }
-  
+
   // ==================================================================================================
   void drawTank(float x, float y) {
     pushMatrix();
-      strokeWeight(0);
-      translate(x, y);
-      rotate(this.angle);
-      imageMode(CENTER);
-      image(img, x, y);
-      imageMode(CORNER);
+    strokeWeight(0);
+    translate(x, y);
+    rotate(this.angle);
+    imageMode(CENTER);
+    image(img, x, y);
+    imageMode(CORNER);
     popMatrix();
   }
 
@@ -432,48 +467,48 @@ class Tank extends Sprite {
   }
 
   // ==================================================================================================
-  void displayReportTimer(){
+  void displayReportTimer() {
     pushMatrix();
-      translate(this.position.x, this.position.y);
-      textSize(12);
-      fill(0);
-      text("Reporting!!", 25, 40);
-      
-      fill(255);
-      rect(35, -25, 7, 50, 2);
+    translate(this.position.x, this.position.y);
+    textSize(12);
+    fill(0);
+    text("Reporting!!", 25, 40);
 
-      // Calculate the progress of the line (percentage of 3000ms elapsed)
-      long now = System.currentTimeMillis();
-      float progress = constrain((now - reportTimer) / 3000.0, 0, 1);
-    
-      // Draw the filling line inside the rectangle
-      stroke(0);
-      strokeWeight(2);
-      float lineHeight = progress * 40; 
-      line(38, 20, 38, 20 - lineHeight); 
+    fill(255);
+    rect(35, -25, 7, 50, 2);
+
+    // Calculate the progress of the line (percentage of 3000ms elapsed)
+    long now = System.currentTimeMillis();
+    float progress = constrain((now - reportTimer) / 3000.0, 0, 1);
+
+    // Draw the filling line inside the rectangle
+    stroke(0);
+    strokeWeight(2);
+    float lineHeight = progress * 40;
+    line(38, 20, 38, 20 - lineHeight);
     popMatrix();
   }
-  
-  // ==================================================================================================
-  void displayReloadTimer(){
-    pushMatrix();
-      translate(this.position.x, this.position.y);
-      textSize(12);
-      fill(0);
-      text("Reloading!!", 25, 40);
-      
-      fill(255);
-      rect(35, -25, 7, 50, 2);
 
-      // Calculate the progress of the line (percentage of 3000ms elapsed)
-      long now = System.currentTimeMillis();
-      float progress = constrain((now - reloadTimer) / 3000.0, 0, 1);
-    
-      // Draw the filling line inside the rectangle
-      stroke(0);
-      strokeWeight(2);
-      float lineHeight = progress * 40; 
-      line(38, 20, 38, 20 - lineHeight);  
+  // ==================================================================================================
+  void displayReloadTimer() {
+    pushMatrix();
+    translate(this.position.x, this.position.y);
+    textSize(12);
+    fill(0);
+    text("Reloading!!", 25, 40);
+
+    fill(255);
+    rect(35, -25, 7, 50, 2);
+
+    // Calculate the progress of the line (percentage of 3000ms elapsed)
+    long now = System.currentTimeMillis();
+    float progress = constrain((now - reloadTimer) / 3000.0, 0, 1);
+
+    // Draw the filling line inside the rectangle
+    stroke(0);
+    strokeWeight(2);
+    float lineHeight = progress * 40;
+    line(38, 20, 38, 20 - lineHeight);
     popMatrix();
   }
 
@@ -569,25 +604,25 @@ class Tank extends Sprite {
       float centerY = agentY + sin(this.viewAngle) * (this.viewLength / 2.0);
 
       // Actual view area
-      if (debugMode) { 
+      if (debugMode) {
         pushMatrix();
-          translate(centerX, centerY);
-          rotate(this.viewAngle);
-          strokeWeight(1);
-          fill(255, 255, 0, 100);
-          rectMode(CENTER);
-          rect(0, 0, this.viewLength, this.viewWidth);
-          rectMode(CORNER);
+        translate(centerX, centerY);
+        rotate(this.viewAngle);
+        strokeWeight(1);
+        fill(255, 255, 0, 100);
+        rectMode(CENTER);
+        rect(0, 0, this.viewLength, this.viewWidth);
+        rectMode(CORNER);
         popMatrix();
       }
-      
+
       // Visual view area
       pushMatrix();
-        translate(agentX, agentY);
-        rotate(this.viewAngle);
-        strokeWeight(0.5);
-        fill(15, 15, 15, 50);
-        quad(0, 0 - t.tankwidth/4, 0, 0 + t.tankwidth/4, 0+viewLength, 0+viewWidth/2, 0+viewLength, 0-viewWidth/2);
+      translate(agentX, agentY);
+      rotate(this.viewAngle);
+      strokeWeight(0.5);
+      fill(15, 15, 15, 50);
+      quad(0, 0 - t.tankwidth/4, 0, 0 + t.tankwidth/4, 0+viewLength, 0+viewWidth/2, 0+viewLength, 0-viewWidth/2);
       popMatrix();
     }
   }
