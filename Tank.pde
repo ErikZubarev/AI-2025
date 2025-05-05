@@ -95,7 +95,8 @@ class Tank extends Sprite {
       action("reverse");
       break;
     }
-    if(!goHome) {roam();}
+
+    //roam();
 
     updateCollision();
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
@@ -140,9 +141,20 @@ class Tank extends Sprite {
           calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
 
         if (enemyDetected && !reported) {
-          action("stop");
-          roam = false;
-          goHome();
+          //CURRENT SOLUTION OF GOING HOME AND REPORTING
+          //roam = false;
+          //goHome();
+
+          //Reports enemy pos to allies via radio
+          radio.reportEnemy(obj.position);
+
+          //Should reportEnemy notify allys directly?
+          //Could probably send a call to each tank except tank that sent it and call future method "target"
+          //Target method should find direction tank should turn to so that it can shoot enemy accoring to memory
+          //Check segemnt between tank and enemy, but only parts that are isExplored. If they contain obstacle, reposition and try again
+          //If segment is obstacle free, start firing until reported that enemy dead 
+          //TODO implement "target" method according to specs above. probably interupts whole tanks update method so it only does target method call each update
+          //TODO implement enemyDead method in radio?
         }
 
 
