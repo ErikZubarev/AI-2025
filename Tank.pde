@@ -3,7 +3,8 @@
 class Tank extends Sprite {
   PVector velocity,
     startpos,
-    enemy;
+    enemy,
+    prevPos;
   PImage img;
   String name;
   int tankwidth,
@@ -83,19 +84,18 @@ class Tank extends Sprite {
     checkReloading();
     checkReporting();
     checkHeadingHomeLogic();
-    roam();
-
-    //switch (state) {
-    //case 0:
-    //  action("stop");
-    //  break;
-    //case 1:
-    //  action("move");
-    //  break;
-    //case 2:
-    //  action("reverse");
-    //  break;
-    //}
+    switch (state) {
+    case 0:
+      action("stop");
+      break;
+    case 1:
+      action("move");
+      break;
+    case 2:
+      action("reverse");
+      break;
+    }
+    if(!goHome) {roam();}
 
     updateCollision();
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
@@ -140,6 +140,7 @@ class Tank extends Sprite {
           calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
 
         if (enemyDetected && !reported) {
+          action("stop");
           roam = false;
           goHome();
         }
@@ -395,28 +396,48 @@ class Tank extends Sprite {
   // AUTOMATIC RANDOM MOVEMENT WHEN EXPLORING =================================================================
   void roam() {
     if (roam) {
-      long now = System.currentTimeMillis();
-      if (now - movementTimer >= actionTime) { // variable time doing the action
-        randomAction = int(random(3));
-        movementTimer = now;
-        actionTime = randomAction != 0 ? 200 : 1000; //Since if we rotate or a second we basically do a full loop i made it 200 ms instead which gives like 1/8
-      }
+        // Initialize prevPos dynamically if it's not set
+        if (prevPos == null) {
+            prevPos = position.copy();
+        }
 
-      switch (randomAction) {
-      case 0:
-        action("move");
-        break;
-      case 1:
-        action("stop");
-        action("rotateLeft");
-        break;
-      case 2:
-        action("stop");
-        action("rotateRight");
-        break;
-      }
+        long now = System.currentTimeMillis();
+        if (now - movementTimer >= actionTime) { 
+            // Check if the tank is stuck 
+            if (position.dist(prevPos) < 1.0) { 
+                if (randomAction != 2) { 
+                    randomAction = 2; 
+                    actionTime = 1000; 
+                } else { 
+                    randomAction = 0; 
+                    actionTime = 500; 
+                }
+            } else {
+                randomAction = int(random(3)); 
+                actionTime = randomAction != 0 ? 200 : 1000; // Shorter time for rotation
+            }
+
+            movementTimer = now; // Reset the timer
+            prevPos = position.copy(); // Update the previous position
+        }
+
+        // Perform the action tied to the current randomAction
+        switch (randomAction) {
+            case 0:
+                action("move");
+                break;
+            case 1:
+                action("stop");
+                action("rotateLeft"); 
+                break;
+            case 2:
+                action("stop");
+                action("rotateRight"); 
+                break;
+            
+        }
     }
-  }
+}
   // =================================================
   // ===  DISPLAY METHODS
   // =================================================
