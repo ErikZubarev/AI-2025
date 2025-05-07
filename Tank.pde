@@ -28,10 +28,12 @@ class Tank extends Sprite {
     reported,
     reloading,
     immobilized,
-    roam;
+    roam,
+    hunt;
   ArrayList<PVector> currentPath;
   QuadTreeMemory memory;
   ViewArea viewArea;
+  ArrayList<Sprite> enemyQueue = new ArrayList<>();
 
   //*****Uncomment and comment the below lines to change between Radio and Vision sensor mode
   Radio radio;
@@ -68,6 +70,7 @@ class Tank extends Sprite {
     this.movementTimer  = 0L;
     this.immobilized    = false;
     this.roam           = true;
+    this.hunt           = false;
     this.randomAction   = int(random(3));
   }
 
@@ -79,6 +82,10 @@ class Tank extends Sprite {
   void update() {
     if (reported) {
       //radio.commandAllies(this, allTanks);
+    }
+
+    if(hunt){
+      handleEnemyQueue();
     }
 
     checkReloading();
@@ -141,12 +148,16 @@ class Tank extends Sprite {
           calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
 
         if (enemyDetected && !reported) {
-          //CURRENT SOLUTION OF GOING HOME AND REPORTING
-          //roam = false;
-          //goHome();
+          //VISION SOLUTION. Logs the enemyPosition and then goes home. 
+          roam = false;
+          goHome();
+          if(!enemyQueue.contains(obj)){
+            enemyQueue.add(obj);
+          }
+          
 
           //Reports enemy pos to allies via radio
-          radio.reportEnemy(obj.position);
+          //radio.reportEnemy(obj.position);
 
           //Should reportEnemy notify allys directly?
           //Could probably send a call to each tank except tank that sent it and call future method "target"
@@ -164,6 +175,62 @@ class Tank extends Sprite {
     memory.updateExploredStatus(viewArea);
     memory.pruneChildren(viewArea);
   }
+
+  void collateWithAlly(Tank ally, PVector baseCenter){
+    println("Collating between: " + this +" "+ ally);
+    // Merge this tank's enemyQueue with the ally's enemyQueue
+    for (Sprite enemy : ally.enemyQueue) {
+      if (!enemyQueue.contains(enemy)) {
+        enemyQueue.add(enemy);
+      }
+    }
+
+    // Sort the enemyQueue based on the distance from the middle of the base
+    enemyQueue.sort((a, b) -> {
+      float distA = a.position.dist(baseCenter);
+      float distB = b.position.dist(baseCenter);
+      return Float.compare(distA, distB);
+    });
+
+    this.hunt = true;
+  }
+
+  //This method might not work since i cant test it atm because ally memory on the level of Viktor after a night out *poof*
+  //Dunno if it will work though since we rerun this method every frame so we will be calculating new path each time. most probably will have to move that
+  void handleEnemyQueue() {
+  if (!enemyQueue.isEmpty()) {
+    // Peek at the first enemy in the queue
+    Sprite targetEnemy = enemyQueue.get(0);
+
+    // Check if the enemy is still alive
+    if (targetEnemy instanceof Tank) {
+      Tank enemyTank = (Tank) targetEnemy;
+      if (enemyTank.health == 0) {
+        // Remove the enemy from the queue if it's dead
+        enemyQueue.remove(0);
+        return; // Exit the method to process the next enemy in the next update
+      }
+    }
+
+    // Create a path to the enemy's position
+    calculatePath(position, targetEnemy.position);
+
+    // Move towards the enemy
+    if (currentPath != null && currentWaypointIndex < currentPath.size()) {
+      PVector waypoint = currentPath.get(currentWaypointIndex);
+      moveTowards(waypoint);
+
+      // Check if the tank has reached the current waypoint
+      if (position.dist(waypoint) < 7) {
+        currentWaypointIndex++;
+      }
+    }
+  } else {
+    // If the queue is empty, stop hunting and start roaming
+    hunt = false;
+    roam = true;
+  }
+}
 
 
 

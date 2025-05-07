@@ -144,6 +144,7 @@ void draw() {
   tank0.displayPathHome();
 
   displayHomeBase();
+  team0.checkIfTankHome();
   displayTrees();
   displayTanks();
 
