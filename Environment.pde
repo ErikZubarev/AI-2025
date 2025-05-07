@@ -82,8 +82,8 @@ void setup() {
   }
 
   //Team
-  team0 = new Team();
-  team1 = new Team();
+  team0 = new Team(0, 0, color(204, 50, 50));
+  team1 = new Team(width - 151, height - 351, color(0, 150, 200));
 
   //Tank Images
   red_tank_img = loadImage("redtank.png");

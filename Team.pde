@@ -2,16 +2,23 @@
 //Erik Zubarev
 class Team {
   ArrayList<Tank> members = new ArrayList<>();
+  color teamColor;
+  int x,y;
+  Boundry boundry;
+
+  public Team(int x, int y, color teamColor){
+    this.x = x;
+    this.y = y;
+    this.teamColor = teamColor;
+    this.boundry = new Boundry(x, y, 150, 350); 
+  }
   
   void display() {
     pushMatrix();
     strokeWeight(1);
     stroke(0);
-    fill(color(204, 50, 50), 100);    // Base Team 0 (red)
-    rect(0, 0, 150, 350);
-
-    fill(color(0, 150, 200), 100);    // Base Team 1 (blue)
-    rect(width - 151, height - 351, 150, 350);
+    fill(teamColor, 100);    // Base Team 0 (red)
+    rect(x, y, 150, 350);
     popMatrix();
   }
 }
