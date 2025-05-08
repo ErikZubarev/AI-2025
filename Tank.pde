@@ -153,6 +153,7 @@ class Tank extends Sprite {
           goHome();
           if(!enemyQueue.contains(obj)){
             enemyQueue.add(obj);
+            memory.updateExploredStatus(obj.boundry);
           }
           
 
@@ -180,6 +181,9 @@ class Tank extends Sprite {
     println("Collating between: " + this +" "+ ally);
     //Merge their memory so they can find eachothers tanks, currently not implemented
     //memory.merge(ally.memory);
+    if (!ally.name.equals("player") && this.name.equals("player")) {
+      ally.replaceMem(this.memory);
+    }
     // Merge this tank's enemyQueue with the ally's enemyQueue
     for (Sprite enemy : ally.enemyQueue) {
       if (!enemyQueue.contains(enemy)) {
@@ -196,6 +200,12 @@ class Tank extends Sprite {
 
     this.hunt = true;
   }
+
+  void replaceMem(QuadTreeMemory mem) {
+    this.memory = mem;
+
+    memory.clearHolding(boundry);
+}
 
   //This method might not work since i cant test it atm because ally memory on the level of Viktor after a night out *poof*
   //Dunno if it will work though since we rerun this method every frame so we will be calculating new path each time. most probably will have to move that
@@ -264,7 +274,6 @@ class Tank extends Sprite {
       Tank tank = (Tank) obj;
 
       if (tank.name.equals("enemy")) {
-        println("Enemy Spotted!!");
         radio.reportEnemy(tank.position);
         return true;
       }

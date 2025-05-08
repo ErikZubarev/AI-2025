@@ -143,6 +143,7 @@ void draw() {
   currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
 
   tank0.displayPathHome();
+  tank1.displayPathHome();
 
   displayHomeBase();
   team0.checkIfTankHome();

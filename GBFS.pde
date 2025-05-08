@@ -32,6 +32,7 @@ public class GBFS {
 
     // Solve problem ====================================================================================
     public ArrayList<PVector> solve() {
+        println("start: "+start + "goal: "+goal );
         //final path backwards
         ArrayList<PVector> path = new ArrayList<PVector>();
 

@@ -50,6 +50,25 @@ class QuadTreeMemory {
     //TODO Implement
   }
 
+  // filepath: c:\Users\leg0m\Desktop\Prog\AI\QuadTreeMemory.pde
+public void clearHolding(Boundry area) {
+    if (!boundry.intersects(area)) {
+        return;
+    }
+
+    if (holding != null && area.intersects(holding.boundry)) {
+        holding = null;
+    }
+
+    if (subdivided) {
+        for (QuadTreeMemory child : children) {
+            if (child != null) {
+                child.clearHolding(area);
+            }
+        }
+    }
+}
+
   // ==================================================================================================
   public void insert(Sprite obj) {
     if(holding == obj)
