@@ -178,6 +178,8 @@ class Tank extends Sprite {
 
   void collateWithAlly(Tank ally, PVector baseCenter){
     println("Collating between: " + this +" "+ ally);
+    //Merge their memory so they can find eachothers tanks, currently not implemented
+    //memory.merge(ally.memory);
     // Merge this tank's enemyQueue with the ally's enemyQueue
     for (Sprite enemy : ally.enemyQueue) {
       if (!enemyQueue.contains(enemy)) {
@@ -334,23 +336,19 @@ class Tank extends Sprite {
   }
 
   // PUT TEAM BASE INTO MEMORY AT THE START OF THE GAME ================================================
-  void putBaseIntoMemory() {
-    Boundry base = new Boundry(0, 0, 150, 350); //Ally base
-    Boundry pos = new Boundry(startpos.x, startpos.y, 1, 1);
-
-    if (!pos.isWithin(base)) {
-      base = new Boundry(width - 151, height - 351, 150, 350); //Enemy base
-    }
-
+  void putBaseIntoMemory(Boundry base) {
+    // Mark the base area as explored
     memory.updateExploredStatus(base);
 
+    // Insert all objects within the base area into memory
     for (Sprite obj : placedPositions) {
       if (base.intersects(obj.boundry) && obj != this) {
         memory.insert(obj);
       }
-    }
+  }
 
-    memory.pruneChildren(base);
+  // Prune unnecessary children in the memory tree for optimization
+  memory.pruneChildren(base);
   }
 
   // UPDATE BOUNDRY TO MOVE WITH TANK ================================================================

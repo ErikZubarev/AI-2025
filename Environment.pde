@@ -3,6 +3,7 @@
 
 import java.util.Random;
 import java.util.Iterator;
+boolean testing = false;
 
 // =================================================
 // ===  SETUP METHOD
@@ -110,7 +111,7 @@ void setup() {
   for (Tank t : allTanks) {
     if (t == null) continue;
     team0.members.add(t);
-    t.putBaseIntoMemory();
+    t.putBaseIntoMemory(team0.boundry);
   }
 
   // Team1 randomly placed in the lower right quadrant
@@ -124,7 +125,7 @@ void setup() {
     placedPositions.add(newTank);
     allTanks[3 + i] = newTank;
     team1.members.add(newTank);
-    newTank.putBaseIntoMemory();
+    newTank.putBaseIntoMemory(team1.boundry);
   }
 }
 
@@ -164,11 +165,16 @@ void draw() {
     updateCannonBalls();
     checkLandMineCollision();
     //Applies to all tanks
-    //checkForCollisions();
+    checkForCollisions();
     //Only doing for tank0 atm
-    tank0.detectObject();
+    //tank0.detectObject();
     landmineCounter++;
-    tank0.memory.display();
+    if(testing){
+      tank0.memory.display();
+    }else{
+      tank1.memory.display();
+    }
+    
     currentPauseTime = totalPauseTime; // Save prev pause time
   } else if (pause) {
     totalPauseTime = currentPauseTime + System.currentTimeMillis() - startPauseTimer; // Update current prev pause + current pause time
@@ -271,7 +277,10 @@ void updateTanksLogic() {
 // ==================================================================================================
 void checkForCollisions() {
   for (Tank tank : allTanks) {
-    tank.detectObject();
+    if(team0.members.contains(tank)){
+      tank.detectObject();
+    }
+    
   }
 }
 
@@ -328,8 +337,9 @@ void keyReleased() {
   }
 
   if(key == 'z'){
-    tank1.state = 1;
+    testing = !testing;
   }
+
 }
 
 // PLAYER TANK INPUTS =================================================================================
