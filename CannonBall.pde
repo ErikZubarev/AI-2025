@@ -37,16 +37,16 @@ class CannonBall extends Sprite {
   // ==================================================================================================
   void display() {
     pushMatrix();
-      translate(position.x, position.y);
-      rotate(this.angle);
-      imageMode(CENTER);
-      image(bomb, 0, 0);
-      imageMode(CORNER);
+    translate(position.x, position.y);
+    rotate(this.angle);
+    imageMode(CENTER);
+    image(bomb, 0, 0);
+    imageMode(CORNER);
     popMatrix();
   }
 
   //This is a explostion for when the ball contacts something. currently its only show for like one frame lol
-  void drawExplosion() {      
+  void drawExplosion() {
     Explosion e = new Explosion(position.x, position.y);
     allExplosions.add(e);
   }

@@ -22,25 +22,25 @@ void setup() {
   totalPauseTime   = 0L;
   currentPauseTime = 0L;
   landmineCounter  = 0;
-  
+
   random           = new Random();
   healthImages     = new PImage[4];
   runningFrames    = new PImage[3];
   laughingFrames   = new PImage[2];
   explosionImages  = new PImage[5];
-  
+
   allMines         = new ArrayList<Landmine>();
   allCannonBalls   = new ArrayList<CannonBall>();
   allExplosions    = new ArrayList<Explosion>();
-  
+
   placedPositions  = new ArrayList<Sprite>(); //Positions for every entitiy
-  
+
   allTrees         = new Tree[3];
   allTanks         = new Tank[6];
-  
+
   dogState         = DogState.ENTERING;
-  
- 
+
+
   bomb = loadImage("bomb.png");
 
   for (int i = 0; i < healthImages.length; i++) {
@@ -65,7 +65,7 @@ void setup() {
     PImage img = loadImage("dog_laugh_" + i + ".png");
     laughingFrames[i] = img;
   }
-  
+
   //Instantiate dog with its frames
   dog = new Dog(runningFrames, laughingFrames);
 
@@ -170,12 +170,12 @@ void draw() {
     //Only doing for tank0 atm
     //tank0.detectObject();
     landmineCounter++;
-    if(testing){
+    if (testing) {
       tank0.memory.display();
-    }else{
+    } else {
       tank1.memory.display();
     }
-    
+
     currentPauseTime = totalPauseTime; // Save prev pause time
   } else if (pause) {
     totalPauseTime = currentPauseTime + System.currentTimeMillis() - startPauseTimer; // Update current prev pause + current pause time
@@ -278,10 +278,9 @@ void updateTanksLogic() {
 // ==================================================================================================
 void checkForCollisions() {
   for (Tank tank : allTanks) {
-    if(team0.members.contains(tank)){
+    if (team0.members.contains(tank)) {
       tank.detectObject();
     }
-    
   }
 }
 
@@ -337,32 +336,28 @@ void keyReleased() {
     tank0.action("fire");
   }
 
-  if(key == 'z'){
+  if (key == 'z') {
     testing = !testing;
   }
-
 }
 
 // PLAYER TANK INPUTS =================================================================================
 void checkForInput() {
-  if(pause || gameOver || tank0.goHome || tank0.reporting)
+  if (pause || gameOver || tank0.goHome || tank0.reporting)
     return;
 
-  
+
   if (up) {
     tank0.state = 1; // moveForward
   } else if (down) {
     tank0.state = 2; // moveBackward
-  }
-  else tank0.state = 0;
-  
+  } else tank0.state = 0;
+
   if (right) {
     tank0.action("rotateRight"); // Rotate right
   } else if (left) {
     tank0.action("rotateLeft"); // Rotate left
   }
-
-
 }
 
 // ==================================================================================================

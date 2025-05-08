@@ -21,7 +21,7 @@ class Landmine extends Sprite {
     imageMode(CORNER);
   }
 
-  void displayExplosion(){
+  void displayExplosion() {
     Explosion e = new Explosion(position.x, position.y);
     allExplosions.add(e);
   }

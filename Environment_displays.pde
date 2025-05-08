@@ -2,15 +2,15 @@
 //Erik Zubarev
 
 // ==================================================================================================
-void displayExplosions(){
-  if(allExplosions.isEmpty()) 
+void displayExplosions() {
+  if (allExplosions.isEmpty())
     return;
-  
+
   Iterator<Explosion> explIterator = allExplosions.iterator();
 
-  while ( explIterator.hasNext()){
+  while ( explIterator.hasNext()) {
     Explosion e = explIterator.next();
-    if(!e.isDone())
+    if (!e.isDone())
       e.display();
     else explIterator.remove();
   }

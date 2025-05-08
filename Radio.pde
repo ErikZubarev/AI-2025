@@ -6,8 +6,8 @@ class Radio {
     enemyPositions.add(enemyPos);
   }
 
-//TODO remake so the tanks angle towards enemy and make sure that there is no obstacle between 
-//them according to memory and fire.
+  //TODO remake so the tanks angle towards enemy and make sure that there is no obstacle between
+  //them according to memory and fire.
 
   //void commandAllies(Tank playerTank, ArrayList<Tank> allies) {
   //  for (Tank ally : allies) {

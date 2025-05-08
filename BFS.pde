@@ -96,7 +96,7 @@ public class BFS {
   //Visualization N = neihbour X = current
   //  N N N
   //  N X N
-  //  N N N 
+  //  N N N
   private ArrayList<PVector> generateNeighbors(PVector pos, float step) {
     ArrayList<PVector> neighbors = new ArrayList<PVector>();
     for (int dx = -1; dx <= 1; dx++) {
@@ -109,38 +109,38 @@ public class BFS {
     return neighbors;
   }
 
-    // ==============================================================================================
-    private boolean isSafe(PVector candidate) {
-        float halfWidth = tankBoundry.width / 2;
-        float halfHeight = tankBoundry.height / 2;
-        float safetyMargin = 5.0f; 
-    
-        if (candidate.x - halfWidth - safetyMargin < 0 ||
-            candidate.y - halfHeight - safetyMargin < 0 ||
-            candidate.x + halfWidth + safetyMargin > 800 ||
-            candidate.y + halfHeight + safetyMargin > 800) {
-            return false;
-        }
-    
-        Boundry candidateBoundary = new Boundry(
-            candidate.x - halfWidth - safetyMargin,
-            candidate.y - halfHeight - safetyMargin,
-            tankBoundry.width + 2 * safetyMargin,
-            tankBoundry.height + 2 * safetyMargin
-        );
-    
-        ArrayList<Sprite> obstacles = memory.query(candidateBoundary);
-        if (!obstacles.isEmpty()) {
-            return false;
-        }
-    
-        Boundry pos = new Boundry(candidate.x, candidate.y, 1, 1);
-        if (!memory.isExplored(pos)) {
-            return false;
-        }
-    
-        return true;
+  // ==============================================================================================
+  private boolean isSafe(PVector candidate) {
+    float halfWidth = tankBoundry.width / 2;
+    float halfHeight = tankBoundry.height / 2;
+    float safetyMargin = 5.0f;
+
+    if (candidate.x - halfWidth - safetyMargin < 0 ||
+      candidate.y - halfHeight - safetyMargin < 0 ||
+      candidate.x + halfWidth + safetyMargin > 800 ||
+      candidate.y + halfHeight + safetyMargin > 800) {
+      return false;
     }
+
+    Boundry candidateBoundary = new Boundry(
+      candidate.x - halfWidth - safetyMargin,
+      candidate.y - halfHeight - safetyMargin,
+      tankBoundry.width + 2 * safetyMargin,
+      tankBoundry.height + 2 * safetyMargin
+      );
+
+    ArrayList<Sprite> obstacles = memory.query(candidateBoundary);
+    if (!obstacles.isEmpty()) {
+      return false;
+    }
+
+    Boundry pos = new Boundry(candidate.x, candidate.y, 1, 1);
+    if (!memory.isExplored(pos)) {
+      return false;
+    }
+
+    return true;
+  }
 
 
   // ================================================================================================

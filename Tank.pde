@@ -29,7 +29,8 @@ class Tank extends Sprite {
     reloading,
     immobilized,
     roam,
-    hunt;
+    hunt,
+    linked;
   ArrayList<PVector> currentPath;
   QuadTreeMemory memory;
   ViewArea viewArea;
@@ -71,6 +72,7 @@ class Tank extends Sprite {
     this.immobilized    = false;
     this.roam           = true;
     this.hunt           = false;
+    this.linked         = false;
     this.randomAction   = int(random(3));
   }
 
@@ -84,7 +86,7 @@ class Tank extends Sprite {
       //radio.commandAllies(this, allTanks);
     }
 
-    if(hunt){
+    if (hunt) {
       handleEnemyQueue();
     }
 
@@ -148,14 +150,14 @@ class Tank extends Sprite {
           calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
 
         if (enemyDetected && !reported) {
-          //VISION SOLUTION. Logs the enemyPosition and then goes home. 
+          //VISION SOLUTION. Logs the enemyPosition and then goes home.
           roam = false;
           goHome();
-          if(!enemyQueue.contains(obj)){
+          if (!enemyQueue.contains(obj)) {
             enemyQueue.add(obj);
             memory.updateExploredStatus(obj.boundry);
           }
-          
+
 
           //Reports enemy pos to allies via radio
           //radio.reportEnemy(obj.position);
@@ -164,7 +166,7 @@ class Tank extends Sprite {
           //Could probably send a call to each tank except tank that sent it and call future method "target"
           //Target method should find direction tank should turn to so that it can shoot enemy accoring to memory
           //Check segemnt between tank and enemy, but only parts that are isExplored. If they contain obstacle, reposition and try again
-          //If segment is obstacle free, start firing until reported that enemy dead 
+          //If segment is obstacle free, start firing until reported that enemy dead
           //TODO implement "target" method according to specs above. probably interupts whole tanks update method so it only does target method call each update
           //TODO implement enemyDead method in radio?
         }
@@ -177,7 +179,7 @@ class Tank extends Sprite {
     memory.pruneChildren(viewArea);
   }
 
-  void collateWithAlly(Tank ally, PVector baseCenter){
+  void collateWithAlly(Tank ally, PVector baseCenter) {
     println("Collating between: " + this +" "+ ally);
     //Merge their memory so they can find eachothers tanks, currently not implemented
     //memory.merge(ally.memory);
@@ -196,53 +198,55 @@ class Tank extends Sprite {
       float distA = a.position.dist(baseCenter);
       float distB = b.position.dist(baseCenter);
       return Float.compare(distA, distB);
-    });
+    }
+    );
 
     this.hunt = true;
+    // Create a path to the enemy's position
+    Sprite targetEnemy = enemyQueue.get(0);
+    calculatePath(position, targetEnemy.position);
   }
 
   void replaceMem(QuadTreeMemory mem) {
     this.memory = mem;
-
-    memory.clearHolding(boundry);
-}
+  }
 
   //This method might not work since i cant test it atm because ally memory on the level of Viktor after a night out *poof*
   //Dunno if it will work though since we rerun this method every frame so we will be calculating new path each time. most probably will have to move that
   void handleEnemyQueue() {
-  if (!enemyQueue.isEmpty()) {
-    // Peek at the first enemy in the queue
-    Sprite targetEnemy = enemyQueue.get(0);
+    if (!enemyQueue.isEmpty()) {
+      // Peek at the first enemy in the queue
+      Sprite targetEnemy = enemyQueue.get(0);
 
-    // Check if the enemy is still alive
-    if (targetEnemy instanceof Tank) {
-      Tank enemyTank = (Tank) targetEnemy;
-      if (enemyTank.health == 0) {
-        // Remove the enemy from the queue if it's dead
-        enemyQueue.remove(0);
-        return; // Exit the method to process the next enemy in the next update
+      // Check if the enemy is still alive
+      if (targetEnemy instanceof Tank) {
+        Tank enemyTank = (Tank) targetEnemy;
+        if (enemyTank.health == 0) {
+          // Remove the enemy from the queue if it's dead
+          enemyQueue.remove(0);
+          return; // Exit the method to process the next enemy in the next update
+        }
       }
-    }
 
-    // Create a path to the enemy's position
-    calculatePath(position, targetEnemy.position);
 
-    // Move towards the enemy
-    if (currentPath != null && currentWaypointIndex < currentPath.size()) {
-      PVector waypoint = currentPath.get(currentWaypointIndex);
-      moveTowards(waypoint);
 
-      // Check if the tank has reached the current waypoint
-      if (position.dist(waypoint) < 7) {
-        currentWaypointIndex++;
+      // Move towards the enemy
+      if (currentPath != null && currentWaypointIndex < currentPath.size()) {
+        PVector waypoint = currentPath.get(currentWaypointIndex);
+        moveTowards(waypoint);
+
+        // Check if the tank has reached the current waypoint
+        if (position.dist(waypoint) < 7) {
+          currentWaypointIndex++;
+        }
       }
+    } else {
+      // If the queue is empty, stop hunting and start roaming, unlink from other tank.
+      hunt = false;
+      roam = true;
+      linked = false;
     }
-  } else {
-    // If the queue is empty, stop hunting and start roaming
-    hunt = false;
-    roam = true;
   }
-}
 
 
 
@@ -354,10 +358,10 @@ class Tank extends Sprite {
       if (base.intersects(obj.boundry) && obj != this) {
         memory.insert(obj);
       }
-  }
+    }
 
-  // Prune unnecessary children in the memory tree for optimization
-  memory.pruneChildren(base);
+    // Prune unnecessary children in the memory tree for optimization
+    memory.pruneChildren(base);
   }
 
   // UPDATE BOUNDRY TO MOVE WITH TANK ================================================================
@@ -482,48 +486,47 @@ class Tank extends Sprite {
   // AUTOMATIC RANDOM MOVEMENT WHEN EXPLORING =================================================================
   void roam() {
     if (roam) {
-        // Initialize prevPos dynamically if it's not set
-        if (prevPos == null) {
-            prevPos = position.copy();
+      // Initialize prevPos dynamically if it's not set
+      if (prevPos == null) {
+        prevPos = position.copy();
+      }
+
+      long now = System.currentTimeMillis();
+      if (now - movementTimer >= actionTime) {
+        // Check if the tank is stuck
+        if (position.dist(prevPos) < 1.0) {
+          if (randomAction != 2) {
+            randomAction = 2;
+            actionTime = 1000;
+          } else {
+            randomAction = 0;
+            actionTime = 500;
+          }
+        } else {
+          randomAction = int(random(3));
+          actionTime = randomAction != 0 ? 200 : 1000; // Shorter time for rotation
         }
 
-        long now = System.currentTimeMillis();
-        if (now - movementTimer >= actionTime) { 
-            // Check if the tank is stuck 
-            if (position.dist(prevPos) < 1.0) { 
-                if (randomAction != 2) { 
-                    randomAction = 2; 
-                    actionTime = 1000; 
-                } else { 
-                    randomAction = 0; 
-                    actionTime = 500; 
-                }
-            } else {
-                randomAction = int(random(3)); 
-                actionTime = randomAction != 0 ? 200 : 1000; // Shorter time for rotation
-            }
+        movementTimer = now; // Reset the timer
+        prevPos = position.copy(); // Update the previous position
+      }
 
-            movementTimer = now; // Reset the timer
-            prevPos = position.copy(); // Update the previous position
-        }
-
-        // Perform the action tied to the current randomAction
-        switch (randomAction) {
-            case 0:
-                action("move");
-                break;
-            case 1:
-                action("stop");
-                action("rotateLeft"); 
-                break;
-            case 2:
-                action("stop");
-                action("rotateRight"); 
-                break;
-            
-        }
+      // Perform the action tied to the current randomAction
+      switch (randomAction) {
+      case 0:
+        action("move");
+        break;
+      case 1:
+        action("stop");
+        action("rotateLeft");
+        break;
+      case 2:
+        action("stop");
+        action("rotateRight");
+        break;
+      }
     }
-}
+  }
   // =================================================
   // ===  DISPLAY METHODS
   // =================================================

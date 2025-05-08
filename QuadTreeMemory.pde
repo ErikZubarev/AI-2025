@@ -5,7 +5,7 @@ class QuadTreeMemory {
   public QuadTreeMemory[] children;
   public boolean explored;
   public Boundry boundry;
-  
+
   private int depth;
   private boolean subdivided;
 
@@ -25,7 +25,7 @@ class QuadTreeMemory {
     // Remove items from memory if they are no longer there
     if (holding != null) {
       if (!placedPositions.contains(holding) || !holding.boundry.intersects(boundry)) {
-          holding = null; 
+        holding = null;
       }
     }
 
@@ -43,37 +43,20 @@ class QuadTreeMemory {
 
     for (QuadTreeMemory child : children) {
       child.updateExploredStatus(viewArea);
-    }    
+    }
   }
 
   public void merge(QuadTreeMemory other) {
     //TODO Implement
   }
 
-  // filepath: c:\Users\leg0m\Desktop\Prog\AI\QuadTreeMemory.pde
-public void clearHolding(Boundry area) {
-    if (!boundry.intersects(area)) {
-        return;
-    }
 
-    if (holding != null && area.intersects(holding.boundry)) {
-        holding = null;
-    }
-
-    if (subdivided) {
-        for (QuadTreeMemory child : children) {
-            if (child != null) {
-                child.clearHolding(area);
-            }
-        }
-    }
-}
 
   // ==================================================================================================
   public void insert(Sprite obj) {
-    if(holding == obj)
+    if (holding == obj)
       return;
-    
+
     if (!boundry.intersects(obj.boundry))
       return;
 
@@ -85,7 +68,7 @@ public void clearHolding(Boundry area) {
     if (!subdivided && explored) {
       subdivide();
       for (QuadTreeMemory child : children) {
-        child.explored = true; //Make sure children are safe 
+        child.explored = true; //Make sure children are safe
       }
     }
 
@@ -100,7 +83,7 @@ public void clearHolding(Boundry area) {
     if (passedDown) {
       explored = false;
       holding = null;
-    }  
+    }
   }
 
   // ==================================================================================================
@@ -125,44 +108,44 @@ public void clearHolding(Boundry area) {
 
     return found;
   }
-  
+
   // ==================================================================================================
   public void pruneChildren(Boundry view) {
-      if(!boundry.intersects(view) || !subdivided)
-        return;
+    if (!boundry.intersects(view) || !subdivided)
+      return;
 
-      // First, recursively call pruneChildren on each child (bottom-up processing).
-      for (QuadTreeMemory child : children) {
-        if (child != null) {
-          child.pruneChildren(view); 
-        }
-      }
-      
-      // Now check if all children are uniform:
-      boolean canPrune = true;
-      Sprite commonHolding = children[0].holding;   
-
-      for (QuadTreeMemory child : children) {
-        if (!child.explored) {
-          canPrune = false;
-          break;
-        }
-        
-        if (child.holding != commonHolding) {
-          canPrune = false;
-          break;
-        }
-      }
-      
-      // If pruning conditions are met, merge children upward.
-      if (canPrune) {
-        holding = commonHolding;
-        explored = true;
-        subdivided = false;
-        children = new QuadTreeMemory[4];
+    // First, recursively call pruneChildren on each child (bottom-up processing).
+    for (QuadTreeMemory child : children) {
+      if (child != null) {
+        child.pruneChildren(view);
       }
     }
- 
+
+    // Now check if all children are uniform:
+    boolean canPrune = true;
+    Sprite commonHolding = children[0].holding;
+
+    for (QuadTreeMemory child : children) {
+      if (!child.explored) {
+        canPrune = false;
+        break;
+      }
+
+      if (child.holding != commonHolding) {
+        canPrune = false;
+        break;
+      }
+    }
+
+    // If pruning conditions are met, merge children upward.
+    if (canPrune) {
+      holding = commonHolding;
+      explored = true;
+      subdivided = false;
+      children = new QuadTreeMemory[4];
+    }
+  }
+
   // =================================================
   // ===  HELPER METHODS
   // =================================================
@@ -170,26 +153,26 @@ public void clearHolding(Boundry area) {
   // ==================================================================================================
   public boolean isExplored(Boundry pos) {
     if (!boundry.intersects(pos)) {
-        return false;
+      return false;
     }
 
     // If this node is explored and the position is within its boundary, return true
     if (explored && pos.isWithin(boundry)) {
-        return true;
+      return true;
     }
 
     // If the node is subdivided, recursively check all children
     if (subdivided) {
-        for (QuadTreeMemory child : children) {
-            if (child != null && child.isExplored(pos)) {
-                return true; 
-            }
+      for (QuadTreeMemory child : children) {
+        if (child != null && child.isExplored(pos)) {
+          return true;
         }
+      }
     }
 
     return false;
   }
-   
+
   // ==================================================================================================
   private void subdivide() {
     if (depth <= 0) {
