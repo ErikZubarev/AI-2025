@@ -161,14 +161,11 @@ void draw() {
 
   if (!gameOver && !pause) {
     displayExplosions();
+    checkForCollisions();
     updateTanksLogic();
     displayCannonBalls();
     updateCannonBalls();
     checkLandMineCollision();
-    //Applies to all tanks
-    checkForCollisions();
-    //Only doing for tank0 atm
-    //tank0.detectObject();
     landmineCounter++;
     if (testing) {
       tank0.memory.display();

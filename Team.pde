@@ -22,7 +22,7 @@ class Team {
       }
     }
 
-    if (currentlyHome.size() > 2) {
+    if (currentlyHome.size() >= 2) {
       linkTanks();
     }
 

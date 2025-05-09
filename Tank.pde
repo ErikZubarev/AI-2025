@@ -70,7 +70,7 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.movementTimer  = 0L;
     this.immobilized    = false;
-    this.roam           = true;
+    this.roam           = false;
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
@@ -86,6 +86,9 @@ class Tank extends Sprite {
       //radio.commandAllies(this, allTanks);
     }
 
+    if (roam) {
+      roam();
+    }
     if (hunt) {
       handleEnemyQueue();
     }
@@ -93,6 +96,7 @@ class Tank extends Sprite {
     checkReloading();
     checkReporting();
     checkHeadingHomeLogic();
+
     switch (state) {
     case 0:
       action("stop");
@@ -105,9 +109,8 @@ class Tank extends Sprite {
       break;
     }
 
-    //roam();
-
     updateCollision();
+
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
 
@@ -145,18 +148,27 @@ class Tank extends Sprite {
       if (viewArea.intersects(obj.boundry) && obj != this) { //Ignore self
         boolean unseenLandmineDetected = detectedNewLandmine(obj);
         boolean enemyDetected = detectedEnemy(obj);
-
-        if (unseenLandmineDetected && goHome)
-          calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
-
-        if (enemyDetected && !reported) {
-          //VISION SOLUTION. Logs the enemyPosition and then goes home.
-          roam = false;
-          goHome();
-          if (!enemyQueue.contains(obj)) {
-            enemyQueue.add(obj);
-            memory.updateExploredStatus(obj.boundry);
+        //Atm så kan den hoppa på en annan fiende den hittar påvägen som inte är först i enemyQueue. vende om det är en "bug" eller "feature"
+        if (obj instanceof Tank) {
+          Tank tank = (Tank) obj;
+          if (enemyDetected && linked && tank.health != 0) {
+            // Handle linked tanks behavior
+            currentPath = null;
+            handleLinkedTanks((Tank) obj);
+          } else if (enemyDetected && enemyQueue.isEmpty() && tank.health != 0) {
+            //VISION SOLUTION. Logs the enemyPosition and then goes home.
+            roam = false;
+            goHome();
+            if (!enemyQueue.contains(tank)) {
+              enemyQueue.add(tank);
+              memory.updateExploredStatus(tank.boundry);
+            }
           }
+
+
+          if (unseenLandmineDetected && goHome)
+            calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
+
 
 
           //Reports enemy pos to allies via radio
@@ -200,7 +212,7 @@ class Tank extends Sprite {
       return Float.compare(distA, distB);
     }
     );
-
+    this.goHome = false;
     this.hunt = true;
     // Create a path to the enemy's position
     Sprite targetEnemy = enemyQueue.get(0);
@@ -211,12 +223,12 @@ class Tank extends Sprite {
     this.memory = mem;
   }
 
-  //This method might not work since i cant test it atm because ally memory on the level of Viktor after a night out *poof*
-  //Dunno if it will work though since we rerun this method every frame so we will be calculating new path each time. most probably will have to move that
   void handleEnemyQueue() {
     if (!enemyQueue.isEmpty()) {
       // Peek at the first enemy in the queue
       Sprite targetEnemy = enemyQueue.get(0);
+      printArray(enemyQueue);
+      println("Current target: " + targetEnemy);
 
       // Check if the enemy is still alive
       if (targetEnemy instanceof Tank) {
@@ -241,13 +253,72 @@ class Tank extends Sprite {
         }
       }
     } else {
-      // If the queue is empty, stop hunting and start roaming, unlink from other tank.
+      // If the queue is empty, stop hunting and start roaming, unlink from other tank. added goHome false just incase since this code sucks
       hunt = false;
       roam = true;
       linked = false;
+      goHome = false;
     }
   }
 
+  void handleLinkedTanks(Tank enemyTank) {
+    // Är väll egentligen här hasLine of Sight skulle behövas men kör bara isWithin atm för den funkar okej.
+    //Bäst vore det typ om den har clear LOS till fiende samt att den är inuit viewArea. Om inte LOS, kör GBFS (högst troligtvis är en ally framför)
+    //Om inte isWithin viewArea kör repositionToAlignWithEnemy().
+    if (enemyTank.boundry.isWithin(this.viewArea)) {
+      println(this.name + " firing at enemy!");
+      action("stop"); // Stop the tank before firing
+      action("fire");
+    } else {
+      println(this.name + " repositioning to align with enemy.");
+      repositionToAlignWithEnemy(enemyTank);
+    }
+  }
+
+  // Den här funkar typ men du kan nog se vad problmet är med den
+  void repositionToAlignWithEnemy(Tank enemyTank) {
+    PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
+    float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
+    float angleDifference = atan2(sin(angleToEnemy - angle), cos(angleToEnemy - angle));
+    println(angle);
+    if (abs(angleDifference) > radians(3)) { // If not aligned, rotate towards the enemy
+      if (angleDifference > 0) {
+        action("rotateRight");
+      } else {
+        action("rotateLeft");
+      }
+    } else {
+      action("move"); // Move forward slightly to adjust position
+    }
+  }
+
+  // Basically copy paste från GBFS men får den inte att funka bra
+  boolean hasLineOfSight(Tank enemyTank, Tank ally) {
+    Boundry tempBoundry = new Boundry(ally.position.x - 20 / 2, ally.position.y - 20 / 2, 20, 20);
+
+    float distance = ally.position.dist(enemyTank.position);
+    int steps = (int)(distance / 5) + 1; // Divide straight line into segments
+    for (int i = 0; i <= steps; i++) {
+      float t = i / (float) steps;
+      PVector point = PVector.lerp(ally.position, enemyTank.position, t); // New segment to check
+      tempBoundry.x = point.x - 20 / 2;
+      tempBoundry.y = point.y - 20 / 2;
+
+      // Check for obstacles
+      ArrayList<Sprite> obstacles = memory.query(tempBoundry);
+      println(this);
+      printArray(obstacles);
+      if (!obstacles.isEmpty()) {
+        for (Sprite obstacle : obstacles) {
+          if (obstacle == this) {
+            continue;
+          }
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
 
   // =================================================
@@ -381,6 +452,7 @@ class Tank extends Sprite {
   void updateCollision() {
     float candidateX = position.x + velocity.x;
     float candidateY = position.y + velocity.y;
+
     if (!collisionAt(candidateX, position.y)) {
       position.x = candidateX;
     }
@@ -416,6 +488,7 @@ class Tank extends Sprite {
   // =================================================
   // ==================================================================================================
   void moveForward() {
+    state = 1;
     this.velocity.x = cos(this.angle) * this.maxspeed;
     this.velocity.y = sin(this.angle) * this.maxspeed;
   }
@@ -438,6 +511,7 @@ class Tank extends Sprite {
 
   // ==================================================================================================
   void stopMoving() {
+    this.state = 0;
     this.velocity.x = 0;
     this.velocity.y = 0;
   }
@@ -446,7 +520,7 @@ class Tank extends Sprite {
   void fireCannon() {
     if (!reloading) {
       println("fired");
-      CannonBall cannonBall = new CannonBall(position.copy(), angle, this);
+      CannonBall cannonBall = new CannonBall(position.copy(), this.angle, this);
       addCannonBall(cannonBall);
       reloading = true;
       reloadTimer = System.currentTimeMillis();
@@ -535,20 +609,42 @@ class Tank extends Sprite {
     pushMatrix();
     translate(this.position.x, this.position.y);
     drawTank(0, 0);
-    if (debugMode) {
+    if (true) { // Assuming debugMode is a global boolean
       fill(230);
       stroke(0);
       strokeWeight(1);
-      rect(0 + 40, 0 - 40, 100, 40);
+      // Adjust text box position relative to the tank's center
+      float textBoxWidth = 100;
+      float textBoxHeight = 50;
+      float textBoxX = 40; // Offset from center
+      float textBoxY = -40; // Offset from center
+      rect(textBoxX, textBoxY, textBoxWidth, textBoxHeight);
       fill(30);
-      textSize(15);
-      text(this.name + "\n( " + this.position.x + ", " + this.position.y + " )", 40 + 5, -20 - 5);
+      textSize(12); // Smaller text size for info
+      textAlign(LEFT, TOP); // Align text to top-left of the box
+      // Display tank name, position, and current state(s)
+      String stateText = "";
+      if (roam) stateText = "Roaming";
+      else if (goHome) stateText = "Going Home";
+      else if (reporting) stateText = "Reporting";
+      else if (hunt) stateText = "Hunting";
+      else stateText = "Stopped";
+
+      text(this.health + "\n(" + nf(this.position.x, 0, 1) + ", " + nf(this.position.y, 0, 1) + ")\nState: " + stateText, textBoxX + 5, textBoxY + 5);
+      textAlign(CENTER, CENTER); // Reset text alignment
     }
     popMatrix();
-    boundry.draw();
-    displayHealth();
+    boundry.draw(); // Assuming Boundry class has a draw method
+    displayHealth(); // Display health bar/image
     if (reloading) {
-      displayReloadTimer();
+      displayReloadTimer(); // Display reload timer visual
+    }
+    if (reporting) {
+      displayReportTimer(); // Display reporting timer visual
+    }
+    if (debugMode) {
+      drawViewArea(); // Draw view area in debug mode
+      displayPathHome(); // Draw path in debug mode (can be for any path, not just home)
     }
   }
 
