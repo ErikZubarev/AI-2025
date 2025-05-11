@@ -43,7 +43,7 @@ class Tank extends Sprite {
   GBFS solver;
   //BFS solver;
 
-  Tank(String _name, PVector _startpos, PImage sprite) {
+  Tank(String _name, PVector _startpos, PImage sprite, QuadTreeMemory memory) {
     this.name           = _name;
     this.tankwidth      = sprite.width;
     this.tankheight     = sprite.height;
@@ -55,7 +55,7 @@ class Tank extends Sprite {
     this.state          = 0;
     this.maxspeed       = 2;
     this.isInTransition = false;
-    this.memory         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
+    this.memory         = memory;
     this.viewArea       = new ViewArea(position.x, position.y, angle);
     this.boundry        = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.goHome         = false;
@@ -70,7 +70,7 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.movementTimer  = 0L;
     this.immobilized    = false;
-    this.roam           = false;
+    this.roam           = false; //name.equals("enemy") ? false : true;
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
@@ -148,6 +148,9 @@ class Tank extends Sprite {
       if (viewArea.intersects(obj.boundry) && obj != this) { //Ignore self
         boolean unseenLandmineDetected = detectedNewLandmine(obj);
         boolean enemyDetected = detectedEnemy(obj);
+
+        
+            
         //Atm så kan den hoppa på en annan fiende den hittar påvägen som inte är först i enemyQueue. vende om det är en "bug" eller "feature"
         if (obj instanceof Tank) {
           Tank tank = (Tank) obj;
@@ -166,8 +169,7 @@ class Tank extends Sprite {
           }
 
 
-          if (unseenLandmineDetected && goHome)
-            calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
+          
 
 
 
@@ -185,6 +187,12 @@ class Tank extends Sprite {
 
 
         memory.insert(obj);
+
+        if (unseenLandmineDetected){
+          if(currentPath != null){
+            calculatePath(position, currentPath.get(currentPath.size() - 1)); //Found an unknown mine while following path so recalculate
+          }
+        }
       }
     }
     memory.updateExploredStatus(viewArea);
@@ -192,12 +200,11 @@ class Tank extends Sprite {
   }
 
   void collateWithAlly(Tank ally, PVector baseCenter) {
-    println("Collating between: " + this +" "+ ally);
     //Merge their memory so they can find eachothers tanks, currently not implemented
     //memory.merge(ally.memory);
-    if (!ally.name.equals("player") && this.name.equals("player")) {
-      ally.replaceMem(this.memory);
-    }
+    //if (!ally.name.equals("player") && this.name.equals("player")) {
+    //  ally.replaceMem(this.memory);
+    //}
     // Merge this tank's enemyQueue with the ally's enemyQueue
     for (Sprite enemy : ally.enemyQueue) {
       if (!enemyQueue.contains(enemy)) {
@@ -213,6 +220,7 @@ class Tank extends Sprite {
     }
     );
     this.goHome = false;
+    this.roam = false;
     this.hunt = true;
     // Create a path to the enemy's position
     Sprite targetEnemy = enemyQueue.get(0);
@@ -227,8 +235,6 @@ class Tank extends Sprite {
     if (!enemyQueue.isEmpty()) {
       // Peek at the first enemy in the queue
       Sprite targetEnemy = enemyQueue.get(0);
-      printArray(enemyQueue);
-      println("Current target: " + targetEnemy);
 
       // Check if the enemy is still alive
       if (targetEnemy instanceof Tank) {
@@ -310,7 +316,7 @@ class Tank extends Sprite {
       printArray(obstacles);
       if (!obstacles.isEmpty()) {
         for (Sprite obstacle : obstacles) {
-          if (obstacle == this) {
+          if (obstacle == this || obstacle == enemyTank) {
             continue;
           }
           return false;
@@ -630,7 +636,7 @@ class Tank extends Sprite {
       else if (hunt) stateText = "Hunting";
       else stateText = "Stopped";
 
-      text(this.health + "\n(" + nf(this.position.x, 0, 1) + ", " + nf(this.position.y, 0, 1) + ")\nState: " + stateText, textBoxX + 5, textBoxY + 5);
+      text(this.name + "\n(" + nf(this.position.x, 0, 1) + ", " + nf(this.position.y, 0, 1) + ")\nState: " + stateText, textBoxX + 5, textBoxY + 5);
       textAlign(CENTER, CENTER); // Reset text alignment
     }
     popMatrix();
@@ -644,8 +650,9 @@ class Tank extends Sprite {
     }
     if (debugMode) {
       drawViewArea(); // Draw view area in debug mode
-      displayPathHome(); // Draw path in debug mode (can be for any path, not just home)
+       // Draw path in debug mode (can be for any path, not just home)
     }
+    displayPathHome();
   }
 
   // ==================================================================================================

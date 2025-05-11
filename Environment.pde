@@ -96,9 +96,15 @@ void setup() {
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
 
-  tank0 = new Tank("player", team0_tank0_startpos, red_tank_img);
-  tank1 = new Tank("ally1", team0_tank1_startpos, red_tank_img);
-  tank2 = new Tank("ally2", team0_tank2_startpos, red_tank_img);
+  QuadTreeMemory memory0         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
+  QuadTreeMemory memory1         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
+
+  //TEMP HIVE MIND
+
+
+  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img, memory0);
+  tank1 = new Tank("ally", team0_tank1_startpos, red_tank_img, memory0);
+  tank2 = new Tank("ally", team0_tank2_startpos, red_tank_img, memory0);
 
   allTanks[0] = tank0;                         // Symbol samma som index!
   allTanks[1] = tank1;
@@ -121,7 +127,7 @@ void setup() {
       newTankPos = new PVector(random(450, 750), random(450, 750));
     } while (isOverlapping(newTankPos, placedPositions, 150));
 
-    Tank newTank = new Tank("enemy", newTankPos, blue_tank_img);
+    Tank newTank = new Tank("enemy", newTankPos, blue_tank_img, memory1);
     placedPositions.add(newTank);
     allTanks[3 + i] = newTank;
     team1.members.add(newTank);
@@ -141,9 +147,6 @@ void draw() {
   checkForInput();
 
   currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
-
-  tank0.displayPathHome();
-  tank1.displayPathHome();
 
   displayHomeBase();
   team0.checkIfTankHome();
