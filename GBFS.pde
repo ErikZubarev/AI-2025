@@ -10,13 +10,15 @@ public class GBFS {
   private QuadTreeMemory memory;
   private Boundry tankBoundry;
   private final float stepSize = 20; //Distance between PVectors
-  private final float tolerance = 50; //Acceptable distance from goal
+  private final float tolerance = 70; //Acceptable distance from goal
+  private final Tank agent;
 
-  public GBFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry) {
+  public GBFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry, Tank agent) {
     this.start = start.copy();
     this.goal = goal.copy();
     this.memory = memory;
     this.tankBoundry = tankBoundry;
+    this.agent = agent;
   }
 
   //Simpler to handle class than QuadTreeMemory
@@ -139,8 +141,15 @@ public class GBFS {
     ArrayList<Sprite> obstacles = memory.query(candidateBoundary);
 
     if (!obstacles.isEmpty() ) {
-      if (!(obstacles.get(0) instanceof Tank)) {
-        return false;
+      for(Sprite sprite : obstacles){
+        if(sprite instanceof Tank){
+          Tank tank = (Tank) sprite;
+          if(!(tank == agent)){
+            return false;
+          }
+        }else{
+          return false;
+        }
       }
     }
 

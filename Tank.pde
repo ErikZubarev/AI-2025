@@ -268,18 +268,34 @@ class Tank extends Sprite {
   }
 
   void handleLinkedTanks(Tank enemyTank) {
-    // Är väll egentligen här hasLine of Sight skulle behövas men kör bara isWithin atm för den funkar okej.
-    //Bäst vore det typ om den har clear LOS till fiende samt att den är inuit viewArea. Om inte LOS, kör GBFS (högst troligtvis är en ally framför)
-    //Om inte isWithin viewArea kör repositionToAlignWithEnemy().
+    // Check if the enemy tank is within the view area
     if (enemyTank.boundry.isWithin(this.viewArea)) {
-      println(this.name + " firing at enemy!");
-      action("stop"); // Stop the tank before firing
-      action("fire");
+        if (hasLineOfSight(enemyTank)) {
+            // Fire at the enemy if it is within the view area and has a clear line of sight
+            action("stop"); // Stop the tank before firing
+            action("fire");
+        } else {
+            // No line of sight, calculate a new path to the enemy
+            println(this.name + " no line of sight, recalculating path.");
+            if (currentPath == null || position.dist(currentPath.get(currentPath.size() - 1)) > 10) {
+                calculatePath(position, enemyTank.position);
+            }
+        }
     } else {
-      println(this.name + " repositioning to align with enemy.");
-      repositionToAlignWithEnemy(enemyTank);
+        // Enemy is not within the view area
+        if (hasLineOfSight(enemyTank)) {
+            // Align with the enemy if there is a clear line of sight
+            println(this.name + " repositioning to align with enemy.");
+            repositionToAlignWithEnemy(enemyTank);
+        } else {
+            // No line of sight, calculate a new path to the enemy
+            println(this.name + " no line of sight, recalculating path.");
+            if (currentPath == null || position.dist(currentPath.get(currentPath.size() - 1)) > 10) {
+                calculatePath(position, enemyTank.position);
+            }
+        }
     }
-  }
+}
 
   // Den här funkar typ men du kan nog se vad problmet är med den
   void repositionToAlignWithEnemy(Tank enemyTank) {
@@ -298,22 +314,19 @@ class Tank extends Sprite {
     }
   }
 
-  // Basically copy paste från GBFS men får den inte att funka bra
-  boolean hasLineOfSight(Tank enemyTank, Tank ally) {
-    Boundry tempBoundry = new Boundry(ally.position.x - 20 / 2, ally.position.y - 20 / 2, 20, 20);
+  boolean hasLineOfSight(Tank enemyTank) {
+    Boundry tempBoundry = new Boundry(position.x - 20 / 2, position.y - 20 / 2, 20, 20);
 
-    float distance = ally.position.dist(enemyTank.position);
+    float distance = position.dist(enemyTank.position);
     int steps = (int)(distance / 5) + 1; // Divide straight line into segments
     for (int i = 0; i <= steps; i++) {
       float t = i / (float) steps;
-      PVector point = PVector.lerp(ally.position, enemyTank.position, t); // New segment to check
+      PVector point = PVector.lerp(position, enemyTank.position, t); // New segment to check
       tempBoundry.x = point.x - 20 / 2;
       tempBoundry.y = point.y - 20 / 2;
 
       // Check for obstacles
       ArrayList<Sprite> obstacles = memory.query(tempBoundry);
-      println(this);
-      printArray(obstacles);
       if (!obstacles.isEmpty()) {
         for (Sprite obstacle : obstacles) {
           if (obstacle == this || obstacle == enemyTank) {
@@ -342,7 +355,7 @@ class Tank extends Sprite {
   void calculatePath(PVector start, PVector goal) {
 
     //*****Uncomment and comment the below lines to change between GBFS and BFS
-    solver = new GBFS(start, goal, memory, boundry);
+    solver = new GBFS(start, goal, memory, boundry, this);
     //solver = new BFS(position, startpos, memory, boundry);
 
     currentPath = solver.solve();
@@ -525,14 +538,11 @@ class Tank extends Sprite {
   // ==================================================================================================
   void fireCannon() {
     if (!reloading) {
-      println("fired");
       CannonBall cannonBall = new CannonBall(position.copy(), this.angle, this);
       addCannonBall(cannonBall);
       reloading = true;
       reloadTimer = System.currentTimeMillis();
-    } else {
-      println("Cannon is on cooldown!");
-    }
+    } 
   }
 
   // ==================================================================================================
