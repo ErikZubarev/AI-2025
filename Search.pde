@@ -1,10 +1,6 @@
 //Anton Lundqvist
 //Erik Zubarev
-import java.util.HashSet;
-import java.util.PriorityQueue;
-import java.util.Comparator;
-
-public class GBFS {
+public class Search {
   private PVector start;
   private PVector goal;
   private QuadTreeMemory memory;
@@ -13,7 +9,7 @@ public class GBFS {
   private final float tolerance = 70; //Acceptable distance from goal
   private final Tank agent;
 
-  public GBFS(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry, Tank agent) {
+  public Search(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry, Tank agent) {
     this.start = start.copy();
     this.goal = goal.copy();
     this.memory = memory;
@@ -31,9 +27,76 @@ public class GBFS {
       this.parent = parent;
     }
   }
+ 
+  // Uncomment to switch between BFS and GBFS ===================================================================
+  public ArrayList<PVector> solve(){
+    return solveGBFS();
+    //return solveBFS();
+  }
+  
+  // Solve problem using BFS ====================================================================================
+  public ArrayList<PVector> solveBFS() {
+    //final path backwards
+    ArrayList<PVector> path = new ArrayList<PVector>();
 
-  // Solve problem ====================================================================================
-  public ArrayList<PVector> solve() {
+    //Nodes to be explored
+    LinkedList<Node> frontier = new LinkedList<Node>();
+
+    //Set of visited nodes x,y coordinates in String
+    HashSet<String> closedSet = new HashSet<String>();
+
+    //Add startnode to frontier
+    frontier.add(new Node(start, null));
+    int iterations = 0;
+    Long startTime = System.nanoTime();
+
+    while (!frontier.isEmpty()) {
+      iterations++;
+      Node current = frontier.getFirst();
+      frontier.removeFirst();
+
+      // Check if current position is within tolerance of the goal
+      if (PVector.dist(current.pos, goal) <= tolerance) {
+        Node tracker = current;
+        while (tracker != null) {
+          path.add(0, tracker.pos.copy());
+          tracker = tracker.parent;
+        }
+        println("Time in nanoseconds: " + (System.nanoTime() - startTime));
+        println("Iterations: " + iterations);
+        println("Path length: " + path.size());
+        //return path;
+        return smoothPath(path);
+      }
+
+      //Create position and add it to visited nodes
+      String key = current.pos.x + "," + current.pos.y;
+      if (closedSet.contains(key)) {
+        continue;
+      }
+      closedSet.add(key);
+
+      //Create neighbours and iterate through neighbors
+      ArrayList<PVector> neighbors = generateNeighbors(current.pos, stepSize);
+      for (PVector neighbor : neighbors) {
+        String neighborKey = neighbor.x + "," + neighbor.y;
+        if (closedSet.contains(neighborKey))
+          continue;
+
+        if (!isSafe(neighbor)) {
+          continue; //Skip if there is an object in the way or area isnt explored
+        }
+        //Add neigbour to frontier with curretn node as its parent
+        frontier.add(new Node(neighbor, current));
+      }
+    }
+
+    println("No valid path found");
+    return path;
+  }
+
+  // Solve problem using GBFS ====================================================================================
+  public ArrayList<PVector> solveGBFS() {
     //final path backwards
     ArrayList<PVector> path = new ArrayList<PVector>();
 

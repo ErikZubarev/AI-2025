@@ -39,9 +39,8 @@ class Tank extends Sprite {
   //*****Uncomment and comment the below lines to change between Radio and Vision sensor mode
   Radio radio;
 
-  //*****Uncomment and comment the below lines to change between GBFS and BFS
-  GBFS solver;
-  //BFS solver;
+  Search solver;
+
 
   Tank(String _name, PVector _startpos, PImage sprite, QuadTreeMemory memory) {
     this.name           = _name;
@@ -353,10 +352,8 @@ class Tank extends Sprite {
 
   // RETURN BEST PATH ================================================================================= BFS / GBFS
   void calculatePath(PVector start, PVector goal) {
-
-    //*****Uncomment and comment the below lines to change between GBFS and BFS
-    solver = new GBFS(start, goal, memory, boundry, this);
-    //solver = new BFS(position, startpos, memory, boundry);
+    // Switch between GBFS and BFS in Search class
+    solver = new Search(start, goal, memory, boundry, this);
 
     currentPath = solver.solve();
     currentWaypointIndex = 0;

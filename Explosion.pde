@@ -2,7 +2,7 @@
 //Erik Zubarev
 class Explosion {
   float x,
-    y;
+        y;
   long iteration;
   int displayLength;
 

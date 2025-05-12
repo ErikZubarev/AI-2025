@@ -1,8 +1,6 @@
 //Anton Lundqvist
 //Erik Zubarev
 
-import java.util.Random;
-import java.util.Iterator;
 boolean testing = false;
 
 // =================================================
