@@ -211,18 +211,14 @@ class Tank extends Sprite {
       float distA = a.position.dist(baseCenter);
       float distB = b.position.dist(baseCenter);
       return Float.compare(distA, distB);
-    }
-    );
+    });
+    
     this.goHome = false;
     this.roam = false;
     this.hunt = true;
     // Create a path to the enemy's position
     Sprite targetEnemy = enemyQueue.get(0);
     calculatePath(position, targetEnemy.position);
-  }
-
-  void replaceMem(QuadTreeMemory mem) {
-    this.memory = mem;
   }
 
   void handleEnemyQueue() {
@@ -239,8 +235,6 @@ class Tank extends Sprite {
           return; // Exit the method to process the next enemy in the next update
         }
       }
-
-
 
       // Move towards the enemy
       if (currentPath != null && currentWaypointIndex < currentPath.size()) {
@@ -266,7 +260,8 @@ class Tank extends Sprite {
     if (enemyTank.boundry.isWithin(this.viewArea)) {
         if (hasLineOfSight(enemyTank)) {
             // Fire at the enemy if it is within the view area and has a clear line of sight
-            action("stop"); // Stop the tank before firing
+            state = 0;
+            //action("stop"); // Stop the tank before firing
             action("fire");
         } else {
             // No line of sight, calculate a new path to the enemy
