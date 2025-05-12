@@ -185,7 +185,7 @@ public class Search {
   private boolean isSafe(PVector candidate) {
     float halfWidth = tankBoundry.width / 2;
     float halfHeight = tankBoundry.height / 2;
-    float safetyMargin = 5.0f;
+    float safetyMargin = 7.0f;
 
     if (candidate.x - halfWidth - safetyMargin < 0 ||
       candidate.y - halfHeight - safetyMargin < 0 ||

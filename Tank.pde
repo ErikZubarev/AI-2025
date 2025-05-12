@@ -81,6 +81,7 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
+    
     if (reported) {
       //radio.commandAllies(this, allTanks);
     }
@@ -180,6 +181,7 @@ class Tank extends Sprite {
         }
 
 
+
         memory.insert(obj);
 
         if (unseenLandmineDetected){
@@ -194,32 +196,38 @@ class Tank extends Sprite {
   }
 
   void collateWithAlly(Tank ally, PVector baseCenter) {
-    //Merge their memory so they can find eachothers tanks, currently not implemented
-    //memory.merge(ally.memory);
-    //if (!ally.name.equals("player") && this.name.equals("player")) {
-    //  ally.replaceMem(this.memory);
-    //}
-    // Merge this tank's enemyQueue with the ally's enemyQueue
-    for (Sprite enemy : ally.enemyQueue) {
-      if (!enemyQueue.contains(enemy)) {
-        enemyQueue.add(enemy);
-      }
+  // Merge enemy queues
+  for (Sprite enemy : ally.enemyQueue) {
+    if (!enemyQueue.contains(enemy)) {
+      enemyQueue.add(enemy);
+    }
+  }
+
+  // Sort the enemyQueue based on distance from the base center
+  enemyQueue.sort((a, b) -> {
+    float distA = a.position.dist(baseCenter);
+    float distB = b.position.dist(baseCenter);
+    return Float.compare(distA, distB);
+  });
+
+  this.goHome = false;
+  this.roam = false;
+  this.hunt = true;
+
+  // Create a path to the enemy's position
+  Sprite targetEnemy = enemyQueue.get(0);
+  calculatePath(position, targetEnemy.position);
+
+  // Add a Target at each waypoint to make sure other tanks dont plan routes that collide with this one.
+  if (currentPath != null && !currentPath.isEmpty()) {
+    for(PVector p : currentPath){
+          Target target = new Target(p, this);
+          placedPositions.add(target);
+          memory.insert(target);
     }
 
-    // Sort the enemyQueue based on the distance from the middle of the base
-    enemyQueue.sort((a, b) -> {
-      float distA = a.position.dist(baseCenter);
-      float distB = b.position.dist(baseCenter);
-      return Float.compare(distA, distB);
-    });
-    
-    this.goHome = false;
-    this.roam = false;
-    this.hunt = true;
-    // Create a path to the enemy's position
-    Sprite targetEnemy = enemyQueue.get(0);
-    calculatePath(position, targetEnemy.position);
   }
+}
 
   void handleEnemyQueue() {
     if (!enemyQueue.isEmpty()) {
@@ -256,35 +264,18 @@ class Tank extends Sprite {
   }
 
   void handleLinkedTanks(Tank enemyTank) {
-    // Check if the enemy tank is within the view area
+    // Är väll egentligen här hasLine of Sight skulle behövas men kör bara isWithin atm för den funkar okej.
+    //Bäst vore det typ om den har clear LOS till fiende samt att den är inuit viewArea. Om inte LOS, kör GBFS (högst troligtvis är en ally framför)
+    //Om inte isWithin viewArea kör repositionToAlignWithEnemy().
     if (enemyTank.boundry.isWithin(this.viewArea)) {
-        if (hasLineOfSight(enemyTank)) {
-            // Fire at the enemy if it is within the view area and has a clear line of sight
-            state = 0;
-            //action("stop"); // Stop the tank before firing
-            action("fire");
-        } else {
-            // No line of sight, calculate a new path to the enemy
-            println(this.name + " no line of sight, recalculating path.");
-            if (currentPath == null || position.dist(currentPath.get(currentPath.size() - 1)) > 10) {
-                calculatePath(position, enemyTank.position);
-            }
-        }
+      println(this.name + " firing at enemy!");
+      action("stop"); // Stop the tank before firing
+      action("fire");
     } else {
-        // Enemy is not within the view area
-        if (hasLineOfSight(enemyTank)) {
-            // Align with the enemy if there is a clear line of sight
-            println(this.name + " repositioning to align with enemy.");
-            repositionToAlignWithEnemy(enemyTank);
-        } else {
-            // No line of sight, calculate a new path to the enemy
-            println(this.name + " no line of sight, recalculating path.");
-            if (currentPath == null || position.dist(currentPath.get(currentPath.size() - 1)) > 10) {
-                calculatePath(position, enemyTank.position);
-            }
-        }
+      println(this.name + " repositioning to align with enemy.");
+      repositionToAlignWithEnemy(enemyTank);
     }
-}
+  }
 
   // Den här funkar typ men du kan nog se vad problmet är med den
   void repositionToAlignWithEnemy(Tank enemyTank) {
@@ -299,6 +290,7 @@ class Tank extends Sprite {
         action("rotateLeft");
       }
     } else {
+      this.state = 1;
       action("move"); // Move forward slightly to adjust position
     }
   }
@@ -475,7 +467,7 @@ class Tank extends Sprite {
     position.set(candidate);
     updateBoundry();
     for (Sprite s : placedPositions) {
-      if (s instanceof Landmine)
+      if (s instanceof Landmine || s instanceof Target)
         continue;
       if (s != this && boundry.intersects(s.boundry)) {
         position.set(backup);

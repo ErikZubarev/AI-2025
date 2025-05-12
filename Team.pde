@@ -76,6 +76,14 @@ class Team {
             }
         }
     }
+
+    //Removes the targets from memory for garbage collection.
+    for (int i = placedPositions.size() - 1; i >= 0; i--) {
+      Sprite sprite = placedPositions.get(i);
+      if (sprite instanceof Target) {
+      placedPositions.remove(i);
+      }
+    }
   }
 
   void display() {
