@@ -88,6 +88,7 @@ class Tank extends Sprite {
     if (roam) {
       roam();
     }
+    
     if (hunt) {
       handleEnemyQueue();
     }
@@ -148,8 +149,7 @@ class Tank extends Sprite {
         boolean unseenLandmineDetected = detectedNewLandmine(obj);
         boolean enemyDetected = detectedEnemy(obj);
 
-        
-            
+   
         //Atm så kan den hoppa på en annan fiende den hittar påvägen som inte är först i enemyQueue. vende om det är en "bug" eller "feature"
         if (obj instanceof Tank) {
           Tank tank = (Tank) obj;
@@ -166,12 +166,7 @@ class Tank extends Sprite {
               memory.updateExploredStatus(tank.boundry);
             }
           }
-
-
           
-
-
-
           //Reports enemy pos to allies via radio
           //radio.reportEnemy(obj.position);
 
