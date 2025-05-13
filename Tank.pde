@@ -205,12 +205,25 @@ class Tank extends Sprite {
 
     // Check if the enemy is still alive
     if (targetEnemy.health == 0) {
-      // Remove the enemy from the queue if it's dead
       team.removeEnemy(targetEnemy);
       return; // Exit the method to process the next enemy in the next update
     }
     
+    //Find way to enemy
+    solver = new Search(position, targetEnemy.position, this.memory, this.boundry, this);
+    ArrayList<PVector> path = solver.solve();
+    currentPath = path;
     
+    //Get clear LOS to enemy
+    for(int i = 0; i < path.size(); i++){
+      PVector pos = path.get(i);
+      if(solver.isSegmentClearAndExplored(pos, targetEnemy.position)){
+        currentPath = new ArrayList<PVector>();
+        for(int j = 0; j < i; j++){
+          currentPath.add(path.get(j));
+        }
+      }
+    }
 
     // Move towards the enemy
     if (currentPath != null && currentWaypointIndex < currentPath.size()) {
