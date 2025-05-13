@@ -77,12 +77,17 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
-    
     if (reported) {
-      if (roam) {
-        roam();
+      if(!team.isQueueEmpty()){
+        hunt = true;
+      }
+      else{
+        roam = true;
       }
       
+      if(roam){
+        roam();
+      }
       if (hunt) {
         handleEnemyQueue();
       }
@@ -143,46 +148,18 @@ class Tank extends Sprite {
       if (viewArea.intersects(obj.boundry) && obj != this) { //Ignore self
         boolean unseenLandmineDetected = detectedNewLandmine(obj);
         boolean enemyDetected = detectedEnemy(obj);
+        
+        if(unseenLandmineDetected && goHome)
+          calculatePath(position, startpos); //Found an unknown mine on the way back home so we recalculate path
 
-   
-        //Atm så kan den hoppa på en annan fiende den hittar påvägen som inte är först i enemyQueue. vende om det är en "bug" eller "feature"
-        if (obj instanceof Tank) {
-          Tank tank = (Tank) obj;
-          if (enemyDetected && linked && tank.health != 0) {
-            // Handle linked tanks behavior
-            currentPath = null;
-            handleLinkedTanks((Tank) obj);
-          } else if (enemyDetected && enemyQueue.isEmpty() && tank.health != 0) {
-            //VISION SOLUTION. Logs the enemyPosition and then goes home.
-            roam = false;
+        if(enemyDetected){
+          if(!reported)
             goHome();
-            if (!enemyQueue.contains(tank)) {
-              enemyQueue.add(tank);
-              memory.updateExploredStatus(tank.boundry);
-            }
-          }
+            
+          team.addEnemyToQueue((Tank) obj); // Conflict with Vision and Radio
+        }
           
-          //Reports enemy pos to allies via radio
-          //radio.reportEnemy(obj.position);
-
-          //Should reportEnemy notify allys directly?
-          //Could probably send a call to each tank except tank that sent it and call future method "target"
-          //Target method should find direction tank should turn to so that it can shoot enemy accoring to memory
-          //Check segemnt between tank and enemy, but only parts that are isExplored. If they contain obstacle, reposition and try again
-          //If segment is obstacle free, start firing until reported that enemy dead
-          //TODO implement "target" method according to specs above. probably interupts whole tanks update method so it only does target method call each update
-          //TODO implement enemyDead method in radio?
-        }
-
-
-
         memory.insert(obj);
-
-        if (unseenLandmineDetected){
-          if(currentPath != null){
-            calculatePath(position, currentPath.get(currentPath.size() - 1)); //Found an unknown mine while following path so recalculate
-          }
-        }
       }
     }
     memory.updateExploredStatus(viewArea);
@@ -190,70 +167,60 @@ class Tank extends Sprite {
   }
 
   void collateWithAlly(Tank ally, PVector baseCenter) {
-  // Merge enemy queues
-  for (Sprite enemy : ally.enemyQueue) {
-    if (!enemyQueue.contains(enemy)) {
-      enemyQueue.add(enemy);
+    // Merge enemy queues
+    for (Sprite enemy : ally.enemyQueue) {
+      if (!enemyQueue.contains(enemy)) {
+        enemyQueue.add(enemy);
+      }
+    }
+  
+    // Sort the enemyQueue based on distance from the base center
+    enemyQueue.sort((a, b) -> {
+      float distA = a.position.dist(baseCenter);
+      float distB = b.position.dist(baseCenter);
+      return Float.compare(distA, distB);
+    });
+  
+    this.goHome = false;
+    this.roam = false;
+    this.hunt = true;
+  
+    // Create a path to the enemy's position
+    Sprite targetEnemy = enemyQueue.get(0);
+    calculatePath(position, targetEnemy.position);
+  
+    // Add a Target at each waypoint to make sure other tanks dont plan routes that collide with this one.
+    if (currentPath != null && !currentPath.isEmpty()) {
+      for(PVector p : currentPath){
+            Target target = new Target(p, this);
+            placedPositions.add(target);
+            memory.insert(target);
+      }
+  
     }
   }
-
-  // Sort the enemyQueue based on distance from the base center
-  enemyQueue.sort((a, b) -> {
-    float distA = a.position.dist(baseCenter);
-    float distB = b.position.dist(baseCenter);
-    return Float.compare(distA, distB);
-  });
-
-  this.goHome = false;
-  this.roam = false;
-  this.hunt = true;
-
-  // Create a path to the enemy's position
-  Sprite targetEnemy = enemyQueue.get(0);
-  calculatePath(position, targetEnemy.position);
-
-  // Add a Target at each waypoint to make sure other tanks dont plan routes that collide with this one.
-  if (currentPath != null && !currentPath.isEmpty()) {
-    for(PVector p : currentPath){
-          Target target = new Target(p, this);
-          placedPositions.add(target);
-          memory.insert(target);
-    }
-
-  }
-}
 
   void handleEnemyQueue() {
-    if (!enemyQueue.isEmpty()) {
-      // Peek at the first enemy in the queue
-      Sprite targetEnemy = enemyQueue.get(0);
+    Tank targetEnemy = team.enemyQueue.get(0);
 
-      // Check if the enemy is still alive
-      if (targetEnemy instanceof Tank) {
-        Tank enemyTank = (Tank) targetEnemy;
-        if (enemyTank.health == 0) {
-          // Remove the enemy from the queue if it's dead
-          enemyQueue.remove(0);
-          return; // Exit the method to process the next enemy in the next update
-        }
+    // Check if the enemy is still alive
+    if (targetEnemy.health == 0) {
+      // Remove the enemy from the queue if it's dead
+      team.removeEnemy(targetEnemy);
+      return; // Exit the method to process the next enemy in the next update
+    }
+    
+    
+
+    // Move towards the enemy
+    if (currentPath != null && currentWaypointIndex < currentPath.size()) {
+      PVector waypoint = currentPath.get(currentWaypointIndex);
+      moveTowards(waypoint);
+
+      // Check if the tank has reached the current waypoint
+      if (position.dist(waypoint) < 7) {
+        currentWaypointIndex++;
       }
-
-      // Move towards the enemy
-      if (currentPath != null && currentWaypointIndex < currentPath.size()) {
-        PVector waypoint = currentPath.get(currentWaypointIndex);
-        moveTowards(waypoint);
-
-        // Check if the tank has reached the current waypoint
-        if (position.dist(waypoint) < 7) {
-          currentWaypointIndex++;
-        }
-      }
-    } else {
-      // If the queue is empty, stop hunting and start roaming, unlink from other tank. added goHome false just incase since this code sucks
-      hunt = false;
-      roam = true;
-      linked = false;
-      goHome = false;
     }
   }
 
@@ -340,7 +307,7 @@ class Tank extends Sprite {
     if (obj instanceof Tank) {
       Tank tank = (Tank) obj;
 
-      if (tank.name.equals("enemy")) {
+      if (tank.name.equals("enemy") && tank.health != 0) {
         return true;
       }
     }

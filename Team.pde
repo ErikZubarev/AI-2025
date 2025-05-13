@@ -2,7 +2,8 @@
 //Erik Zubarev
 class Team {
   ArrayList<Tank> members = new ArrayList<>();
-  ArrayList<Tank> currentlyHome = new ArrayList();
+  ArrayList<Tank> currentlyHome = new ArrayList<>();
+  ArrayList<Tank> enemyQueue = new ArrayList<>();
   color teamColor;
   int x, y;
   Boundry boundry;
@@ -12,6 +13,31 @@ class Team {
     this.y = y;
     this.teamColor = teamColor;
     this.boundry = new Boundry(x, y, 150, 350);
+  }
+  
+  void removeEnemy(Tank t){
+    enemyQueue.remove(0);  
+    sortQueue();
+  }
+  
+  boolean isQueueEmpty(){
+     return enemyQueue.isEmpty();
+  }
+  
+  void addEnemyToQueue(Tank enemy){
+    if(!enemyQueue.contains(enemy)){
+      enemyQueue.add(enemy);
+      sortQueue();
+    }
+  }
+  
+  void sortQueue(){
+    PVector baseCenter = new PVector(x + 75, y + 175); // Center of the base
+    enemyQueue.sort((a, b) -> {
+      float distA = a.position.dist(baseCenter);
+      float distB = b.position.dist(baseCenter);
+      return Float.compare(distA, distB);
+    });
   }
   
   void setReported(){
