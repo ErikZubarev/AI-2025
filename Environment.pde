@@ -94,8 +94,8 @@ void setup() {
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
 
-  QuadTreeMemory memory0         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
-  QuadTreeMemory memory1         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
+  QuadTreeMemory memory0 = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
+  QuadTreeMemory memory1 = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
 
   //TEMP HIVE MIND
 
@@ -115,6 +115,7 @@ void setup() {
   for (Tank t : allTanks) {
     if (t == null) continue;
     team0.members.add(t);
+    t.team = team0;
     t.putBaseIntoMemory(team0.boundry);
   }
 
@@ -129,6 +130,7 @@ void setup() {
     placedPositions.add(newTank);
     allTanks[3 + i] = newTank;
     team1.members.add(newTank);
+    newTank.team = team1;
     newTank.putBaseIntoMemory(team1.boundry);
   }
 }

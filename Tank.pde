@@ -34,11 +34,8 @@ class Tank extends Sprite {
   ArrayList<PVector> currentPath;
   QuadTreeMemory memory;
   ViewArea viewArea;
+  Team team;
   ArrayList<Sprite> enemyQueue = new ArrayList<>();
-
-  //*****Uncomment and comment the below lines to change between Radio and Vision sensor mode
-  Radio radio;
-
   Search solver;
 
 
@@ -61,7 +58,6 @@ class Tank extends Sprite {
     this.reported       = false;
     this.reporting      = false;
     this.reloading      = false;
-    this.radio          = new Radio();
     this.lastFired      = 0;
     this.fireCooldown   = 3000;
     this.health         = 3;
@@ -83,15 +79,13 @@ class Tank extends Sprite {
   void update() {
     
     if (reported) {
-      //radio.commandAllies(this, allTanks);
-    }
-
-    if (roam) {
-      roam();
-    }
-    
-    if (hunt) {
-      handleEnemyQueue();
+      if (roam) {
+        roam();
+      }
+      
+      if (hunt) {
+        handleEnemyQueue();
+      }
     }
 
     checkReloading();
@@ -347,7 +341,6 @@ class Tank extends Sprite {
       Tank tank = (Tank) obj;
 
       if (tank.name.equals("enemy")) {
-        radio.reportEnemy(tank.position);
         return true;
       }
     }
@@ -399,7 +392,7 @@ class Tank extends Sprite {
     displayReportTimer();
     long now = System.currentTimeMillis();
     if (now - reportTimer >= 3000) {
-      reported = true;
+      team.setReported();
       reportTimer = 0L;
       reporting = false;
     }

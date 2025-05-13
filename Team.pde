@@ -13,6 +13,12 @@ class Team {
     this.teamColor = teamColor;
     this.boundry = new Boundry(x, y, 150, 350);
   }
+  
+  void setReported(){
+    for(Tank t : members){
+      t.reported = true;
+    }
+  }
 
   void checkIfTankHome() {
     // Check if tanks have entered the base
