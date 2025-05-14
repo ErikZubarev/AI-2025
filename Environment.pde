@@ -149,7 +149,6 @@ void draw() {
   currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
 
   displayHomeBase();
-  team0.checkIfTankHome();
   displayTrees();
   displayTanks();
 
