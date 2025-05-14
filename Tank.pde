@@ -22,8 +22,7 @@ class Tank extends Sprite {
   float speed,
     maxspeed,
     angle;
-  boolean isInTransition,
-    goHome,
+  boolean goHome,
     reporting,
     reported,
     reloading,
@@ -50,7 +49,6 @@ class Tank extends Sprite {
     this.angle          = 0;
     this.state          = 0;
     this.maxspeed       = 2;
-    this.isInTransition = false;
     this.memory         = memory;
     this.viewArea       = new ViewArea(position.x, position.y, angle);
     this.boundry        = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
@@ -69,6 +67,7 @@ class Tank extends Sprite {
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
+    this.solver         = new Search(this.memory, this.boundry, this);
   }
 
   // =================================================
@@ -206,26 +205,15 @@ class Tank extends Sprite {
     // Check if the enemy is still alive
     if (targetEnemy.health == 0) {
       team.removeEnemy(targetEnemy);
+      hunt = false;
       return; // Exit the method to process the next enemy in the next update
     }
     
-    //Find way to enemy
-    solver = new Search(position, targetEnemy.position, this.memory, this.boundry, this);
-    ArrayList<PVector> path = solver.solve();
-    currentPath = path;
-    
-    //Get clear LOS to enemy
-    for(int i = 0; i < path.size(); i++){
-      PVector pos = path.get(i);
-      if(solver.isSegmentClearAndExplored(pos, targetEnemy.position)){
-        currentPath = new ArrayList<PVector>();
-        for(int j = 0; j < i; j++){
-          currentPath.add(path.get(j));
-        }
-      }
-    }
+    checkPathToEnemy(targetEnemy);
+    moveToEnemy();
+  }
 
-    // Move towards the enemy
+  void moveToEnemy(){
     if (currentPath != null && currentWaypointIndex < currentPath.size()) {
       PVector waypoint = currentPath.get(currentWaypointIndex);
       moveTowards(waypoint);
@@ -234,9 +222,62 @@ class Tank extends Sprite {
       if (position.dist(waypoint) < 7) {
         currentWaypointIndex++;
       }
+    }  
+  }
+  
+  void checkPathToEnemy(Tank enemy){
+    if(currentPath != null)
+      return;
+      
+    //Find way to enemy
+    ArrayList<PVector> path = solver.solve(position, enemy.position);
+    currentPath = path;
+    
+    //Get clear LOS to enemy
+    for(int i = 0; i < path.size(); i++){
+      PVector pos = path.get(i);
+      if(!hasLineOfSight(pos, enemy))
+        continue;
+
+      currentPath = new ArrayList<PVector>();
+      
+      for(int j = 0; j < i; j++)
+        currentPath.add(path.get(j));
+
+      return;
     }
   }
+  
+  public boolean hasLineOfSight(PVector start, Tank enemy) {
+    Boundry tempBoundry = new Boundry(
+      start.x - boundry.width / 2,
+      start.y - boundry.height / 2,
+      tankwidth,
+      tankheight
+      );
 
+    float distance = start.dist(enemy.position);
+    int steps = (int)(distance / 5) + 1; // Divide straight line into segments
+    for (int i = 0; i <= steps; i++) {
+      float t = i / (float) steps;
+      PVector point = PVector.lerp(start, enemy.position, t); // New segment to check
+      tempBoundry.x = point.x - tankwidth / 2;
+      tempBoundry.y = point.y - tankheight / 2;
+
+      // Check for obstacles
+      ArrayList<Sprite> obstacles = memory.query(tempBoundry);
+      
+      for(Sprite s : obstacles){
+        if(s == enemy)
+          continue;
+
+        return false;
+      }
+    }
+    return true;
+  }
+
+  
   void handleLinkedTanks(Tank enemyTank) {
     // Är väll egentligen här hasLine of Sight skulle behövas men kör bara isWithin atm för den funkar okej.
     //Bäst vore det typ om den har clear LOS till fiende samt att den är inuit viewArea. Om inte LOS, kör GBFS (högst troligtvis är en ally framför)
@@ -309,9 +350,7 @@ class Tank extends Sprite {
   // RETURN BEST PATH ================================================================================= BFS / GBFS
   void calculatePath(PVector start, PVector goal) {
     // Switch between GBFS and BFS in Search class
-    solver = new Search(start, goal, memory, boundry, this);
-
-    currentPath = solver.solve();
+    currentPath = solver.solve(start, goal);
     currentWaypointIndex = 0;
   }
 
@@ -358,6 +397,7 @@ class Tank extends Sprite {
         if (currentWaypointIndex >= currentPath.size()) {
           reportTimer = System.currentTimeMillis();
           goHome = false;
+          currentPath = null;
           action("reporting");
         }
       }

@@ -16,7 +16,7 @@ class Team {
   }
   
   void removeEnemy(Tank t){
-    enemyQueue.remove(0);  
+    enemyQueue.remove(t);  
     sortQueue();
   }
   
