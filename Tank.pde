@@ -36,9 +36,6 @@ class Tank extends Sprite {
   ViewArea viewArea;
   ArrayList<Sprite> enemyQueue = new ArrayList<>();
 
-  //*****Uncomment and comment the below lines to change between Radio and Vision sensor mode
-  Radio radio;
-
   Search solver;
 
 
@@ -61,7 +58,6 @@ class Tank extends Sprite {
     this.reported       = false;
     this.reporting      = false;
     this.reloading      = false;
-    this.radio          = new Radio();
     this.lastFired      = 0;
     this.fireCooldown   = 3000;
     this.health         = 3;
@@ -376,7 +372,6 @@ class Tank extends Sprite {
       Tank tank = (Tank) obj;
 
       if (tank.name.equals("enemy")) {
-        radio.reportEnemy(tank.position);
         return true;
       }
     }
