@@ -77,6 +77,10 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
+    //Stopgap measure for making sure tanks can relink after killing assigned enemies
+    if(enemyQueue.isEmpty()){
+      linked = false;
+    }
     if (reported) {
       //radio.commandAllies(this, allTanks);
     }
