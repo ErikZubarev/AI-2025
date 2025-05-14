@@ -1,8 +1,6 @@
 //Anton Lundqvist
 //Erik Zubarev
 
-boolean testing = false;
-
 // =================================================
 // ===  SETUP METHOD
 // =================================================
@@ -140,6 +138,17 @@ void setup() {
 // ==========================================================================================
 void draw() {
 
+  boolean allDead = true;
+  for (Tank enemy : team1.members) {
+    if (enemy.health > 0) {
+      allDead = false;
+      break;
+    }
+  }
+  if (allDead) {
+    gameOver = true;
+  }
+
   background(200);
 
   checkForInput();
@@ -168,10 +177,8 @@ void draw() {
     updateCannonBalls();
     checkLandMineCollision();
     landmineCounter++;
-    if (testing) {
+    if (debugMode) {
       tank0.memory.display();
-    } else {
-      tank1.memory.display();
     }
 
     currentPauseTime = totalPauseTime; // Save prev pause time
@@ -334,9 +341,6 @@ void keyReleased() {
     tank0.action("fire");
   }
 
-  if (key == 'z') {
-    testing = !testing;
-  }
 }
 
 // PLAYER TANK INPUTS =================================================================================

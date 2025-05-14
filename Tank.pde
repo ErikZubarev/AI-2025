@@ -65,7 +65,7 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.movementTimer  = 0L;
     this.immobilized    = false;
-    this.roam           = false; //name.equals("enemy") ? false : true;
+    this.roam           = name.equals("enemy") ? false : true;
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
