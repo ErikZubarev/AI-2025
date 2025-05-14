@@ -153,7 +153,7 @@ void draw() {
 
   checkForInput();
 
-  currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
+  
 
   displayHomeBase();
   team0.checkIfTankHome();
@@ -170,6 +170,7 @@ void draw() {
   dog.display();
 
   if (!gameOver && !pause) {
+    currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
     displayExplosions();
     checkForCollisions();
     updateTanksLogic();
