@@ -361,6 +361,7 @@ class Tank extends Sprite {
     if(currentPath.size() <= 0){
       goHome = false;
       hunt = false;
+      linked = false;
       roam = true;
       enemyQueue = new ArrayList<Sprite>();
     }
