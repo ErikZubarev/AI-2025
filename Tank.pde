@@ -362,6 +362,7 @@ class Tank extends Sprite {
       goHome = false;
       hunt = false;
       roam = true;
+      enemyQueue = new ArrayList<Sprite>();
     }
     currentWaypointIndex = 0;
   }
