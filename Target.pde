@@ -4,7 +4,7 @@ class Target extends Sprite {
 
   Target(PVector position, Tank owner) {
     this.position = position.copy();
-    this.boundry = new Boundry(position.x - owner.tankwidth / 2, position.y - owner.tankheight / 2, owner.tankwidth, owner.tankheight);
+    this.boundry = new Boundry(position.x - 20 / 2, position.y - 20 / 2, 20, 20);
     this.owner = owner;
   }
 }

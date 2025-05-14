@@ -81,7 +81,6 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
-    
     if (reported) {
       //radio.commandAllies(this, allTanks);
     }
@@ -89,7 +88,7 @@ class Tank extends Sprite {
     if (roam) {
       roam();
     }
-    
+
     if (hunt) {
       handleEnemyQueue();
     }
@@ -146,46 +145,35 @@ class Tank extends Sprite {
   // TANK VISION LOGIC ==================================================================================
   void detectObject() {
     for (Sprite obj : placedPositions) {
-      if (viewArea.intersects(obj.boundry) && obj != this) { //Ignore self
+      if (viewArea.intersects(obj.boundry) && obj != this) {
         boolean unseenLandmineDetected = detectedNewLandmine(obj);
         boolean enemyDetected = detectedEnemy(obj);
 
-   
-        //Atm så kan den hoppa på en annan fiende den hittar påvägen som inte är först i enemyQueue. vende om det är en "bug" eller "feature"
-        if (obj instanceof Tank) {
+        if (obj instanceof Tank && enemyDetected) {
           Tank tank = (Tank) obj;
-          if (enemyDetected && linked && tank.health != 0) {
-            // Handle linked tanks behavior
-            currentPath = null;
-            handleLinkedTanks((Tank) obj);
-          } else if (enemyDetected && enemyQueue.isEmpty() && tank.health != 0) {
-            //VISION SOLUTION. Logs the enemyPosition and then goes home.
-            roam = false;
-            goHome();
-            if (!enemyQueue.contains(tank)) {
+          if(!enemyQueue.isEmpty() && !goHome){
+            if(!enemyQueue.contains(tank) && !(enemyQueue.get(0) == tank) && tank.health != 0){
+              currentPath = null;
+              enemyQueue.add(0, tank);
+            }
+          }else{
+            if(tank.health != 0 && !enemyQueue.contains(tank)){
               enemyQueue.add(tank);
               memory.updateExploredStatus(tank.boundry);
+              //Helper logic for exploring the area around the enemytank when its found. Helps with calculating the ambush point
+              Boundry expandedBoundry = new Boundry(tank.position.x - 70, tank.position.y - 70, 140, 140);
+              memory.updateExploredStatus(expandedBoundry);
+              memory.pruneChildren(expandedBoundry);
+              roam = false;
+              goHome();
             }
           }
-          
-          //Reports enemy pos to allies via radio
-          //radio.reportEnemy(obj.position);
-
-          //Should reportEnemy notify allys directly?
-          //Could probably send a call to each tank except tank that sent it and call future method "target"
-          //Target method should find direction tank should turn to so that it can shoot enemy accoring to memory
-          //Check segemnt between tank and enemy, but only parts that are isExplored. If they contain obstacle, reposition and try again
-          //If segment is obstacle free, start firing until reported that enemy dead
-          //TODO implement "target" method according to specs above. probably interupts whole tanks update method so it only does target method call each update
-          //TODO implement enemyDead method in radio?
         }
-
-
 
         memory.insert(obj);
 
-        if (unseenLandmineDetected){
-          if(currentPath != null){
+        if (unseenLandmineDetected) {
+          if (currentPath != null && currentPath.size() > 0) {
             calculatePath(position, currentPath.get(currentPath.size() - 1)); //Found an unknown mine while following path so recalculate
           }
         }
@@ -195,67 +183,129 @@ class Tank extends Sprite {
     memory.pruneChildren(viewArea);
   }
 
+
+  // =================================================
+  // ===  ATTACKING LOGIC
+  // =================================================
+  // ==================================================================================================
+
+  //Helper function for gathering valid points around a enemy tank to path find to.
+  //Uses trigonometri to get 4 evenly spaces points around a tank in a 50px radius
+  PVector findAmbushSite(Sprite enemyTank) {
+    println(enemyTank);
+    PVector target = enemyTank.position;
+    float radius = 50; 
+    int slices = 4; 
+
+
+    ArrayList<PVector> points = new ArrayList<>();
+
+    for (int i = 0; i < slices; i++) {
+      float angle = TWO_PI / slices * i; 
+      float x = target.x + cos(angle) * radius; 
+      float y = target.y + sin(angle) * radius; 
+      points.add(new PVector(x, y));
+    }
+
+    //Checks all spots to see if they are clear excluding the enemyTank
+    for (PVector vec : points) {
+      Boundry temp = new Boundry(vec.x - tankwidth / 2, vec.y - tankheight, 70, 70);
+      if (memory.isExplored(new Boundry(target.x, target.y, 1, 1))) {
+        ArrayList<Sprite> obstacles = memory.query(temp);
+        if (!obstacles.isEmpty()) {
+          boolean allAreEnemyTank = true;
+          for (Sprite obstacle : obstacles) {
+            if (obstacle != enemyTank) {
+              allAreEnemyTank = false;
+              break;
+            }
+          }
+          if (allAreEnemyTank) {
+            return vec;
+          }
+        }
+      }
+    }
+
+    return target;
+  }
+
+  //Helper method to collate information with a ally when going out to hunt a enemy.
+  //Merges eachothers enemeyQueue lists and sorts them according to distance from base, least first.
   void collateWithAlly(Tank ally, PVector baseCenter) {
-  // Merge enemy queues
-  for (Sprite enemy : ally.enemyQueue) {
-    if (!enemyQueue.contains(enemy)) {
-      enemyQueue.add(enemy);
+    for (Sprite enemy : ally.enemyQueue) {
+      if (!enemyQueue.contains(enemy)) {
+        enemyQueue.add(enemy);
+      }
+    }
+
+    //Sort the enemyQueue based on distance from the base center
+    enemyQueue.sort((a, b) -> {
+      float distA = a.position.dist(baseCenter);
+      float distB = b.position.dist(baseCenter);
+      return Float.compare(distA, distB);
+    }
+    );
+
+    this.goHome = false;
+    this.roam = false;
+    this.hunt = true;
+
+    //Create a ambush site that dosent interfere with the other tanks pathfinding thus giving each tank a unique goal
+    //which hopefully makes the tanks not crash into eachother and get stuck.
+    Sprite targetEnemy = enemyQueue.get(0);
+    PVector ambush = findAmbushSite(targetEnemy);
+    calculatePath(position, ambush);
+    Target ambushTarget = new Target(ambush, this);
+    placedPositions.add(ambushTarget);
+    memory.insert(ambushTarget);
+
+    //Add a Target at each waypoint to make sure other tanks dont plan routes that collide with this one.
+    if (currentPath != null && !currentPath.isEmpty()) {
+      for (int i = 0; i < currentPath.size() - 1; i++) { //Exclude the last position, since this is handled when creatin ambush point
+        PVector p = currentPath.get(i);
+        Target target = new Target(p, this);
+        placedPositions.add(target);
+        memory.insert(target);
+      }
     }
   }
 
-  // Sort the enemyQueue based on distance from the base center
-  enemyQueue.sort((a, b) -> {
-    float distA = a.position.dist(baseCenter);
-    float distB = b.position.dist(baseCenter);
-    return Float.compare(distA, distB);
-  });
-
-  this.goHome = false;
-  this.roam = false;
-  this.hunt = true;
-
-  // Create a path to the enemy's position
-  Sprite targetEnemy = enemyQueue.get(0);
-  calculatePath(position, targetEnemy.position);
-
-  // Add a Target at each waypoint to make sure other tanks dont plan routes that collide with this one.
-  if (currentPath != null && !currentPath.isEmpty()) {
-    for(PVector p : currentPath){
-          Target target = new Target(p, this);
-          placedPositions.add(target);
-          memory.insert(target);
-    }
-
-  }
-}
-
+  //Main method for handling movemement to enemyTanks and removing them from the enemeyQueue if they die.
   void handleEnemyQueue() {
     if (!enemyQueue.isEmpty()) {
-      // Peek at the first enemy in the queue
+      //Peek at the first enemy in the queue
       Sprite targetEnemy = enemyQueue.get(0);
 
-      // Check if the enemy is still alive
+      //Check if the enemy is still alive
       if (targetEnemy instanceof Tank) {
         Tank enemyTank = (Tank) targetEnemy;
         if (enemyTank.health == 0) {
-          // Remove the enemy from the queue if it's dead
+          //Remove the enemy from the queue if it's dead
           enemyQueue.remove(0);
-          return; // Exit the method to process the next enemy in the next update
+          return; //Exit the method to process the next enemy in the next update
         }
       }
 
-      // Move towards the enemy
+      //Move towards the enemy
       if (currentPath != null && currentWaypointIndex < currentPath.size()) {
         PVector waypoint = currentPath.get(currentWaypointIndex);
         moveTowards(waypoint);
 
-        // Check if the tank has reached the current waypoint
+        //Check if the tank has reached the current waypoint
         if (position.dist(waypoint) < 7) {
           currentWaypointIndex++;
         }
+
+        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){
+          currentPath = null;
+        }
+      }
+      else{
+        engageEnemy((Tank) targetEnemy);
       }
     } else {
-      // If the queue is empty, stop hunting and start roaming, unlink from other tank. added goHome false just incase since this code sucks
+      //If the queue is empty, stop hunting and start roaming, unlink from other tank.
       hunt = false;
       roam = true;
       linked = false;
@@ -263,62 +313,35 @@ class Tank extends Sprite {
     }
   }
 
-  void handleLinkedTanks(Tank enemyTank) {
-    // Är väll egentligen här hasLine of Sight skulle behövas men kör bara isWithin atm för den funkar okej.
-    //Bäst vore det typ om den har clear LOS till fiende samt att den är inuit viewArea. Om inte LOS, kör GBFS (högst troligtvis är en ally framför)
-    //Om inte isWithin viewArea kör repositionToAlignWithEnemy().
-    if (enemyTank.boundry.isWithin(this.viewArea)) {
-      println(this.name + " firing at enemy!");
-      action("stop"); // Stop the tank before firing
+  //helper method for handleEnemyQueue that handles firing on the enemy if they can.
+  void engageEnemy(Tank enemyTank) {
+    if (enemyTank.boundry.isWithin(this.viewArea) && repositionToAlignWithEnemy(enemyTank)) {
+      action("stop");
       action("fire");
     } else {
-      println(this.name + " repositioning to align with enemy.");
       repositionToAlignWithEnemy(enemyTank);
     }
   }
 
-  // Den här funkar typ men du kan nog se vad problmet är med den
-  void repositionToAlignWithEnemy(Tank enemyTank) {
+  //Helper method for engageEnemy. calculates the direction the tank needs to turn to face enemy and turns it accordingly
+  //If they are already facing them we move forwards.
+  boolean repositionToAlignWithEnemy(Tank enemyTank) {
     PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
     float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
     float angleDifference = atan2(sin(angleToEnemy - angle), cos(angleToEnemy - angle));
-    println(angle);
     if (abs(angleDifference) > radians(3)) { // If not aligned, rotate towards the enemy
       if (angleDifference > 0) {
         action("rotateRight");
       } else {
         action("rotateLeft");
       }
+      return false;
     } else {
-      this.state = 1;
-      action("move"); // Move forward slightly to adjust position
+      action("move");
+      return true;
     }
   }
 
-  boolean hasLineOfSight(Tank enemyTank) {
-    Boundry tempBoundry = new Boundry(position.x - 20 / 2, position.y - 20 / 2, 20, 20);
-
-    float distance = position.dist(enemyTank.position);
-    int steps = (int)(distance / 5) + 1; // Divide straight line into segments
-    for (int i = 0; i <= steps; i++) {
-      float t = i / (float) steps;
-      PVector point = PVector.lerp(position, enemyTank.position, t); // New segment to check
-      tempBoundry.x = point.x - 20 / 2;
-      tempBoundry.y = point.y - 20 / 2;
-
-      // Check for obstacles
-      ArrayList<Sprite> obstacles = memory.query(tempBoundry);
-      if (!obstacles.isEmpty()) {
-        for (Sprite obstacle : obstacles) {
-          if (obstacle == this || obstacle == enemyTank) {
-            continue;
-          }
-          return false;
-        }
-      }
-    }
-    return true;
-  }
 
 
   // =================================================
@@ -338,6 +361,12 @@ class Tank extends Sprite {
     solver = new Search(start, goal, memory, boundry, this);
 
     currentPath = solver.solve();
+    //Fallback in case no path was found. Revers to roaming.
+    if(currentPath.size() <= 0){
+      goHome = false;
+      hunt = false;
+      roam = true;
+    }
     currentWaypointIndex = 0;
   }
 
@@ -521,7 +550,7 @@ class Tank extends Sprite {
       addCannonBall(cannonBall);
       reloading = true;
       reloadTimer = System.currentTimeMillis();
-    } 
+    }
   }
 
   // ==================================================================================================
@@ -639,7 +668,7 @@ class Tank extends Sprite {
     }
     if (debugMode) {
       drawViewArea(); // Draw view area in debug mode
-       // Draw path in debug mode (can be for any path, not just home)
+      // Draw path in debug mode (can be for any path, not just home)
     }
     displayPathHome();
   }
