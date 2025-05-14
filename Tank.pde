@@ -232,7 +232,8 @@ class Tank extends Sprite {
 
   //Helper method to collate information with a ally when going out to hunt a enemy.
   //Merges eachothers enemeyQueue lists and sorts them according to distance from base, least first.
-  void collateWithAlly(Tank ally, PVector baseCenter) {
+  // ...existing code...
+void collateWithAlly(Tank ally, PVector baseCenter) {
     for (Sprite enemy : ally.enemyQueue) {
       if (!enemyQueue.contains(enemy)) {
         enemyQueue.add(enemy);
@@ -244,15 +245,21 @@ class Tank extends Sprite {
       float distA = a.position.dist(baseCenter);
       float distB = b.position.dist(baseCenter);
       return Float.compare(distA, distB);
-    }
-    );
+    });
 
     this.goHome = false;
     this.roam = false;
     this.hunt = true;
 
-    //Create a ambush site that dosent interfere with the other tanks pathfinding thus giving each tank a unique goal
-    //which hopefully makes the tanks not crash into eachother and get stuck.
+    // Only proceed if there is at least one enemy
+    if (enemyQueue.isEmpty()) {
+      this.hunt = false;
+      this.roam = true;
+      this.linked = false;
+      return;
+    }
+
+    //Create a ambush site that doesn't interfere with the other tanks pathfinding
     Sprite targetEnemy = enemyQueue.get(0);
     PVector ambush = findAmbushSite(targetEnemy);
     calculatePath(position, ambush);
@@ -260,16 +267,17 @@ class Tank extends Sprite {
     placedPositions.add(ambushTarget);
     memory.insert(ambushTarget);
 
-    //Add a Target at each waypoint to make sure other tanks dont plan routes that collide with this one.
+    //Add a Target at each waypoint to make sure other tanks don't plan routes that collide with this one.
     if (currentPath != null && !currentPath.isEmpty()) {
-      for (int i = 0; i < currentPath.size() - 1; i++) { //Exclude the last position, since this is handled when creatin ambush point
+      for (int i = 0; i < currentPath.size() - 1; i++) {
         PVector p = currentPath.get(i);
         Target target = new Target(p, this);
         placedPositions.add(target);
         memory.insert(target);
       }
     }
-  }
+}
+// ...existing code...
 
   //Main method for handling movemement to enemyTanks and removing them from the enemeyQueue if they die.
   void handleEnemyQueue() {
