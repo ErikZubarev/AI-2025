@@ -63,7 +63,7 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.movementTimer  = 0L;
     this.immobilized    = false;
-    this.roam           = false; //name.equals("enemy") ? false : true;
+    this.roam           = name.equals("enemy") ? false : true;
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
@@ -344,6 +344,7 @@ class Tank extends Sprite {
       linked = false;
       currentPath = null;
       goHome = false;
+      reported = false;
       return;
     }
     
@@ -532,6 +533,7 @@ class Tank extends Sprite {
       hunt = false;
       linked = false;
       roam = true;
+      reported = false;
       enemyQueue = new ArrayList<Sprite>();
     }
     currentWaypointIndex = 0;
