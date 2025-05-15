@@ -278,7 +278,7 @@ class Tank extends Sprite {
 
       currentPath = new ArrayList<PVector>();
       
-      for(int j = 0; j < i; j++)
+      for(int j = 0; j <= i; j++)
         currentPath.add(path.get(j));
 
       return;
