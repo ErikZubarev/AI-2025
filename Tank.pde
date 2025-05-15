@@ -337,9 +337,8 @@ class Tank extends Sprite {
 
   //Main method for handling movemement to enemyTanks and removing them from the enemeyQueue if they die.
   void handleEnemyQueueVision() {
-    
     //If the queue is empty, stop hunting and start roaming, unlink from other tank.
-    if(team.isQueueEmpty()){
+    if(enemyQueue.isEmpty()){
       hunt = false;
       roam = true;
       linked = false;
@@ -349,7 +348,7 @@ class Tank extends Sprite {
     }
     
     //Otherwise there is an enemy to kill
-    Tank enemyTank = (Tank) team.enemyQueue.get(0);
+    Tank enemyTank = (Tank) enemyQueue.get(0);
 
 
     if (enemyTank.health == 0) {

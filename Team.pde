@@ -65,7 +65,14 @@ class Team {
       }
     }
 
-    if (currentlyHome.size() >= 2) {
+    boolean anyReported = false;
+    for (Tank tank : currentlyHome) {
+      if (tank.reported) {
+      anyReported = true;
+      break;
+      }
+    }
+    if (currentlyHome.size() >= 2 && anyReported) {
       linkTanks();
     }
 
