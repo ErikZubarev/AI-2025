@@ -6,6 +6,7 @@ class Team {
   ArrayList<Tank> enemyQueue = new ArrayList<>();
   color teamColor;
   int x, y;
+  boolean radioComs = false; // #################################### SWITCH BETWEEN RADIO OR VISION COMMUNICATIONS, SWITCH TO FALSE FOR VISION ####################################
   Boundry boundry;
 
   public Team(int x, int y, color teamColor) {
@@ -17,10 +18,9 @@ class Team {
 
   // =================================================
   // ===  RADIO
-  // === UNCOMMENT THIS CODE BLOCK FOR RADIO AND COMMENT OUT VISION BLOCK
   // =================================================
   // ==================================================================================================
-
+  
   void removeEnemy(Tank t){
     enemyQueue.remove(t);  
     sortQueue();
@@ -51,13 +51,12 @@ class Team {
       t.reported = true;
     }
   }
-
+  
   // =================================================
   // ===  VISION
-  // === UNCOMMENT THIS CODE BLOCK FOR VISION AND COMMENT OUT RADIO BLOCK
   // =================================================
   // ==================================================================================================
-  /*
+  
   void checkIfTankHome() {
     // Check if tanks have entered the base
     for (Tank tank : members) {
@@ -130,7 +129,7 @@ class Team {
     }
   }
 
-  */
+  
 
   void display() {
     pushMatrix();

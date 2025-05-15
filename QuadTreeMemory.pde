@@ -46,12 +46,6 @@ class QuadTreeMemory {
     }
   }
 
-  public void merge(QuadTreeMemory other) {
-    //TODO Implement
-  }
-
-
-
   // ==================================================================================================
   public void insert(Sprite obj) {
     if (holding == obj)

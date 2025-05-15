@@ -154,11 +154,12 @@ void draw() {
 
   checkForInput();
 
-  
-
+  // For vision communications, check if tank is home
+  if(!team0.radioComs)
+    team0.checkIfTankHome();
+    
+    
   displayHomeBase();
-  //UNCOMMENT THIS FOR VISION
-  //team0.checkIfTankHome();
   displayTrees();
   displayTanks();
 

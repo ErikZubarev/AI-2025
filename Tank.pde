@@ -22,8 +22,7 @@ class Tank extends Sprite {
   float speed,
     maxspeed,
     angle;
-  boolean isInTransition,
-    goHome,
+  boolean goHome,
     reporting,
     reported,
     reloading,
@@ -50,7 +49,6 @@ class Tank extends Sprite {
     this.angle          = 0;
     this.state          = 0;
     this.maxspeed       = 2;
-    this.isInTransition = false;
     this.memory         = memory;
     this.viewArea       = new ViewArea(position.x, position.y, angle);
     this.boundry        = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
@@ -78,10 +76,17 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
-    //Stopgap measure for making sure tanks can relink after killing assigned enemies, only for vision. i.e uncomment if you switch to vision
-    //if(enemyQueue.isEmpty()){
-    //  linked = false;
-    //}
+    //Stopgap measure for making sure tanks can relink after killing assigned enemies, only for vision
+    if(enemyQueue.isEmpty())
+      linked = false;
+    
+    
+    if(hunt && reported){
+      if(team.radioComs)
+        handleEnemyQueueRadio();
+      else 
+        handleEnemyQueueVision();
+    }
 
     if (roam) {
       roam();
@@ -91,14 +96,8 @@ class Tank extends Sprite {
     if (reported) {
       hunt = true;
       roam = false;
-      handleEnemyQueueRadio();
     }
     
-    //Vision
-    //if(hunt){
-    //  handleEnemyQueueVision();
-    //}
-
     checkReloading();
     checkReporting();
     checkHeadingHomeLogic();
@@ -156,35 +155,7 @@ class Tank extends Sprite {
         boolean enemyDetected = detectedEnemy(obj);
 
         if (obj instanceof Tank && enemyDetected) {
-          Tank tank = (Tank) obj;
-          if(!enemyQueue.isEmpty() && !goHome){
-            if(!enemyQueue.contains(tank) && !(enemyQueue.get(0) == tank) && tank.health != 0){
-              currentPath = null;
-              enemyQueue.add(0, tank);
-            }
-          }else{
-            if(tank.health != 0 && !enemyQueue.contains(tank)){
-              //FOR VISION IMPLEMENTATION
-              //enemyQueue.add(tank);
-              
-
-              //FOR RADIO IMPLEMENTATION
-              team.addEnemyToQueue(tank);
-              team.setReported();
-
-              memory.updateExploredStatus(tank.boundry);
-              //Helper logic for exploring the area around the enemytank when its found. Helps with calculating the ambush point
-              Boundry expandedBoundry = new Boundry(tank.position.x - 70, tank.position.y - 70, 140, 140);
-              memory.updateExploredStatus(expandedBoundry);
-              memory.pruneChildren(expandedBoundry);
-              roam = false;
-              //UNCOMMENT FOR VISION
-              //goHome();
-            }
-              
-              
-            
-          }
+          handleEnemyDetection((Tank) obj);
         }
 
         memory.insert(obj);
@@ -200,59 +171,91 @@ class Tank extends Sprite {
     memory.pruneChildren(viewArea);
   }
   
+  void handleEnemyDetection(Tank tank){
+    if(!enemyQueue.isEmpty() && !goHome){
+      if(!enemyQueue.contains(tank) && !(enemyQueue.get(0) == tank) && tank.health != 0){
+        currentPath = null;
+        enemyQueue.add(0, tank);
+      }
+    }else{
+      if(tank.health != 0 && !enemyQueue.contains(tank)){
+        //FOR VISION IMPLEMENTATION
+        if(!team.radioComs){
+          enemyQueue.add(tank);
+          goHome();
+        }
+        
+        //FOR RADIO IMPLEMENTATION
+        if(team.radioComs){
+          if(!team.enemyQueue.contains(tank))
+            startReport();
+          team.addEnemyToQueue(tank);
+        }
+
+        //Helper logic for exploring the area around the enemytank when its found. Helps with calculating the ambush point
+        memory.updateExploredStatus(tank.boundry);
+        Boundry expandedBoundry = new Boundry(tank.position.x - 70, tank.position.y - 70, 140, 140);
+        memory.updateExploredStatus(expandedBoundry);
+        memory.pruneChildren(expandedBoundry);
+        roam = false;
+      }
+    }
+  }
+  
   // =================================================
   // ===  START OF RADIO LOGIC
   // =================================================
   // ==================================================================================================
 
 
+  // RADIO IMPLEMENTATION OF KILLING ENEMIES ==========================================================
   void handleEnemyQueueRadio() {
-    if (!team.isQueueEmpty()) {
-      //Peek at the first enemy in the queue
-      Sprite targetEnemy = team.enemyQueue.get(0);
-
-      //Check if the enemy is still alive
-      if (targetEnemy instanceof Tank) {
-        Tank enemyTank = (Tank) targetEnemy;
-        if (enemyTank.health == 0) {
-          //Remove the enemy from the queue if it's dead
-          team.removeEnemy((Tank)targetEnemy);
-          currentPath = null;
-          return; //Exit the method to process the next enemy in the next update
-        }
-      }
-      
-      checkPathToEnemy((Tank)targetEnemy);
-
-      //Move towards the enemy
-      if (currentPath != null && currentWaypointIndex < currentPath.size()) {
-        PVector waypoint = currentPath.get(currentWaypointIndex);
-        moveTowards(waypoint);
-
-        //Check if the tank has reached the current waypoint
-        if (position.dist(waypoint) < 10) {
-          currentWaypointIndex++;
-        }
-
-        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){  
-          //THE HOLY PRINTLN, IDK WHY BUT THIS CODE SEGMENT LEGIT DOSENT WORK WITHOUT IT
-          println("you should stop");
-          currentWaypointIndex = Integer.MAX_VALUE;
-          action("stop");
-        }
-      }
-      else{
-        engageEnemyRadio((Tank) targetEnemy);
-      }
-    } else {
-      //If the queue is empty, stop hunting and start roaming, unlink from other tank.
+    //If the queue is empty, stop hunting and start roaming, unlink from other tank.
+    if(team.isQueueEmpty()){
       hunt = false;
       roam = true;
       goHome = false;
       currentPath = null;
       reported = false;
+      return;
     }
 
+    //Otherwise there is an enemy to kill
+    Tank enemyTank = (Tank) team.enemyQueue.get(0);
+
+    //Check if the enemy is still alive
+    if (enemyTank.health == 0) {
+      team.removeEnemy(enemyTank);
+      currentPath = null;
+      return; //Exit the method to process the next enemy in the next update
+    }
+    
+    //Move towards the enemy
+    checkPathToEnemy(enemyTank);
+
+    //If not at enemy, move to enemy, else shoot at enemy
+    if (currentPath != null && currentWaypointIndex < currentPath.size())
+      moveTowardEnemyRadio();
+    else
+      engageEnemyRadio(enemyTank);
+  }
+  
+  //helper method for handleEnemyQueue that handles firing on the enemy if they can.
+  void moveTowardEnemyRadio(){
+    PVector waypoint = currentPath.get(currentWaypointIndex);
+    moveTowards(waypoint);
+
+    //Check if the tank has reached the current waypoint
+    if (position.dist(waypoint) < 10) {
+      currentWaypointIndex++;
+    }
+
+    if(position.dist(currentPath.get(currentPath.size()-1)) < 10){  
+      //THE HOLY PRINTLN, IDK WHY BUT THIS CODE SEGMENT LEGIT DOSENT WORK WITHOUT IT
+      println("you should stop");
+      currentWaypointIndex = Integer.MAX_VALUE;
+      action("stop");
+    }
   }
 
   //helper method for handleEnemyQueue that handles firing on the enemy if they can.
@@ -584,15 +587,18 @@ class Tank extends Sprite {
       if (position.dist(waypoint) < 7) {
         currentWaypointIndex++;
         if (currentWaypointIndex >= currentPath.size()) {
-          reportTimer = System.currentTimeMillis();
-          goHome = false;
-          action("reporting");
+          startReport();
         }
       }
     }
   }
+  void startReport(){
+    reportTimer = System.currentTimeMillis();
+    goHome = false;
+    action("reporting");
+  }
 
-  // IS REPORTING LOGIC ================================================================================ TODO: UPDATE THIS SO TANK CANT MOVE WHEN REPORTING
+  // IS REPORTING LOGIC ================================================================================
   void checkReporting() {
   if (reportTimer == 0L)
     return;
@@ -773,7 +779,7 @@ class Tank extends Sprite {
             actionTime = 500;
           }
         } else {
-          randomAction = int(random(3));
+          randomAction = int(random(2));
           actionTime = randomAction != 0 ? 200 : 1000; // Shorter time for rotation
         }
 
