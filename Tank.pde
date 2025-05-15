@@ -316,7 +316,7 @@ class Tank extends Sprite {
       );
 
     float distance = start.dist(enemy.position);
-    int steps = (int)(distance / 5) + 1; // Divide straight line into segments
+    int steps = (int)(distance / 10) + 1; // Divide straight line into segments
     for (int i = 0; i <= steps; i++) {
       float t = i / (float) steps;
       PVector point = PVector.lerp(start, enemy.position, t); // New segment to check
