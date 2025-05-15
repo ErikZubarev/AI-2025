@@ -1015,6 +1015,7 @@ class Tank extends Sprite {
       translate(agentX, agentY);
       rotate(this.viewAngle);
       strokeWeight(0.5);
+      stroke(0);
       fill(15, 15, 15, 50);
       quad(0, 0 - t.tankwidth/4, 0, 0 + t.tankwidth/4, 0+viewLength, 0+viewWidth/2, 0+viewLength, 0-viewWidth/2);
       popMatrix();
