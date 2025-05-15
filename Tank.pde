@@ -171,6 +171,7 @@ class Tank extends Sprite {
     memory.pruneChildren(viewArea);
   }
   
+  // HANDLE ENEMY DETECTION ==============================================================================
   void handleEnemyDetection(Tank tank){
     if(!enemyQueue.isEmpty() && !goHome){
       if(!enemyQueue.contains(tank) && !(enemyQueue.get(0) == tank) && tank.health != 0){
@@ -205,8 +206,6 @@ class Tank extends Sprite {
   // =================================================
   // ===  START OF RADIO LOGIC
   // =================================================
-  // ==================================================================================================
-
 
   // RADIO IMPLEMENTATION OF KILLING ENEMIES ==========================================================
   void handleEnemyQueueRadio() {
@@ -235,30 +234,12 @@ class Tank extends Sprite {
 
     //If not at enemy, move to enemy, else shoot at enemy
     if (currentPath != null && currentWaypointIndex < currentPath.size())
-      moveTowardEnemyRadio();
+      moveTowardEnemy();
     else
       engageEnemyRadio(enemyTank);
   }
-  
-  //helper method for handleEnemyQueue that handles firing on the enemy if they can.
-  void moveTowardEnemyRadio(){
-    PVector waypoint = currentPath.get(currentWaypointIndex);
-    moveTowards(waypoint);
 
-    //Check if the tank has reached the current waypoint
-    if (position.dist(waypoint) < 10) {
-      currentWaypointIndex++;
-    }
-
-    if(position.dist(currentPath.get(currentPath.size()-1)) < 10){  
-      //THE HOLY PRINTLN, IDK WHY BUT THIS CODE SEGMENT LEGIT DOSENT WORK WITHOUT IT
-      println("you should stop");
-      currentWaypointIndex = Integer.MAX_VALUE;
-      action("stop");
-    }
-  }
-
-  //helper method for handleEnemyQueue that handles firing on the enemy if they can.
+  // FIRE AT ENEMY ======================================================================================
   void engageEnemyRadio(Tank enemyTank) {
     if (hasLineOfSight(position, enemyTank) && repositionToAlignWithEnemy(enemyTank)) {
       action("stop");
@@ -268,20 +249,23 @@ class Tank extends Sprite {
     }
   }
 
+
+  // ALIGN ROTATION TO ENEMY POSITION ===================================================================
   boolean repositionToAlignWithEnemyRadio(Tank enemyTank) {
     PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
     float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
     float angleDifference = atan2(sin(angleToEnemy - angle), cos(angleToEnemy - angle));
-    if (abs(angleDifference) > radians(3)) { // If not aligned, rotate towards the enemy
-      if (angleDifference > 0) {
+    
+    // If not aligned, rotate towards the enemy
+    if (abs(angleDifference) > radians(3)) { 
+      if (angleDifference > 0)
         action("rotateRight");
-      } else {
+      else
         action("rotateLeft");
-      }
       return false;
-    } else {
-      return true;
     }
+    
+    return true;
   }
   
   // UPDATE PATH TO ENEMY =========================================================================== RADIO 
@@ -353,47 +337,36 @@ class Tank extends Sprite {
 
   //Main method for handling movemement to enemyTanks and removing them from the enemeyQueue if they die.
   void handleEnemyQueueVision() {
-    if (!enemyQueue.isEmpty()) {
-      //Peek at the first enemy in the queue
-      Sprite targetEnemy = enemyQueue.get(0);
-
-      //Check if the enemy is still alive
-      if (targetEnemy instanceof Tank) {
-        Tank enemyTank = (Tank) targetEnemy;
-        if (enemyTank.health == 0) {
-          //Remove the enemy from the queue if it's dead
-          enemyQueue.remove(0);
-          return; //Exit the method to process the next enemy in the next update
-        }
-      }
-
-      //Move towards the enemy
-      if (currentPath != null && currentWaypointIndex < currentPath.size()) {
-        PVector waypoint = currentPath.get(currentWaypointIndex);
-        moveTowards(waypoint);
-
-        //Check if the tank has reached the current waypoint
-        if (position.dist(waypoint) < 7) {
-          currentWaypointIndex++;
-        }
-
-        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){
-          currentPath = null;
-        }
-      }
-      else{
-        engageEnemy((Tank) targetEnemy);
-      }
-    } else {
-      //If the queue is empty, stop hunting and start roaming, unlink from other tank.
+    
+    //If the queue is empty, stop hunting and start roaming, unlink from other tank.
+    if(team.isQueueEmpty()){
       hunt = false;
       roam = true;
       linked = false;
       currentPath = null;
       goHome = false;
+      return;
+    }
+    
+    //Otherwise there is an enemy to kill
+    Tank enemyTank = (Tank) team.enemyQueue.get(0);
+
+
+    if (enemyTank.health == 0) {
+      enemyQueue.remove(0);
+      return; //Exit the method to process the next enemy in the next update
+    }
+    
+    //Move towards the enemy
+    if (currentPath != null && currentWaypointIndex < currentPath.size()) {
+      moveTowardEnemy();
+    }
+    else{
+      engageEnemy(enemyTank);
     }
   }
 
+ 
   //Helper function for gathering valid points around a enemy tank to path find to.
   //Uses trigonometri to get 4 evenly spaces points around a tank in a 50px radius
   PVector findAmbushSite(Sprite enemyTank) {
@@ -522,6 +495,25 @@ class Tank extends Sprite {
   // =================================================
   // ===  HELPER METHODS
   // =================================================
+  
+  // MOVE TOWARD ENEMY ==================================================================================
+  void moveTowardEnemy(){
+    PVector waypoint = currentPath.get(currentWaypointIndex);
+    moveTowards(waypoint);
+
+    //Check if the tank has reached the current waypoint
+    if (position.dist(waypoint) < 10) {
+      currentWaypointIndex++;
+    }
+
+    if(position.dist(currentPath.get(currentPath.size()-1)) < 10){  
+      //THE HOLY PRINTLN, IDK WHY BUT THIS CODE SEGMENT LEGIT DOSENT WORK WITHOUT IT
+      println("you should stop");
+      currentWaypointIndex = Integer.MAX_VALUE;
+      action("stop");
+    }
+  }
+  
   // ==================================================================================================
   void goHome() {
     if (!goHome) {
