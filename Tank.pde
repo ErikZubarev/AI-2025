@@ -89,6 +89,7 @@ class Tank extends Sprite {
 
     if (reported) {
       hunt = true;
+      roam = false;
       //UNCOMMENT THE ONE YOU WANT TO USE
       handleEnemyQueueRadio();
       //handleEnemyQueueVision();
@@ -208,9 +209,11 @@ class Tank extends Sprite {
         if (enemyTank.health == 0) {
           //Remove the enemy from the queue if it's dead
           team.removeEnemy((Tank)targetEnemy);
+          currentPath = null;
           return; //Exit the method to process the next enemy in the next update
         }
       }
+      
       checkPathToEnemy((Tank)targetEnemy);
 
       //Move towards the enemy
@@ -219,8 +222,15 @@ class Tank extends Sprite {
         moveTowards(waypoint);
 
         //Check if the tank has reached the current waypoint
-        if (position.dist(waypoint) < 7) {
+        if (position.dist(waypoint) < 10) {
           currentWaypointIndex++;
+        }
+
+        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){  
+          //THE HOLY PRINTLN, IDK WHY BUT THIS CODE SEGMENT LEGIT DOSENT WORK WITHOUT IT
+          println("you should stop");
+          currentWaypointIndex = Integer.MAX_VALUE;
+          action("stop");
         }
       }
       else{
@@ -231,6 +241,8 @@ class Tank extends Sprite {
       hunt = false;
       roam = true;
       goHome = false;
+      currentPath = null;
+      reported = false;
     }
 
   }
@@ -268,6 +280,7 @@ class Tank extends Sprite {
       
     //Find way to enemy
     ArrayList<PVector> path = solver.solve(position, enemy.position);
+    currentWaypointIndex = 0;
     currentPath = path;
     
     //Get clear LOS to enemy
@@ -306,7 +319,7 @@ class Tank extends Sprite {
       ArrayList<Sprite> obstacles = memory.query(tempBoundry);
       
       for(Sprite s : obstacles){
-        if(s == enemy)
+        if(s == enemy || s == this)
           continue;
 
         return false;
@@ -314,8 +327,6 @@ class Tank extends Sprite {
     }
     return true;
   }
-
-
 
   // =================================================
   // ===  END OF RADIO LOGIC
@@ -518,7 +529,7 @@ class Tank extends Sprite {
       hunt = false;
       linked = false;
       roam = true;
-      enemyQueue = new ArrayList<Sprite>();
+      enemyQueue = null;
     }
     currentWaypointIndex = 0;
   }
