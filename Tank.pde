@@ -226,7 +226,9 @@ class Tank extends Sprite {
           currentWaypointIndex++;
         }
 
-        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){
+        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){  
+          //THE HOLY PRINTLN, IDK WHY BUT THIS CODE SEGMENT LEGIT DOSENT WORK WITHOUT IT
+          println("you should stop");
           currentWaypointIndex = Integer.MAX_VALUE;
           action("stop");
         }
@@ -247,8 +249,6 @@ class Tank extends Sprite {
 
   //helper method for handleEnemyQueue that handles firing on the enemy if they can.
   void engageEnemyRadio(Tank enemyTank) {
-    println("los: " + hasLineOfSight(position, enemyTank));
-    println("repo: " + repositionToAlignWithEnemy(enemyTank));
     if (hasLineOfSight(position, enemyTank) && repositionToAlignWithEnemy(enemyTank)) {
       action("stop");
       action("fire");
