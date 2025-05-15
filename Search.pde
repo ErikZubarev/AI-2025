@@ -9,9 +9,7 @@ public class Search {
   private final float tolerance = 70; //Acceptable distance from goal
   private final Tank agent;
 
-  public Search(PVector start, PVector goal, QuadTreeMemory memory, Boundry tankBoundry, Tank agent) {
-    this.start = start.copy();
-    this.goal = goal.copy();
+  public Search(QuadTreeMemory memory, Boundry tankBoundry, Tank agent) {
     this.memory = memory;
     this.tankBoundry = tankBoundry;
     this.agent = agent;
@@ -29,7 +27,10 @@ public class Search {
   }
  
   // Uncomment to switch between BFS and GBFS ===================================================================
-  public ArrayList<PVector> solve(){
+  public ArrayList<PVector> solve(PVector start, PVector goal){
+    this.start = start.copy();
+    this.goal = goal.copy();
+    
     return solveGBFS();
     //return solveBFS();
   }
@@ -252,7 +253,7 @@ public class Search {
   }
 
   // ==================================================================================================
-  private boolean isSegmentClearAndExplored(PVector start, PVector end) {
+  public boolean isSegmentClearAndExplored(PVector start, PVector end) {
     Boundry tempBoundry = new Boundry(
       start.x - tankBoundry.width / 2,
       start.y - tankBoundry.height / 2,

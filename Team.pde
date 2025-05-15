@@ -3,6 +3,7 @@
 class Team {
   ArrayList<Tank> members = new ArrayList<>();
   ArrayList<Tank> currentlyHome = new ArrayList();
+  ArrayList<Tank> enemyQueue = new ArrayList<>();
   color teamColor;
   int x, y;
   Boundry boundry;
@@ -14,6 +15,49 @@ class Team {
     this.boundry = new Boundry(x, y, 150, 350);
   }
 
+  // =================================================
+  // ===  RADIO
+  // === UNCOMMENT THIS CODE BLOCK FOR RADIO AND COMMENT OUT VISION BLOCK
+  // =================================================
+  // ==================================================================================================
+
+  void removeEnemy(Tank t){
+    enemyQueue.remove(t);  
+    sortQueue();
+  }
+  
+  boolean isQueueEmpty(){
+     return enemyQueue.isEmpty();
+  }
+  
+  void addEnemyToQueue(Tank enemy){
+    if(!enemyQueue.contains(enemy)){
+      enemyQueue.add(enemy);
+      sortQueue();
+    }
+  }
+  
+  void sortQueue(){
+    PVector baseCenter = new PVector(x + 75, y + 175); // Center of the base
+    enemyQueue.sort((a, b) -> {
+      float distA = a.position.dist(baseCenter);
+      float distB = b.position.dist(baseCenter);
+      return Float.compare(distA, distB);
+    });
+  }
+  
+  void setReported(){
+    for(Tank t : members){
+      t.reported = true;
+    }
+  }
+
+  // =================================================
+  // ===  VISION
+  // === UNCOMMENT THIS CODE BLOCK FOR VISION AND COMMENT OUT RADIO BLOCK
+  // =================================================
+  // ==================================================================================================
+  /*
   void checkIfTankHome() {
     // Check if tanks have entered the base
     for (Tank tank : members) {
@@ -85,6 +129,8 @@ class Team {
       }
     }
   }
+
+  */
 
   void display() {
     pushMatrix();

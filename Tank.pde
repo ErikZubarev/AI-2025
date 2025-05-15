@@ -35,7 +35,7 @@ class Tank extends Sprite {
   QuadTreeMemory memory;
   ViewArea viewArea;
   ArrayList<Sprite> enemyQueue = new ArrayList<>();
-
+  Team team;
   Search solver;
 
 
@@ -65,10 +65,11 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.movementTimer  = 0L;
     this.immobilized    = false;
-    this.roam           = name.equals("enemy") ? false : true;
+    this.roam           = false; //name.equals("enemy") ? false : true;
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
+    this.solver         = new Search(this.memory, this.boundry, this);
   }
 
   // =================================================
@@ -81,16 +82,16 @@ class Tank extends Sprite {
     if(enemyQueue.isEmpty()){
       linked = false;
     }
-    if (reported) {
-      //radio.commandAllies(this, allTanks);
-    }
 
     if (roam) {
       roam();
     }
 
-    if (hunt) {
-      handleEnemyQueue();
+    if (reported) {
+      hunt = true;
+      //UNCOMMENT THE ONE YOU WANT TO USE
+      handleEnemyQueueRadio();
+      //handleEnemyQueueVision();
     }
 
     checkReloading();
@@ -158,14 +159,21 @@ class Tank extends Sprite {
             }
           }else{
             if(tank.health != 0 && !enemyQueue.contains(tank)){
-              enemyQueue.add(tank);
+              //FOR VISION IMPLEMENTATION
+              //enemyQueue.add(tank);
+              //goHome();
+
+              //FOR RADIO IMPLEMENTATION
+              team.addEnemyToQueue(tank);
+              team.setReported();
+
               memory.updateExploredStatus(tank.boundry);
               //Helper logic for exploring the area around the enemytank when its found. Helps with calculating the ambush point
               Boundry expandedBoundry = new Boundry(tank.position.x - 70, tank.position.y - 70, 140, 140);
               memory.updateExploredStatus(expandedBoundry);
               memory.pruneChildren(expandedBoundry);
               roam = false;
-              goHome();
+              
             }
           }
         }
@@ -182,12 +190,186 @@ class Tank extends Sprite {
     memory.updateExploredStatus(viewArea);
     memory.pruneChildren(viewArea);
   }
-
-
+  
   // =================================================
-  // ===  ATTACKING LOGIC
+  // ===  START OF RADIO LOGIC
   // =================================================
   // ==================================================================================================
+
+
+  void handleEnemyQueueRadio() {
+    if (!team.isQueueEmpty()) {
+      //Peek at the first enemy in the queue
+      Sprite targetEnemy = team.enemyQueue.get(0);
+
+      //Check if the enemy is still alive
+      if (targetEnemy instanceof Tank) {
+        Tank enemyTank = (Tank) targetEnemy;
+        if (enemyTank.health == 0) {
+          //Remove the enemy from the queue if it's dead
+          team.removeEnemy((Tank)targetEnemy);
+          return; //Exit the method to process the next enemy in the next update
+        }
+      }
+      checkPathToEnemy((Tank)targetEnemy);
+
+      //Move towards the enemy
+      if (currentPath != null && currentWaypointIndex < currentPath.size()) {
+        PVector waypoint = currentPath.get(currentWaypointIndex);
+        moveTowards(waypoint);
+
+        //Check if the tank has reached the current waypoint
+        if (position.dist(waypoint) < 7) {
+          currentWaypointIndex++;
+        }
+      }
+      else{
+        engageEnemyRadio((Tank) targetEnemy);
+      }
+    } else {
+      //If the queue is empty, stop hunting and start roaming, unlink from other tank.
+      hunt = false;
+      roam = true;
+      goHome = false;
+    }
+
+  }
+
+  //helper method for handleEnemyQueue that handles firing on the enemy if they can.
+  void engageEnemyRadio(Tank enemyTank) {
+    if (hasLineOfSight(position, enemyTank) && repositionToAlignWithEnemy(enemyTank)) {
+      action("stop");
+      action("fire");
+    } else {
+      repositionToAlignWithEnemyRadio(enemyTank);
+    }
+  }
+
+  boolean repositionToAlignWithEnemyRadio(Tank enemyTank) {
+    PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
+    float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
+    float angleDifference = atan2(sin(angleToEnemy - angle), cos(angleToEnemy - angle));
+    if (abs(angleDifference) > radians(3)) { // If not aligned, rotate towards the enemy
+      if (angleDifference > 0) {
+        action("rotateRight");
+      } else {
+        action("rotateLeft");
+      }
+      return false;
+    } else {
+      return true;
+    }
+  }
+  
+  // UPDATE PATH TO ENEMY =========================================================================== RADIO 
+  void checkPathToEnemy(Tank enemy){
+    if(currentPath != null)
+      return;
+      
+    //Find way to enemy
+    ArrayList<PVector> path = solver.solve(position, enemy.position);
+    currentPath = path;
+    
+    //Get clear LOS to enemy
+    for(int i = 0; i < path.size(); i++){
+      PVector pos = path.get(i);
+      if(!hasLineOfSight(pos, enemy))
+        continue;
+
+      currentPath = new ArrayList<PVector>();
+      
+      for(int j = 0; j < i; j++)
+        currentPath.add(path.get(j));
+
+      return;
+    }
+  }
+  
+  // CHECK IF ENEMY CAN BE SHOT AT FROM START ======================================================== RADIO
+  public boolean hasLineOfSight(PVector start, Tank enemy) {
+    Boundry tempBoundry = new Boundry(
+      start.x - boundry.width / 2,
+      start.y - boundry.height / 2,
+      tankwidth,
+      tankheight
+      );
+
+    float distance = start.dist(enemy.position);
+    int steps = (int)(distance / 5) + 1; // Divide straight line into segments
+    for (int i = 0; i <= steps; i++) {
+      float t = i / (float) steps;
+      PVector point = PVector.lerp(start, enemy.position, t); // New segment to check
+      tempBoundry.x = point.x - tankwidth / 2;
+      tempBoundry.y = point.y - tankheight / 2;
+
+      // Check for obstacles
+      ArrayList<Sprite> obstacles = memory.query(tempBoundry);
+      
+      for(Sprite s : obstacles){
+        if(s == enemy)
+          continue;
+
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+
+  // =================================================
+  // ===  END OF RADIO LOGIC
+  // =================================================
+  // ==================================================================================================
+
+
+
+  // =================================================
+  // ===  START OF VISION LOGIC
+  // =================================================
+  // ==================================================================================================
+
+  //Main method for handling movemement to enemyTanks and removing them from the enemeyQueue if they die.
+  void handleEnemyQueueVision() {
+    if (!enemyQueue.isEmpty()) {
+      //Peek at the first enemy in the queue
+      Sprite targetEnemy = enemyQueue.get(0);
+
+      //Check if the enemy is still alive
+      if (targetEnemy instanceof Tank) {
+        Tank enemyTank = (Tank) targetEnemy;
+        if (enemyTank.health == 0) {
+          //Remove the enemy from the queue if it's dead
+          enemyQueue.remove(0);
+          return; //Exit the method to process the next enemy in the next update
+        }
+      }
+
+      //Move towards the enemy
+      if (currentPath != null && currentWaypointIndex < currentPath.size()) {
+        PVector waypoint = currentPath.get(currentWaypointIndex);
+        moveTowards(waypoint);
+
+        //Check if the tank has reached the current waypoint
+        if (position.dist(waypoint) < 7) {
+          currentWaypointIndex++;
+        }
+
+        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){
+          currentPath = null;
+        }
+      }
+      else{
+        engageEnemy((Tank) targetEnemy);
+      }
+    } else {
+      //If the queue is empty, stop hunting and start roaming, unlink from other tank.
+      hunt = false;
+      roam = true;
+      linked = false;
+      goHome = false;
+    }
+  }
 
   //Helper function for gathering valid points around a enemy tank to path find to.
   //Uses trigonometri to get 4 evenly spaces points around a tank in a 50px radius
@@ -232,8 +414,7 @@ class Tank extends Sprite {
 
   //Helper method to collate information with a ally when going out to hunt a enemy.
   //Merges eachothers enemeyQueue lists and sorts them according to distance from base, least first.
-  // ...existing code...
-void collateWithAlly(Tank ally, PVector baseCenter) {
+  void collateWithAlly(Tank ally, PVector baseCenter) {
     for (Sprite enemy : ally.enemyQueue) {
       if (!enemyQueue.contains(enemy)) {
         enemyQueue.add(enemy);
@@ -276,50 +457,8 @@ void collateWithAlly(Tank ally, PVector baseCenter) {
         memory.insert(target);
       }
     }
-}
-// ...existing code...
-
-  //Main method for handling movemement to enemyTanks and removing them from the enemeyQueue if they die.
-  void handleEnemyQueue() {
-    if (!enemyQueue.isEmpty()) {
-      //Peek at the first enemy in the queue
-      Sprite targetEnemy = enemyQueue.get(0);
-
-      //Check if the enemy is still alive
-      if (targetEnemy instanceof Tank) {
-        Tank enemyTank = (Tank) targetEnemy;
-        if (enemyTank.health == 0) {
-          //Remove the enemy from the queue if it's dead
-          enemyQueue.remove(0);
-          return; //Exit the method to process the next enemy in the next update
-        }
-      }
-
-      //Move towards the enemy
-      if (currentPath != null && currentWaypointIndex < currentPath.size()) {
-        PVector waypoint = currentPath.get(currentWaypointIndex);
-        moveTowards(waypoint);
-
-        //Check if the tank has reached the current waypoint
-        if (position.dist(waypoint) < 7) {
-          currentWaypointIndex++;
-        }
-
-        if(position.dist(currentPath.get(currentPath.size()-1)) < 10){
-          currentPath = null;
-        }
-      }
-      else{
-        engageEnemy((Tank) targetEnemy);
-      }
-    } else {
-      //If the queue is empty, stop hunting and start roaming, unlink from other tank.
-      hunt = false;
-      roam = true;
-      linked = false;
-      goHome = false;
-    }
   }
+
 
   //helper method for handleEnemyQueue that handles firing on the enemy if they can.
   void engageEnemy(Tank enemyTank) {
@@ -350,6 +489,11 @@ void collateWithAlly(Tank ally, PVector baseCenter) {
     }
   }
 
+  // =================================================
+  // ===  END OF VISION LOGIC
+  // =================================================
+  // ==================================================================================================
+
 
 
   // =================================================
@@ -366,9 +510,8 @@ void collateWithAlly(Tank ally, PVector baseCenter) {
   // RETURN BEST PATH ================================================================================= BFS / GBFS
   void calculatePath(PVector start, PVector goal) {
     // Switch between GBFS and BFS in Search class
-    solver = new Search(start, goal, memory, boundry, this);
 
-    currentPath = solver.solve();
+    currentPath = solver.solve(start, goal);
     //Fallback in case no path was found. Revers to roaming.
     if(currentPath.size() <= 0){
       goHome = false;
@@ -431,17 +574,17 @@ void collateWithAlly(Tank ally, PVector baseCenter) {
 
   // IS REPORTING LOGIC ================================================================================ TODO: UPDATE THIS SO TANK CANT MOVE WHEN REPORTING
   void checkReporting() {
-    if (reportTimer == 0L)
-      return;
+  if (reportTimer == 0L)
+    return;
 
-    displayReportTimer();
-    long now = System.currentTimeMillis();
-    if (now - reportTimer >= 3000) {
-      reported = true;
-      reportTimer = 0L;
-      reporting = false;
-    }
+  displayReportTimer();
+  long now = System.currentTimeMillis();
+  if (now - reportTimer >= 3000) {
+    team.setReported();
+    reportTimer = 0L;
+    reporting = false;
   }
+}
 
   // IS RELOADING LOGIC ================================================================================
   void checkReloading() {

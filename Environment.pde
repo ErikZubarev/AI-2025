@@ -113,6 +113,7 @@ void setup() {
   for (Tank t : allTanks) {
     if (t == null) continue;
     team0.members.add(t);
+    t.team = team0;
     t.putBaseIntoMemory(team0.boundry);
   }
 
@@ -156,7 +157,8 @@ void draw() {
   
 
   displayHomeBase();
-  team0.checkIfTankHome();
+  //UNCOMMENT THIS FOR VISION
+  //team0.checkIfTankHome();
   displayTrees();
   displayTanks();
 
