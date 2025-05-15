@@ -78,22 +78,26 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
-    //Stopgap measure for making sure tanks can relink after killing assigned enemies
-    if(enemyQueue.isEmpty()){
-      linked = false;
-    }
+    //Stopgap measure for making sure tanks can relink after killing assigned enemies, only for vision. i.e uncomment if you switch to vision
+    //if(enemyQueue.isEmpty()){
+    //  linked = false;
+    //}
 
     if (roam) {
       roam();
     }
-
+    
+    //RADIO
     if (reported) {
       hunt = true;
       roam = false;
-      //UNCOMMENT THE ONE YOU WANT TO USE
       handleEnemyQueueRadio();
-      //handleEnemyQueueVision();
     }
+    
+    //Vision
+    //if(hunt){
+    //  handleEnemyQueueVision();
+    //}
 
     checkReloading();
     checkReporting();
@@ -162,7 +166,7 @@ class Tank extends Sprite {
             if(tank.health != 0 && !enemyQueue.contains(tank)){
               //FOR VISION IMPLEMENTATION
               //enemyQueue.add(tank);
-              //goHome();
+              
 
               //FOR RADIO IMPLEMENTATION
               team.addEnemyToQueue(tank);
@@ -174,8 +178,12 @@ class Tank extends Sprite {
               memory.updateExploredStatus(expandedBoundry);
               memory.pruneChildren(expandedBoundry);
               roam = false;
-              
+              //UNCOMMENT FOR VISION
+              //goHome();
             }
+              
+              
+            
           }
         }
 
@@ -378,6 +386,7 @@ class Tank extends Sprite {
       hunt = false;
       roam = true;
       linked = false;
+      currentPath = null;
       goHome = false;
     }
   }
@@ -529,7 +538,7 @@ class Tank extends Sprite {
       hunt = false;
       linked = false;
       roam = true;
-      enemyQueue = null;
+      enemyQueue = new ArrayList<Sprite>();
     }
     currentWaypointIndex = 0;
   }
