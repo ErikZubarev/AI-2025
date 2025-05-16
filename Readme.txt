@@ -40,11 +40,7 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
    OBS tillse att inte ha caps-lock igång då det ger en annan ascii kod som programmet inte reagerar på.
 
 2. Interagera med simuleringen  
-   - Använd piltangenterna för att styra den röda tanken:
-     - Upp: Framåt
-     - Ner: Bakåt
-     - Vänster: Rotera vänster
-     - Höger: Rotera höger
+   - När du klickar på 'p' så startar simuleringen. Stridsvagnarna kör autonomt och inga användarinput förväntas eller utförs.
    - Tryck på `p` för att pausa/återuppta simuleringen.
    - Tryck på `d` för att aktivera/deaktivera debug-läge.
 
@@ -52,9 +48,9 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
    - Vänta tills hunden placerar en landmina automatiskt.
    - Alternativt, klicka med musen för att manuellt placera en landmina på musens position.
 
-4. Byt mellan GBFS och BFS algoritmen.
-    - Från början används BFS. Om du vill bytta till GBFS så gå till Tank.pde filen och kommentera ut rad 16 och av-kommentera rad 15 som skapar objekt av algoritmerna.
-    Samt att kommentera ut rad 74 och av-kommentera rad 73
+4. Byt mellan Synbaserad och Radiobaserad samarbetsmetod.
+    - För att prova de två olika implementationerna så behövs endast boolean variabeln radioComs i Team.pde (rad 9) bytas. 
+    - Om radioComs = true så används Radiobaserad. Om radioComs = false används synbaserad.
 
 5. Debug-läge  
    - Aktivera debug-läge (`d`) för att se gränser, utforskade områden och QuadTree-strukturen.
@@ -65,14 +61,18 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
 
 ### Filstruktur
 - `Environment.pde`: Huvudfil som hanterar spelvärlden och logiken.
+- `ENV_display.pde`: Display metoder som fanns i Environment.pde har flyttats ut hit.
+- `ENV_variables.pde`: Samltiga Global variabler som fanns i Environment.pde har flyttas hits.
 - `Tank.pde`: Hanterar tankarnas beteende och rörelse.
 - `Tree.pde`: Representerar träd som hinder.
 - `Landmine.pde`: Hanterar landminor.
 - `Dog.pde`: Hanterar hundens rörelse och placering av landminor.
-- `GBFS.pde`: Implementering av Greedy Best-First Search.
-- `BFS.pde`: Implementering av Breadth-First Search.
+- `Search.pde': Har både GBFS och BFS algoritmen som nyttjas för pathfinding. Endast GBFS har nyttjats under testning men om BFS skulle vela prövas är det bara att bytta return i Search.pde (rad 34&35)
 - `QuadTreeMemory.pde`: Hanterar minne och utforskade områden.
 - `Boundry.pde`: Hanterar gränser och kollisioner.
+- `CannonBall.pde`: Representerar stridsvagenens projektiler.
+- 'Explosion.pde`: Hjälpklass för att förenkla visualisering av explosions skapade av kannonkulor och landminor.
+- `Target.pde`: Hjälpklass för stridsvagnarnas planering av sökvägen. Agerar som ett hinder så andra vagnar inte kan planera sin väg där.
 
 ---
 
