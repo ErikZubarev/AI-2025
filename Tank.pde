@@ -29,7 +29,8 @@ class Tank extends Sprite {
     immobilized,
     roam,
     hunt,
-    linked;
+    linked,
+    setAmbush;
   ArrayList<PVector> currentPath;
   QuadTreeMemory memory;
   ViewArea viewArea;
@@ -68,6 +69,7 @@ class Tank extends Sprite {
     this.linked         = false;
     this.randomAction   = int(random(3));
     this.solver         = new Search(this.memory, this.boundry, this);
+    this.setAmbush      = false;
   }
 
   // =================================================
@@ -221,6 +223,7 @@ class Tank extends Sprite {
       goHome = false;
       currentPath = null;
       reported = false;
+      setAmbush = false;
       return;
     }
 
@@ -231,6 +234,7 @@ class Tank extends Sprite {
     if (enemyTank.health == 0) {
       team.removeEnemy(enemyTank);
       currentPath = null;
+      setAmbush = false;
       return; //Exit the method to process the next enemy in the next update
     }
     
@@ -300,7 +304,7 @@ class Tank extends Sprite {
       ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Will not detect objects that are not in memory
       
       for(Sprite s : obstacles){
-        if(s == enemy || s == this || s instanceof Landmine || s instanceof Target)
+        if(s == enemy || s == this || s instanceof Landmine)
           continue;
 
         return false;
@@ -311,15 +315,28 @@ class Tank extends Sprite {
 
   // MAKE SO TANKS CANT INTERFERE WITH PATHFINDING ====================================================
   void setAmbushSitesRadio(){
-    //Add a Target at each waypoint to make sure other tanks don't plan routes that collide with this one.
-    if (currentPath != null && !currentPath.isEmpty()) {
-      for (int i = 0; i < currentPath.size(); i++) {
-        PVector p = currentPath.get(i);
-        Target target = new Target(p, this);
-        placedPositions.add(target);
-        memory.insert(target);
+    if(setAmbush){
+      //Removes the targets from memory for garbage collection.
+      for (int i = placedPositions.size() - 1; i >= 0; i--) {
+        Sprite sprite = placedPositions.get(i);
+        if (sprite instanceof Target) {
+          placedPositions.remove(i);
+        }
       }
     }
+    else {
+      //Add a Target at each waypoint to make sure other tanks don't plan routes that collide with this one.
+      if (currentPath != null && !currentPath.isEmpty()) {
+        for (int i = 0; i < currentPath.size(); i++) {
+          PVector p = currentPath.get(i);
+          Target target = new Target(p, this);
+          placedPositions.add(target);
+          memory.insert(target);
+        }
+      }
+      setAmbush = true;
+    }
+
   }
 
   // =================================================
