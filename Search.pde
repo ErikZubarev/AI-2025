@@ -31,8 +31,8 @@ public class Search {
     this.start = start.copy();
     this.goal = goal.copy();
     
-    //return solveGBFS();
-    return solveBFS();
+    return solveGBFS();
+    //return solveBFS();
   }
   
   // Solve problem using BFS ====================================================================================

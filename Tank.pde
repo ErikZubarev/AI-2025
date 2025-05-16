@@ -147,7 +147,7 @@ class Tank extends Sprite {
     }
   }
 
-  // TANK VISION LOGIC ==================================================================================
+  // TANK VISION SENSOR ==================================================================================
   void detectObject() {
     for (Sprite obj : placedPositions) {
       if (viewArea.intersects(obj.boundry) && obj != this) {
@@ -244,28 +244,8 @@ class Tank extends Sprite {
     if (hasLineOfSight(position, enemyTank) && repositionToAlignWithEnemy(enemyTank)) {
       action("stop");
       action("fire");
-    } else {
-      repositionToAlignWithEnemyRadio(enemyTank);
-    }
-  }
-
-
-  // ALIGN ROTATION TO ENEMY POSITION ===================================================================
-  boolean repositionToAlignWithEnemyRadio(Tank enemyTank) {
-    PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
-    float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
-    float angleDifference = atan2(sin(angleToEnemy - angle), cos(angleToEnemy - angle));
-    
-    // If not aligned, rotate towards the enemy
-    if (abs(angleDifference) > radians(3)) { 
-      if (angleDifference > 0)
-        action("rotateRight");
-      else
-        action("rotateLeft");
-      return false;
-    }
-    
-    return true;
+    } else 
+      repositionToAlignWithEnemy(enemyTank);
   }
   
   // UPDATE PATH TO ENEMY =========================================================================== RADIO 
@@ -303,7 +283,7 @@ class Tank extends Sprite {
       );
 
     float distance = start.dist(enemy.position);
-    int steps = (int)(distance / 10) + 1; // Divide straight line into segments
+    int steps = (int)(distance / 5) + 1; // Divide straight line into segments
     for (int i = 0; i <= steps; i++) {
       float t = i / (float) steps;
       PVector point = PVector.lerp(start, enemy.position, t); // New segment to check
@@ -311,7 +291,7 @@ class Tank extends Sprite {
       tempBoundry.y = point.y - tankheight / 2;
 
       // Check for obstacles
-      ArrayList<Sprite> obstacles = memory.query(tempBoundry);
+      ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Will not detect objects that are not in memory
       
       for(Sprite s : obstacles){
         if(s == enemy || s == this)
@@ -387,21 +367,23 @@ class Tank extends Sprite {
 
     //Checks all spots to see if they are clear excluding the enemyTank
     for (PVector vec : points) {
+      if (!memory.isExplored(new Boundry(target.x, target.y, 1, 1))) 
+        continue;
+
       Boundry temp = new Boundry(vec.x - tankwidth / 2, vec.y - tankheight, 70, 70);
-      if (memory.isExplored(new Boundry(target.x, target.y, 1, 1))) {
-        ArrayList<Sprite> obstacles = memory.query(temp);
-        if (!obstacles.isEmpty()) {
-          boolean allAreEnemyTank = true;
-          for (Sprite obstacle : obstacles) {
-            if (obstacle != enemyTank) {
-              allAreEnemyTank = false;
-              break;
-            }
-          }
-          if (allAreEnemyTank) {
-            return vec;
-          }
+      ArrayList<Sprite> obstacles = memory.query(temp);
+      if (obstacles.isEmpty())
+        continue;
+      
+      boolean allAreEnemyTank = true;
+      for (Sprite obstacle : obstacles) {
+        if (obstacle != enemyTank) {
+          allAreEnemyTank = false;
+          break;
         }
+      }
+      if (allAreEnemyTank) {
+        return vec;
       }
     }
 
@@ -412,9 +394,8 @@ class Tank extends Sprite {
   //Merges eachothers enemeyQueue lists and sorts them according to distance from base, least first.
   void collateWithAlly(Tank ally, PVector baseCenter) {
     for (Sprite enemy : ally.enemyQueue) {
-      if (!enemyQueue.contains(enemy)) {
+      if (!enemyQueue.contains(enemy))
         enemyQueue.add(enemy);
-      }
     }
 
     //Sort the enemyQueue based on distance from the base center
@@ -466,25 +447,6 @@ class Tank extends Sprite {
     }
   }
 
-  //Helper method for engageEnemy. calculates the direction the tank needs to turn to face enemy and turns it accordingly
-  //If they are already facing them we move forwards.
-  boolean repositionToAlignWithEnemy(Tank enemyTank) {
-    PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
-    float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
-    float angleDifference = atan2(sin(angleToEnemy - angle), cos(angleToEnemy - angle));
-    if (abs(angleDifference) > radians(3)) { // If not aligned, rotate towards the enemy
-      if (angleDifference > 0) {
-        action("rotateRight");
-      } else {
-        action("rotateLeft");
-      }
-      return false;
-    } else {
-      action("move");
-      return true;
-    }
-  }
-
   // =================================================
   // ===  END OF VISION LOGIC
   // =================================================
@@ -495,6 +457,28 @@ class Tank extends Sprite {
   // =================================================
   // ===  HELPER METHODS
   // =================================================
+  
+  
+  //Helper method for engageEnemy. calculates the direction the tank needs to turn to face enemy and turns it accordingly
+  //If they are already facing them we move forwards.
+  boolean repositionToAlignWithEnemy(Tank enemyTank) {
+    PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
+    float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
+    float angleDifference = atan2(sin(angleToEnemy - angle), cos(angleToEnemy - angle));
+    
+    if (abs(angleDifference) > radians(3)) { // If not aligned, rotate towards the enemy
+      if (angleDifference > 0) {
+        action("rotateRight");
+      } else {
+        action("rotateLeft");
+      }
+      return false;
+    } else {
+      if(!team.radioComs)
+        action("move");
+      return true;
+    }
+  }
   
   // MOVE TOWARD ENEMY ==================================================================================
   void moveTowardEnemy(){
@@ -585,6 +569,9 @@ class Tank extends Sprite {
       }
     }
   }
+  
+  
+  // IS REPORTING HELPER ===============================================================================
   void startReport(){
     reportTimer = System.currentTimeMillis();
     goHome = false;
@@ -595,15 +582,15 @@ class Tank extends Sprite {
   void checkReporting() {
   if (reportTimer == 0L)
     return;
-
-  displayReportTimer();
-  long now = System.currentTimeMillis();
-  if (now - reportTimer >= 3000) {
-    team.setReported();
-    reportTimer = 0L;
-    reporting = false;
+  
+    displayReportTimer();
+    long now = System.currentTimeMillis();
+    if (now - reportTimer >= 3000) {
+      team.setReported();
+      reportTimer = 0L;
+      reporting = false;
+    }
   }
-}
 
   // IS RELOADING LOGIC ================================================================================
   void checkReloading() {

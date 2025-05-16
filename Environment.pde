@@ -349,9 +349,8 @@ void keyReleased() {
 
 // PLAYER TANK INPUTS =================================================================================
 void checkForInput() {
-  if (pause || gameOver || tank0.goHome || tank0.reporting)
+  if (pause || gameOver || tank0.goHome || tank0.reporting || tank0.roam)
     return;
-
 
   if (up) {
     tank0.state = 1; // moveForward
