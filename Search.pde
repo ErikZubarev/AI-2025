@@ -27,16 +27,21 @@ public class Search {
   }
  
   // Uncomment to switch between BFS and GBFS ===================================================================
+  public ArrayList<PVector> solve(PVector start, PVector goal, float tolerance){
+      this.start = start.copy();
+      this.goal = goal.copy();
+      
+      return solveGBFS(tolerance);
+      //return solveBFS(tolerance);
+  }
+  
+  // Uncomment to switch between BFS and GBFS ===================================================================
   public ArrayList<PVector> solve(PVector start, PVector goal){
-    this.start = start.copy();
-    this.goal = goal.copy();
-    
-    return solveGBFS();
-    //return solveBFS();
+    return solve(start, goal, this.tolerance);
   }
   
   // Solve problem using BFS ====================================================================================
-  public ArrayList<PVector> solveBFS() {
+  public ArrayList<PVector> solveBFS(float tol) {
     //final path backwards
     ArrayList<PVector> path = new ArrayList<PVector>();
 
@@ -57,7 +62,7 @@ public class Search {
       frontier.removeFirst();
 
       // Check if current position is within tolerance of the goal
-      if (PVector.dist(current.pos, goal) <= tolerance) {
+      if (PVector.dist(current.pos, goal) <= tol) {
         Node tracker = current;
         while (tracker != null) {
           path.add(0, tracker.pos.copy());
@@ -97,7 +102,7 @@ public class Search {
   }
 
   // Solve problem using GBFS ====================================================================================
-  public ArrayList<PVector> solveGBFS() {
+  public ArrayList<PVector> solveGBFS(float tol) {
     //final path backwards
     ArrayList<PVector> path = new ArrayList<PVector>();
 
@@ -125,7 +130,7 @@ public class Search {
       Node current = frontier.poll();
 
       // Check if current position is within tolerance of the goal
-      if (PVector.dist(current.pos, goal) <= tolerance) {
+      if (PVector.dist(current.pos, goal) <= tol) {
         Node tracker = current;
         while (tracker != null) {
           path.add(0, tracker.pos.copy());

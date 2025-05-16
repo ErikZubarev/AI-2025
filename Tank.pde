@@ -80,12 +80,13 @@ class Tank extends Sprite {
   void update() {
     if(team == null)
       return;
-    
+      
     updateCommunications();
     checkReloading();
     checkReporting();
     checkHeadingHomeLogic();
     
+
     if (roam)
       roam();
 
@@ -167,7 +168,8 @@ class Tank extends Sprite {
 
         if (unseenLandmineDetected) {
           if (currentPath != null && currentPath.size() > 0) {
-            calculatePath(position, currentPath.get(currentPath.size() - 1)); //Found an unknown mine while following path so recalculate
+            calculatePath(position, currentPath.get(currentPath.size()-1), 10); //Found an unknown mine while following path so recalculate
+            setAmbushSitesVision();
           }
         }
       }
@@ -388,7 +390,7 @@ class Tank extends Sprite {
   // ==================================================================================================
   PVector findAmbushSite(Sprite enemyTank) {
     PVector target = enemyTank.position;
-    float radius = 50; 
+    float radius = 70; 
     int slices = 4; 
 
     ArrayList<PVector> points = new ArrayList<>();
@@ -450,6 +452,7 @@ class Tank extends Sprite {
       this.hunt = false;
       this.roam = true;
       this.linked = false;
+      this.reported = false;
       return;
     }
 
@@ -548,9 +551,13 @@ class Tank extends Sprite {
 
   // RETURN BEST PATH ================================================================================= BFS / GBFS
   void calculatePath(PVector start, PVector goal) {
+    calculatePath(start, goal, 70); //Default tolerance
+  }
+  
+    void calculatePath(PVector start, PVector goal, int tolerance) {
     // Switch between GBFS and BFS in Search class
 
-    currentPath = solver.solve(start, goal);
+    currentPath = solver.solve(start, goal, tolerance);
     //Fallback in case no path was found. Revers to roaming.
     if(currentPath.size() <= 0){
       goHome = false;
