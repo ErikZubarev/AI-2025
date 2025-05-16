@@ -63,7 +63,7 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.movementTimer  = 0L;
     this.immobilized    = false;
-    this.roam           = false; //name.equals("enemy") ? false : true;
+    this.roam           = name.equals("enemy") ? false : true;
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
@@ -78,32 +78,14 @@ class Tank extends Sprite {
   void update() {
     if(team == null)
       return;
-      
-    //Stopgap measure for making sure tanks can relink after killing assigned enemies, only for vision
-    if(enemyQueue.isEmpty())
-      linked = false;
     
-    // Radio only
-    // You or ally find enemy -> Report enemy -> Hunt enemy
-    if(team.radioComs && reported){
-      hunt = true;
-      roam = false;
-    }
-    
-    if(hunt && reported){
-      if(team.radioComs)
-        handleEnemyQueueRadio();
-      else 
-        handleEnemyQueueVision();
-    }
-
-    if (roam) {
-      roam();
-    }
-    
+    updateCommunications();
     checkReloading();
     checkReporting();
     checkHeadingHomeLogic();
+    
+    if (roam)
+      roam();
 
     switch (state) {
     case 0:
@@ -149,11 +131,29 @@ class Tank extends Sprite {
       break;
     }
   }
+  
+  // CHECKS ALLY COMMUNICATIONS ============================================================================
+  void updateCommunications(){
+    // Radio only
+    // You or ally find enemy -> Report enemy -> Hunt enemy
+    // Vision tank has to wait for ally to join base
+    if(team.radioComs && reported){
+      hunt = true;
+      roam = false;
+    }
+    
+    if(hunt && reported){
+      if(team.radioComs)
+        handleEnemyQueueRadio();
+      else 
+        handleEnemyQueueVision();
+    }
+  }
 
   // TANK VISION SENSOR ==================================================================================
   void detectObject() {
     for (Sprite obj : placedPositions) {
-      if (viewArea.intersects(obj.boundry) && obj != this) {
+      if (viewArea.intersects(obj.boundry)) {
         boolean unseenLandmineDetected = detectedNewLandmine(obj);
         boolean enemyDetected = detectedEnemy(obj);
 
@@ -172,6 +172,11 @@ class Tank extends Sprite {
     }
     memory.updateExploredStatus(viewArea);
     memory.pruneChildren(viewArea);
+
+    // + 10x10 area around tank, updates position of self
+    Boundry feeling = new Boundry(boundry.x-10, boundry.y-10, boundry.width +20, boundry.height+20);
+    memory.updateExploredStatus(feeling);
+    memory.pruneChildren(feeling);
   }
   
   // HANDLE ENEMY DETECTION ==============================================================================
@@ -231,7 +236,7 @@ class Tank extends Sprite {
     
     //Move towards the enemy
     checkPathToEnemy(enemyTank);
-    setAmbushSites(); // ####################################################################################################################
+    setAmbushSitesRadio();
 
     //If not at enemy, move to enemy, else shoot at enemy
     if (currentPath != null && currentWaypointIndex < currentPath.size())
@@ -295,13 +300,26 @@ class Tank extends Sprite {
       ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Will not detect objects that are not in memory
       
       for(Sprite s : obstacles){
-        if(s == enemy || s == this || s instanceof Landmine)
+        if(s == enemy || s == this || s instanceof Landmine || s instanceof Target)
           continue;
 
         return false;
       }
     }
     return true;
+  }
+
+  // MAKE SO TANKS CANT INTERFERE WITH PATHFINDING ====================================================
+  void setAmbushSitesRadio(){
+    //Add a Target at each waypoint to make sure other tanks don't plan routes that collide with this one.
+    if (currentPath != null && !currentPath.isEmpty()) {
+      for (int i = 0; i < currentPath.size(); i++) {
+        PVector p = currentPath.get(i);
+        Target target = new Target(p, this);
+        placedPositions.add(target);
+        memory.insert(target);
+      }
+    }
   }
 
   // =================================================
@@ -419,7 +437,7 @@ class Tank extends Sprite {
     }
 
     //Create a ambush site that doesn't interfere with the other tanks pathfinding
-    setAmbushSites();
+    setAmbushSitesVision();
   }
 
 
@@ -433,22 +451,10 @@ class Tank extends Sprite {
       repositionToAlignWithEnemy(enemyTank);
     }
   }
-
-  // =================================================
-  // ===  END OF VISION LOGIC
-  // =================================================
-  // ==================================================================================================
-
-
-
-  // =================================================
-  // ===  HELPER METHODS
-  // =================================================
-  
   
   // MAKE SO TANKS CANT INTERFERE WITH PATHFINDING ====================================================
-  void setAmbushSites(){
-    Sprite targetEnemy = team.radioComs ? team.enemyQueue.get(0) : enemyQueue.get(0);
+  void setAmbushSitesVision(){
+    Sprite targetEnemy = enemyQueue.get(0);
     PVector ambush = findAmbushSite(targetEnemy);
     calculatePath(position, ambush);
     Target ambushTarget = new Target(ambush, this);
@@ -465,6 +471,15 @@ class Tank extends Sprite {
       }
     }
   }
+  // =================================================
+  // ===  END OF VISION LOGIC
+  // =================================================
+  // ==================================================================================================
+
+
+  // =================================================
+  // ===  HELPER METHODS
+  // =================================================
   
   //Helper method for engageEnemy. calculates the direction the tank needs to turn to face enemy and turns it accordingly
   //If they are already facing them we move forwards.
