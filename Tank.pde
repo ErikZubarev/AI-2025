@@ -63,7 +63,7 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.movementTimer  = 0L;
     this.immobilized    = false;
-    this.roam           = name.equals("enemy") ? false : true;
+    this.roam           = false; //name.equals("enemy") ? false : true;
     this.hunt           = false;
     this.linked         = false;
     this.randomAction   = int(random(3));
@@ -76,10 +76,19 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC ================================================================================== RADIO / VISION
   void update() {
+    if(team == null)
+      return;
+      
     //Stopgap measure for making sure tanks can relink after killing assigned enemies, only for vision
     if(enemyQueue.isEmpty())
       linked = false;
     
+    // Radio only
+    // You or ally find enemy -> Report enemy -> Hunt enemy
+    if(team.radioComs && reported){
+      hunt = true;
+      roam = false;
+    }
     
     if(hunt && reported){
       if(team.radioComs)
@@ -222,7 +231,7 @@ class Tank extends Sprite {
     
     //Move towards the enemy
     checkPathToEnemy(enemyTank);
-    //setAmbushSites();
+    setAmbushSites();
 
     //If not at enemy, move to enemy, else shoot at enemy
     if (currentPath != null && currentWaypointIndex < currentPath.size())
