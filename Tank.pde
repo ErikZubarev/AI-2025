@@ -231,7 +231,7 @@ class Tank extends Sprite {
     
     //Move towards the enemy
     checkPathToEnemy(enemyTank);
-    setAmbushSites();
+    setAmbushSites(); // ####################################################################################################################
 
     //If not at enemy, move to enemy, else shoot at enemy
     if (currentPath != null && currentWaypointIndex < currentPath.size())
