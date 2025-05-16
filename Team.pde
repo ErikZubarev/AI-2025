@@ -6,7 +6,7 @@ class Team {
   ArrayList<Tank> enemyQueue = new ArrayList<>();
   color teamColor;
   int x, y;
-  boolean radioComs = false; // #################################### SWITCH BETWEEN RADIO OR VISION COMMUNICATIONS, SWITCH TO FALSE FOR VISION ####################################
+  boolean radioComs = true; // #################################### SWITCH BETWEEN RADIO OR VISION COMMUNICATIONS, SWITCH TO FALSE FOR VISION ####################################
   Boundry boundry;
 
   public Team(int x, int y, color teamColor) {
@@ -92,46 +92,47 @@ class Team {
 
     // Find the first two tanks with enemies in their queue that are not already linked
     for (Tank tank : currentlyHome) {
-        if (tank.enemyQueue.size() > 0 && !tank.linked) {
-            if (tankWithEnemies1 == null) {
-                tankWithEnemies1 = tank;
-            } else if (tankWithEnemies2 == null) {
-                tankWithEnemies2 = tank;
-                break;
-            }
+      if (tank.enemyQueue.size() > 0 && !tank.linked) {
+        if (tankWithEnemies1 == null) {
+            tankWithEnemies1 = tank;
+        } else if (tankWithEnemies2 == null) {
+            tankWithEnemies2 = tank;
+            break;
         }
+      }
     }
 
     if (tankWithEnemies1 != null && tankWithEnemies2 != null) {
-        // Link the two tanks with enemies
-        PVector baseCenter = new PVector(x + 75, y + 175); // Center of the base
-        tankWithEnemies1.collateWithAlly(tankWithEnemies2, baseCenter);
-        tankWithEnemies2.collateWithAlly(tankWithEnemies1, baseCenter);
+      // Link the two tanks with enemies
+      PVector baseCenter = new PVector(x + 75, y + 175); // Center of the base
+      tankWithEnemies1.collateWithAlly(tankWithEnemies2, baseCenter);
+      tankWithEnemies2.collateWithAlly(tankWithEnemies1, baseCenter);
 
-        // Mark both tanks as linked
-        tankWithEnemies1.linked = true;
-        tankWithEnemies2.linked = true;
-    } else if (tankWithEnemies1 != null) {
-        // If only one tank has enemies, link it with any other unlinked tank
-        for (Tank tank : currentlyHome) {
-            if (tank != tankWithEnemies1 && !tank.linked) {
-                PVector baseCenter = new PVector(x + 75, y + 175);
-                tankWithEnemies1.collateWithAlly(tank, baseCenter);
-                tank.collateWithAlly(tankWithEnemies1, baseCenter);
+      // Mark both tanks as linked
+      tankWithEnemies1.linked = true;
+      tankWithEnemies2.linked = true;
+    } 
+    else if (tankWithEnemies1 != null) {
+      // If only one tank has enemies, link it with any other unlinked tank
+      for (Tank tank : currentlyHome) {
+        if (tank != tankWithEnemies1 && !tank.linked) {
+            PVector baseCenter = new PVector(x + 75, y + 175);
+            tankWithEnemies1.collateWithAlly(tank, baseCenter);
+            tank.collateWithAlly(tankWithEnemies1, baseCenter);
 
-                // Mark both tanks as linked
-                tankWithEnemies1.linked = true;
-                tank.linked = true;
-                break;
-            }
+            // Mark both tanks as linked
+            tankWithEnemies1.linked = true;
+            tank.linked = true;
+            break;
         }
+      }
     }
 
     //Removes the targets from memory for garbage collection.
     for (int i = placedPositions.size() - 1; i >= 0; i--) {
       Sprite sprite = placedPositions.get(i);
       if (sprite instanceof Target) {
-      placedPositions.remove(i);
+        placedPositions.remove(i);
       }
     }
   }

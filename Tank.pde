@@ -222,6 +222,7 @@ class Tank extends Sprite {
     
     //Move towards the enemy
     checkPathToEnemy(enemyTank);
+    //setAmbushSites();
 
     //If not at enemy, move to enemy, else shoot at enemy
     if (currentPath != null && currentWaypointIndex < currentPath.size())
@@ -285,7 +286,7 @@ class Tank extends Sprite {
       ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Will not detect objects that are not in memory
       
       for(Sprite s : obstacles){
-        if(s == enemy || s == this)
+        if(s == enemy || s == this || s instanceof Landmine)
           continue;
 
         return false;
@@ -307,6 +308,7 @@ class Tank extends Sprite {
   // ==================================================================================================
 
   //Main method for handling movemement to enemyTanks and removing them from the enemeyQueue if they die.
+  // ==================================================================================================
   void handleEnemyQueueVision() {
     //If the queue is empty, stop hunting and start roaming, unlink from other tank.
     if(enemyQueue.isEmpty()){
@@ -339,12 +341,11 @@ class Tank extends Sprite {
  
   //Helper function for gathering valid points around a enemy tank to path find to.
   //Uses trigonometri to get 4 evenly spaces points around a tank in a 50px radius
+  // ==================================================================================================
   PVector findAmbushSite(Sprite enemyTank) {
-    println(enemyTank);
     PVector target = enemyTank.position;
     float radius = 50; 
     int slices = 4; 
-
 
     ArrayList<PVector> points = new ArrayList<>();
 
@@ -382,6 +383,7 @@ class Tank extends Sprite {
 
   //Helper method to collate information with a ally when going out to hunt a enemy.
   //Merges eachothers enemeyQueue lists and sorts them according to distance from base, least first.
+  // ==================================================================================================
   void collateWithAlly(Tank ally, PVector baseCenter) {
     for (Sprite enemy : ally.enemyQueue) {
       if (!enemyQueue.contains(enemy))
@@ -408,26 +410,12 @@ class Tank extends Sprite {
     }
 
     //Create a ambush site that doesn't interfere with the other tanks pathfinding
-    Sprite targetEnemy = enemyQueue.get(0);
-    PVector ambush = findAmbushSite(targetEnemy);
-    calculatePath(position, ambush);
-    Target ambushTarget = new Target(ambush, this);
-    placedPositions.add(ambushTarget);
-    memory.insert(ambushTarget);
-
-    //Add a Target at each waypoint to make sure other tanks don't plan routes that collide with this one.
-    if (currentPath != null && !currentPath.isEmpty()) {
-      for (int i = 0; i < currentPath.size() - 1; i++) {
-        PVector p = currentPath.get(i);
-        Target target = new Target(p, this);
-        placedPositions.add(target);
-        memory.insert(target);
-      }
-    }
+    setAmbushSites();
   }
 
 
   //helper method for handleEnemyQueue that handles firing on the enemy if they can.
+  // ==================================================================================================
   void engageEnemy(Tank enemyTank) {
     if (enemyTank.boundry.isWithin(this.viewArea) && repositionToAlignWithEnemy(enemyTank)) {
       action("stop");
@@ -449,8 +437,29 @@ class Tank extends Sprite {
   // =================================================
   
   
+  // MAKE SO TANKS CANT INTERFERE WITH PATHFINDING ====================================================
+  void setAmbushSites(){
+    Sprite targetEnemy = team.radioComs ? team.enemyQueue.get(0) : enemyQueue.get(0);
+    PVector ambush = findAmbushSite(targetEnemy);
+    calculatePath(position, ambush);
+    Target ambushTarget = new Target(ambush, this);
+    placedPositions.add(ambushTarget);
+    memory.insert(ambushTarget);
+    
+    //Add a Target at each waypoint to make sure other tanks don't plan routes that collide with this one.
+    if (currentPath != null && !currentPath.isEmpty()) {
+      for (int i = 0; i < currentPath.size() - 1; i++) {
+        PVector p = currentPath.get(i);
+        Target target = new Target(p, this);
+        placedPositions.add(target);
+        memory.insert(target);
+      }
+    }
+  }
+  
   //Helper method for engageEnemy. calculates the direction the tank needs to turn to face enemy and turns it accordingly
   //If they are already facing them we move forwards.
+  // ==================================================================================================
   boolean repositionToAlignWithEnemy(Tank enemyTank) {
     PVector directionToEnemy = PVector.sub(enemyTank.position, position).normalize();
     float angleToEnemy = atan2(directionToEnemy.y, directionToEnemy.x);
