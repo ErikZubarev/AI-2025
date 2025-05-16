@@ -304,7 +304,7 @@ class Tank extends Sprite {
       ArrayList<Sprite> obstacles = memory.query(tempBoundry); // Will not detect objects that are not in memory
       
       for(Sprite s : obstacles){
-        if(s == enemy || s == this || s instanceof Landmine )
+        if(s == enemy || s == this || s instanceof Landmine)
           continue;
 
         return false;
