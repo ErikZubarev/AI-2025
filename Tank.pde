@@ -92,12 +92,6 @@ class Tank extends Sprite {
       roam();
     }
     
-    //RADIO
-    if (reported) {
-      hunt = true;
-      roam = false;
-    }
-    
     checkReloading();
     checkReporting();
     checkHeadingHomeLogic();
@@ -173,34 +167,31 @@ class Tank extends Sprite {
   
   // HANDLE ENEMY DETECTION ==============================================================================
   void handleEnemyDetection(Tank tank){
+    if(tank.health == 0 || enemyQueue.contains(tank) || team.enemyQueue.contains(tank))
+      return;
+    
+    // Vision only
     if(!enemyQueue.isEmpty() && !goHome){
-      if(!enemyQueue.contains(tank) && !(enemyQueue.get(0) == tank) && tank.health != 0){
-        currentPath = null;
-        enemyQueue.add(0, tank);
-      }
-    }else{
-      if(tank.health != 0 && !enemyQueue.contains(tank)){
-        //FOR VISION IMPLEMENTATION
-        if(!team.radioComs){
-          enemyQueue.add(tank);
-          goHome();
-        }
-        
-        //FOR RADIO IMPLEMENTATION
-        if(team.radioComs){
-          if(!team.enemyQueue.contains(tank))
-            startReport();
-          team.addEnemyToQueue(tank);
-        }
-
-        //Helper logic for exploring the area around the enemytank when its found. Helps with calculating the ambush point
-        memory.updateExploredStatus(tank.boundry);
-        Boundry expandedBoundry = new Boundry(tank.position.x - 70, tank.position.y - 70, 140, 140);
-        memory.updateExploredStatus(expandedBoundry);
-        memory.pruneChildren(expandedBoundry);
-        roam = false;
-      }
+      currentPath = null;
+      enemyQueue.add(0, tank);
+      return; //Add new enemy to vision queue and engage later.
     }
+    
+    if(team.radioComs){
+      startReport();
+      team.addEnemyToQueue(tank);
+    }
+    else{
+      enemyQueue.add(tank);
+      goHome();
+    }
+
+    //Helper logic for exploring the area around the enemytank when its found. Helps with calculating the ambush point
+    memory.updateExploredStatus(tank.boundry);
+    Boundry expandedBoundry = new Boundry(tank.position.x - 70, tank.position.y - 70, 140, 140);
+    memory.updateExploredStatus(expandedBoundry);
+    memory.pruneChildren(expandedBoundry);
+    roam = false;
   }
   
   // =================================================
@@ -330,7 +321,6 @@ class Tank extends Sprite {
     
     //Otherwise there is an enemy to kill
     Tank enemyTank = (Tank) enemyQueue.get(0);
-
 
     if (enemyTank.health == 0) {
       enemyQueue.remove(0);
