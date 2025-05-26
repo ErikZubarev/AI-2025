@@ -27,12 +27,12 @@ public class Search {
   }
  
   // Uncomment to switch between BFS and GBFS ===================================================================
-  public ArrayList<PVector> solve(PVector start, PVector goal, float tolerance){
+  public ArrayList<PVector> solve(PVector start, PVector goal, float tol){
       this.start = start.copy();
       this.goal = goal.copy();
       
-      return solveGBFS(tolerance);
-      //return solveBFS(tolerance);
+      return solveGBFS(tol);
+      //return solveBFS(tol);
   }
   
   // Uncomment to switch between BFS and GBFS ===================================================================

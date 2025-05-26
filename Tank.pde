@@ -169,7 +169,6 @@ class Tank extends Sprite {
         if (unseenLandmineDetected) {
           if (currentPath != null && currentPath.size() > 0) {
             calculatePath(position, currentPath.get(currentPath.size()-1), 10); //Found an unknown mine while following path so recalculate
-            setAmbushSitesVision();
           }
         }
       }
