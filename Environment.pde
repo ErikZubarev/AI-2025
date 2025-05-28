@@ -171,10 +171,13 @@ void draw() {
   if (!gameOver && !pause) {
     currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
     displayExplosions();
-    checkForCollisions();
-    updateTanksLogic();
     displayCannonBalls();
     updateCannonBalls();
+    
+    checkForCollisions();
+    updateTanksLogic();
+    
+    
     checkLandMineCollision();
     landmineCounter++;
 

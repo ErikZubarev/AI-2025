@@ -80,9 +80,7 @@ Tree tree0,
 Tree[] allTrees;
 
 // Team0
-Tank tank0,
-  tank1,
-  tank2;
+Tank tank0;
 
 // Team1
 Tank tank3,
