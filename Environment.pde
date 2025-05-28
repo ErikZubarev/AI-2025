@@ -11,7 +11,7 @@ void setup() {
   down             = false;
   debugMode        = false;
   gameOver         = false;
-  pause            = true;
+  pause            = false;
   startGameTimer   = System.currentTimeMillis();
   startPauseTimer  = System.currentTimeMillis();
   currentGameTimer = 0L;
@@ -37,10 +37,16 @@ void setup() {
   eventsRewards    = new HashMap<>();
   assignRewards();
   
-  alpha            = 1.0;
-  gamma            = 1.0;
-  eps              = 1.0;
-  qLearner         = new QLearner(alpha, gamma, eps);
+  previousState    = null; //Reset between new epochs
+  previousAction   = null;
+  
+  if(qLearner == null){
+    //Assures that Q-learning element does not reset every epoch
+    alpha            = 1.0;
+    gamma            = 1.0;
+    eps              = 1.0;
+    qLearner         = new QLearner(alpha, gamma, eps);
+  }
 
   dogState         = DogState.ENTERING;
 
@@ -143,6 +149,9 @@ void draw() {
   }
   if (allDead) {
     gameOver = true;
+    gameWon = true;
+    checkRewards(); //Updates gameover rewards
+    setup();
   }
 
   background(200);
@@ -297,7 +306,10 @@ void assignRewards(){
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
 void checkRewards(){
+  //TODO
   //Checks whether the agent triggered an event (e.g., fired a shot, stepped on a landmine).
+  //Check gameOver and assign
+  //Update previousState and previousAction
   //Update said event by using the rewards table above
   //updateQ()
 }

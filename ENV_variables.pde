@@ -16,7 +16,8 @@ boolean left,
 
   debugMode,
   gameOver,
-  pause;
+  pause,
+  gameWon;
 
 PImage tree_img,
   blue_tank_img,
@@ -52,20 +53,23 @@ long startGameTimer,
   currentPauseTime,
   totalPauseTime;
 
+float alpha, 
+      gamma, 
+      eps;
+
+String previousAction;
+Tank.State previousState;
 
 ArrayList<Landmine> allMines;
 ArrayList<CannonBall> allCannonBalls;
 ArrayList<Sprite> placedPositions;
 ArrayList<Explosion> allExplosions;
 
-Tank.State previousState;
-String previousAction;
-
 HashMap<String, Integer> eventsRewards;
 
-QLearner qLearner;
 
-float alpha, gamma, eps;
+
+QLearner qLearner;
 
 Random random;
 

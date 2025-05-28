@@ -67,12 +67,15 @@ void displayGUI() {
     fill(30);
     text("Time ran out!", width/2-150, height/3);
     gameOver = true;
+    gameWon = false;
+    checkRewards(); //Updates gameover rewards
+    setup();
   }
 
   if (gameOver) {
     textSize(36);
     fill(30);
-    text("Game Over!", width/2-150, height/2);
+    text("Game Over!", width/2-150, height/2); // this will not be visable
   }
 }
 
