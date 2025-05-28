@@ -405,15 +405,16 @@ class Tank extends Sprite {
   // =================================================
   public class State {
     float tankPosition, 
-          tankRotation;
+          tankRotation,
+          nearestEnemy, 
+          nearestTree, 
+          nearestLandmine;
     int tankHealth, 
         remainingEnemies, 
-        timeRemaining, 
-        nearestEnemy, 
-        nearestTree, 
-        nearestLandmine;
+        timeRemaining;
+
     
-    State(float pos, float rot, int hp, int nearestEnemy, int nearestTree, int nearestLandmine){
+    State(float pos, float rot, int hp, float nearestEnemy, float nearestTree, float nearestLandmine){
       tankPosition = pos;
       tankRotation = rot;
       tankHealth = hp;

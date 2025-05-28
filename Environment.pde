@@ -33,9 +33,12 @@ void setup() {
 
   allTrees         = new Tree[3];
   allTanks         = new Tank[4];
+  
+  eventsRewards    = new HashMap<>();
+  
+  assignRewards();
 
   dogState         = DogState.ENTERING;
-
 
   bomb = loadImage("bomb.png");
 
@@ -96,20 +99,14 @@ void setup() {
   QuadTreeMemory memory1         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
 
   //TEMP HIVE MIND
-
-
   tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img, memory0);
 
   allTanks[0] = tank0;                         // Symbol samma som index!
 
   placedPositions.add(tank0);
-
-  for (Tank t : allTanks) {
-    if (t == null) continue;
-    team0.members.add(t);
-    t.team = team0;
-    t.putBaseIntoMemory(team0.boundry);
-  }
+  team0.members.add(tank0);
+  tank0.team = team0;
+  tank0.putBaseIntoMemory(team0.boundry);
 
   // Team1 randomly placed in the lower right quadrant
   for (int i = 0; i < 3; i++) {
@@ -282,6 +279,15 @@ void checkForCollisions() {
       tank.detectObject();
     }
   }
+}
+
+void assignRewards(){
+  eventsRewards.put("Game Over",-100);
+  eventsRewards.put("Win",+100);
+  eventsRewards.put("Enemy Hit",+5);
+  eventsRewards.put("Enemy Destroyed",+10);
+  eventsRewards.put("Agent Damage",-5);
+  eventsRewards.put("Time",-1);
 }
 
 // ==================================================================================================

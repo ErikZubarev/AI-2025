@@ -58,6 +58,11 @@ ArrayList<CannonBall> allCannonBalls;
 ArrayList<Sprite> placedPositions;
 ArrayList<Explosion> allExplosions;
 
+Tank.State previousState;
+String previousAction;
+
+HashMap<String, Integer> eventsRewards;
+
 Random random;
 
 Tree tree0,
