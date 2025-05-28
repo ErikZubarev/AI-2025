@@ -24,7 +24,6 @@ class Tank extends Sprite {
     hunt;
   QuadTreeMemory memory;
   ViewArea viewArea;
-  ArrayList<Sprite> enemyQueue = new ArrayList<>();
   Team team;
 
 
@@ -54,7 +53,7 @@ class Tank extends Sprite {
   // ===  MAIN METHODS
   // =================================================
 
-  // MAIN TANK LOGIC ================================================================================== RADIO / VISION
+  // MAIN TANK LOGIC ==================================================================================
   void update() {
     if(team == null)
       return;
@@ -135,7 +134,7 @@ class Tank extends Sprite {
   
   // HANDLE ENEMY DETECTION ==============================================================================
   void handleEnemyDetection(Tank tank){
-    if(tank.health == 0 || enemyQueue.contains(tank) || team.enemyQueue.contains(tank))
+    if(tank.health == 0)
       return;
     
     
@@ -150,7 +149,7 @@ class Tank extends Sprite {
   }
   
 
-  // OBSERVE IF ENEMY IS SPOTTED ===================================================================== RADIO / VISION
+  // OBSERVE IF ENEMY IS SPOTTED ===================================================================== 
   boolean detectedEnemy(Sprite obj) {
     if (obj instanceof Tank) {
       Tank tank = (Tank) obj;
