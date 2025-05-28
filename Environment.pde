@@ -32,7 +32,7 @@ void setup() {
   placedPositions  = new ArrayList<Sprite>(); //Positions for every entitiy
 
   allTrees         = new Tree[3];
-  allTanks         = new Tank[6];
+  allTanks         = new Tank[4];
 
   dogState         = DogState.ENTERING;
 
@@ -99,16 +99,10 @@ void setup() {
 
 
   tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img, memory0);
-  tank1 = new Tank("ally", team0_tank1_startpos, red_tank_img, memory0);
-  tank2 = new Tank("ally", team0_tank2_startpos, red_tank_img, memory0);
 
   allTanks[0] = tank0;                         // Symbol samma som index!
-  allTanks[1] = tank1;
-  allTanks[2] = tank2;
 
   placedPositions.add(tank0);
-  placedPositions.add(tank1);
-  placedPositions.add(tank2);
 
   for (Tank t : allTanks) {
     if (t == null) continue;
@@ -126,7 +120,7 @@ void setup() {
 
     Tank newTank = new Tank("enemy", newTankPos, blue_tank_img, memory1);
     placedPositions.add(newTank);
-    allTanks[3 + i] = newTank;
+    allTanks[1 + i] = newTank;
     team1.members.add(newTank);
     newTank.putBaseIntoMemory(team1.boundry);
   }
@@ -154,9 +148,6 @@ void draw() {
 
   checkForInput();
 
-  // For vision communications, check if tank is home
-  if(!team0.radioComs)
-    team0.checkIfTankHome();
     
     
   displayHomeBase();
@@ -349,7 +340,7 @@ void keyReleased() {
 
 // PLAYER TANK INPUTS =================================================================================
 void checkForInput() {
-  if (pause || gameOver || tank0.goHome || tank0.reporting || tank0.roam)
+  if (pause || gameOver)
     return;
 
   if (up) {
