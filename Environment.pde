@@ -158,7 +158,7 @@ void draw() {
 
   checkForInput();
 
-    
+  checkRewards();
     
   displayHomeBase();
   displayTrees();
