@@ -63,6 +63,10 @@ String previousAction;
 
 HashMap<String, Integer> eventsRewards;
 
+QLearner qLearner;
+
+float alpha, gamma, eps;
+
 Random random;
 
 Tree tree0,

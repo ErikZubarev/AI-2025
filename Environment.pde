@@ -35,8 +35,12 @@ void setup() {
   allTanks         = new Tank[4];
   
   eventsRewards    = new HashMap<>();
-  
   assignRewards();
+  
+  alpha            = 1.0;
+  gamma            = 1.0;
+  eps              = 1.0;
+  qLearner         = new QLearner(alpha, gamma, eps);
 
   dogState         = DogState.ENTERING;
 
@@ -281,6 +285,7 @@ void checkForCollisions() {
   }
 }
 
+// ================================================================================================== TWEAK REWARDS HERE
 void assignRewards(){
   eventsRewards.put("Game Over",-100);
   eventsRewards.put("Win",+100);
@@ -289,6 +294,14 @@ void assignRewards(){
   eventsRewards.put("Agent Damage",-5);
   eventsRewards.put("Time",-1);
 }
+
+// ================================================================================================== TWEAK Q-LEARNING HERE
+void checkRewards(){
+  //Checks whether the agent triggered an event (e.g., fired a shot, stepped on a landmine).
+  //Update said event by using the rewards table above
+  //updateQ()
+}
+
 
 // ==================================================================================================
 void keyPressed() {
