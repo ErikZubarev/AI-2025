@@ -1,6 +1,5 @@
 //Anton Lundqvist
 //Erik Zubarev
-//TEST
 class Tank extends Sprite {
   PVector velocity,
     startpos,
