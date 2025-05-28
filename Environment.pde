@@ -194,6 +194,27 @@ void draw() {
   displayGUI();
 }
 
+// ================================================================================================== TWEAK REWARDS HERE
+void assignRewards(){
+  eventsRewards.put("Game Over",-100);
+  eventsRewards.put("Win",+100);
+  eventsRewards.put("Enemy Hit",+5);
+  eventsRewards.put("Enemy Destroyed",+10);
+  eventsRewards.put("Agent Damage",-5);
+  eventsRewards.put("Time",-1);
+}
+
+// ================================================================================================== TWEAK Q-LEARNING HERE
+void checkRewards(){
+  //TODO
+  //Checks whether the agent triggered an event (e.g., fired a shot, stepped on a landmine).
+  //Check gameOver and assign
+  //Update previousState and previousAction
+  //Update said event by using the rewards table above
+  //updateQ()
+}
+
+
 // HELPER METHODS ======================================
 
 //Created helper fucntion to check if the generated pos is too close to a existing one
@@ -293,27 +314,6 @@ void checkForCollisions() {
     }
   }
 }
-
-// ================================================================================================== TWEAK REWARDS HERE
-void assignRewards(){
-  eventsRewards.put("Game Over",-100);
-  eventsRewards.put("Win",+100);
-  eventsRewards.put("Enemy Hit",+5);
-  eventsRewards.put("Enemy Destroyed",+10);
-  eventsRewards.put("Agent Damage",-5);
-  eventsRewards.put("Time",-1);
-}
-
-// ================================================================================================== TWEAK Q-LEARNING HERE
-void checkRewards(){
-  //TODO
-  //Checks whether the agent triggered an event (e.g., fired a shot, stepped on a landmine).
-  //Check gameOver and assign
-  //Update previousState and previousAction
-  //Update said event by using the rewards table above
-  //updateQ()
-}
-
 
 // ==================================================================================================
 void keyPressed() {
