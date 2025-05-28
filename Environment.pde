@@ -105,18 +105,14 @@ void setup() {
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
 
-  QuadTreeMemory memory0         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
-  QuadTreeMemory memory1         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
-
   //TEMP HIVE MIND
-  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img, memory0);
+  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img);
 
   allTanks[0] = tank0;                         // Symbol samma som index!
 
   placedPositions.add(tank0);
   team0.members.add(tank0);
   tank0.team = team0;
-  tank0.putBaseIntoMemory(team0.boundry);
 
   // Team1 randomly placed in the lower right quadrant
   for (int i = 0; i < 3; i++) {
@@ -125,11 +121,10 @@ void setup() {
       newTankPos = new PVector(random(450, 750), random(450, 750));
     } while (isOverlapping(newTankPos, placedPositions, 150));
 
-    Tank newTank = new Tank("enemy", newTankPos, blue_tank_img, memory1);
+    Tank newTank = new Tank("enemy", newTankPos, blue_tank_img);
     placedPositions.add(newTank);
     allTanks[1 + i] = newTank;
     team1.members.add(newTank);
-    newTank.putBaseIntoMemory(team1.boundry);
   }
 }
 
@@ -182,9 +177,6 @@ void draw() {
     updateCannonBalls();
     checkLandMineCollision();
     landmineCounter++;
-    if (debugMode) {
-      tank0.memory.display();
-    }
 
     currentPauseTime = totalPauseTime; // Save prev pause time
   } else if (pause) {

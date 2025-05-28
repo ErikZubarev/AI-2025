@@ -22,12 +22,12 @@ class Tank extends Sprite {
     reloading,
     immobilized,
     hunt;
-  QuadTreeMemory memory;
   ViewArea viewArea;
   Team team;
+  HashSet<Sprite> foundObjects;
 
 
-  Tank(String _name, PVector _startpos, PImage sprite, QuadTreeMemory memory) {
+  Tank(String _name, PVector _startpos, PImage sprite) {
     this.name           = _name;
     this.tankwidth      = sprite.width;
     this.tankheight     = sprite.height;
@@ -38,7 +38,6 @@ class Tank extends Sprite {
     this.angle          = 0;
     this.state          = 0;
     this.maxspeed       = 2;
-    this.memory         = memory;
     this.viewArea       = new ViewArea(position.x, position.y, angle);
     this.boundry        = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
     this.reloading      = false;
@@ -47,6 +46,7 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.immobilized    = false;
     this.hunt           = false;
+    this.foundObjects   = new HashSet<Sprite>();
   }
 
   // =================================================
@@ -59,7 +59,6 @@ class Tank extends Sprite {
       return;
       
     checkReloading();
-
 
 
     switch (state) {
@@ -103,80 +102,43 @@ class Tank extends Sprite {
     }
   }
   
+  State getCurrentState(){
+    return new State(
+      position.copy(),
+      angle,
+      health,
+      findNearest("enemy"),
+      findNearest("tree"),
+      findNearest("landmine")
+    );
+  }
+
+  float findNearest(String type) {
+    float minDist = Float.MAX_VALUE;
+    for (Sprite obj : foundObjects) {
+      if (type.equals("enemy") && obj instanceof Tank) {
+        float d = PVector.dist(this.position, obj.position);
+        if (d < minDist) minDist = d;
+      } else if (type.equals("tree") && obj instanceof Tree) {
+        float d = PVector.dist(this.position, obj.position);
+        if (d < minDist) minDist = d;
+      } else if (type.equals("landmine") && obj instanceof Landmine) {
+        float d = PVector.dist(this.position, obj.position);
+        if (d < minDist) minDist = d;
+      }
+    }
+    return minDist;
+  }
   
 
   // TANK VISION SENSOR ==================================================================================
   void detectObject() {
     for (Sprite obj : placedPositions) {
-      if (viewArea.intersects(obj.boundry)) {
-        boolean unseenLandmineDetected = detectedNewLandmine(obj);
-        boolean enemyDetected = detectedEnemy(obj);
-
-        if (obj instanceof Tank && enemyDetected) {
-          handleEnemyDetection((Tank) obj);
-        }
-
-        memory.insert(obj);
-
-        if (unseenLandmineDetected) {
-          
-        }
+      if (viewArea.intersects(obj.boundry) && obj != this) {
+        foundObjects.add(obj);
       }
     }
-    memory.updateExploredStatus(viewArea);
-    memory.pruneChildren(viewArea);
-
-    // + 10x10 area around tank, updates position of self
-    Boundry feeling = new Boundry(boundry.x-10, boundry.y-10, boundry.width +20, boundry.height+20);
-    memory.updateExploredStatus(feeling);
-    memory.pruneChildren(feeling);
   }
-  
-  // HANDLE ENEMY DETECTION ==============================================================================
-  void handleEnemyDetection(Tank tank){
-    if(tank.health == 0)
-      return;
-    
-    
-    
-
-    //Helper logic for exploring the area around the enemytank when its found. Helps with calculating the ambush point
-    memory.updateExploredStatus(tank.boundry);
-    Boundry expandedBoundry = new Boundry(tank.position.x - 70, tank.position.y - 70, 140, 140);
-    memory.updateExploredStatus(expandedBoundry);
-    memory.pruneChildren(expandedBoundry);
-    
-  }
-  
-
-  // OBSERVE IF ENEMY IS SPOTTED ===================================================================== 
-  boolean detectedEnemy(Sprite obj) {
-    if (obj instanceof Tank) {
-      Tank tank = (Tank) obj;
-
-      if (tank.name.equals("enemy")) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // DYNAMICALLY CHECK IF A LANDMINE APPEARED =========================================================
-  boolean detectedNewLandmine(Sprite obj) {
-    if (obj instanceof Landmine) {
-      ArrayList<Sprite> foundObjects = memory.query(obj.boundry);
-      boolean alreadyKnown = foundObjects.contains(obj);
-
-      if (!alreadyKnown) {
-        println("New landmine detected!");
-        return true;
-      }
-    }
-    return false;
-  }
-
-
-
 
   // IS RELOADING LOGIC ================================================================================
   void checkReloading() {
@@ -188,22 +150,6 @@ class Tank extends Sprite {
       reloading = false;
       reloadTimer = 0L;
     }
-  }
-
-  // PUT TEAM BASE INTO MEMORY AT THE START OF THE GAME ================================================
-  void putBaseIntoMemory(Boundry base) {
-    // Mark the base area as explored
-    memory.updateExploredStatus(base);
-
-    // Insert all objects within the base area into memory
-    for (Sprite obj : placedPositions) {
-      if (base.intersects(obj.boundry) && obj != this) {
-        memory.insert(obj);
-      }
-    }
-
-    // Prune unnecessary children in the memory tree for optimization
-    memory.pruneChildren(base);
   }
 
   // UPDATE BOUNDRY TO MOVE WITH TANK ================================================================
@@ -404,8 +350,8 @@ class Tank extends Sprite {
   // ===  INNER CLASS STATE
   // =================================================
   public class State {
-    float tankPosition, 
-          tankRotation,
+    PVector tankPosition;
+    float tankRotation,
           nearestEnemy, 
           nearestTree, 
           nearestLandmine;
@@ -414,7 +360,7 @@ class Tank extends Sprite {
         timeRemaining;
 
     
-    State(float pos, float rot, int hp, float nearestEnemy, float nearestTree, float nearestLandmine){
+    State(PVector pos, float rot, int hp, float nearestEnemy, float nearestTree, float nearestLandmine){
       tankPosition = pos;
       tankRotation = rot;
       tankHealth = hp;
