@@ -81,6 +81,7 @@ void displayTimer() {
   long min = floor(currentGameTimer/60);
   long sec = currentGameTimer % 60;
   String time = min + ":" + (sec < 10? "0"+sec : ""+sec);
+  println(currentGameTimer);
 
   textSize(36);
   fill(30);

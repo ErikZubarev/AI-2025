@@ -400,8 +400,38 @@ class Tank extends Sprite {
   }
 
   // ==================================================================================================
-
-
+  // =================================================
+  // ===  INNER CLASS STATE
+  // =================================================
+  public class State {
+    float tankPosition, 
+          tankRotation;
+    int tankHealth, 
+        remainingEnemies, 
+        timeRemaining, 
+        nearestEnemy, 
+        nearestTree, 
+        nearestLandmine;
+    
+    State(float pos, float rot, int hp, int nearestEnemy, int nearestTree, int nearestLandmine){
+      tankPosition = pos;
+      tankRotation = rot;
+      tankHealth = hp;
+      this.nearestEnemy  = nearestEnemy;
+      this.nearestTree = nearestTree;
+      this.nearestLandmine = nearestLandmine;
+      timeRemaining = 180 - ((int) currentGameTimer); // 3 minutes - current time
+      
+      remainingEnemies = 0;
+      for(Tank enemy : allTanks){
+        if(enemy.name == "enemy")
+          remainingEnemies++;
+      }
+      
+    }
+  
+  }
+    
   // =================================================
   // ===  INNER CLASS VIEW AREA
   // =================================================
