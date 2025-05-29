@@ -1,3 +1,6 @@
+  
+
+
 //Anton Lundqvist
 //Erik Zubarev
 class Tank extends Sprite {
@@ -19,11 +22,11 @@ class Tank extends Sprite {
     angle;
   boolean
     reloading,
-    immobilized,
     hunt;
   ViewArea viewArea;
   Team team;
   HashSet<Sprite> foundObjects;
+  Tank.State state;
 
 
   Tank(String _name, PVector _startpos, PImage sprite) {
@@ -42,9 +45,44 @@ class Tank extends Sprite {
     this.fireCooldown   = 3000;
     this.health         = 3;
     this.reloadTimer    = 0L;
-    this.immobilized    = false;
     this.hunt           = false;
     this.foundObjects   = new HashSet<Sprite>();
+    this.state          = name == "enemy" ? null : new State(
+      health,
+      findNearest("enemy"),
+      findNearest("tree"),
+      findNearest("landmine")
+    );
+  }
+
+  //THIS IS A STAE EIKR HERHERE you go
+  public class State {
+    int nearestEnemy, 
+          nearestTree, 
+          nearestLandmine;
+    int tankHealth, 
+        remainingEnemies;
+
+    
+    State(int hp, int nearestEnemy, int nearestTree, int nearestLandmine){
+      tankHealth = hp;
+      this.nearestEnemy  = nearestEnemy;
+      this.nearestTree = nearestTree;
+      this.nearestLandmine = nearestLandmine;
+      
+      this.remainingEnemies = remainingEnemies();
+      
+    }
+
+    int remainingEnemies(){
+      remainingEnemies = 0;
+      for(Tank enemy : allTanks){
+        if(enemy != null && enemy.name == "enemy")
+          remainingEnemies++;
+      }
+     return remainingEnemies;
+    }
+  
   }
 
   // =================================================
@@ -65,16 +103,16 @@ class Tank extends Sprite {
   void action(String _action) {
     switch (_action) {
     case "move":
-      if (!immobilized) moveForward();
+      moveForward();
       break;
     case "reverse":
-      if (!immobilized) moveBackward();
+      moveBackward();
       break;
     case "rotateLeft":
-      if (health > 0) rotateLeft();
+      rotateLeft();
       break;
     case "rotateRight":
-      if (health > 0) rotateRight();
+      rotateRight();
       break;
     case "stop":
       stopMoving();
@@ -86,17 +124,17 @@ class Tank extends Sprite {
   }
   
   State getCurrentState(){
-    return new State(
-      position.copy(),
-      angle,
-      health,
-      findNearest("enemy"),
-      findNearest("tree"),
-      findNearest("landmine")
-    );
+
+    state.tankHealth = this.health;
+    state.nearestEnemy = findNearest("enemy");
+    state.nearestTree = findNearest("tree");
+    state.nearestLandmine = findNearest("landmine");
+    state.remainingEnemies = state.remainingEnemies();
+    return state;
+    
   }
 
-  float findNearest(String type) {
+  int findNearest(String type) {
     float minDist = Float.MAX_VALUE;
     for (Sprite obj : foundObjects) {
       if (type.equals("enemy") && obj instanceof Tank) {
@@ -110,7 +148,13 @@ class Tank extends Sprite {
         if (d < minDist) minDist = d;
       }
     }
-    return minDist;
+    if(minDist < 50){
+      return 1;
+    }else if (minDist < 200){
+      return 2;
+    }else{
+      return 3;
+    }
   }
   
 
@@ -119,6 +163,9 @@ class Tank extends Sprite {
     for (Sprite obj : placedPositions) {
       if (viewArea.intersects(obj.boundry) && obj != this) {
         foundObjects.add(obj);
+        if(obj instanceof Tank){
+          seesEnemy = true;
+        }
       }
     }
   }
@@ -188,7 +235,6 @@ class Tank extends Sprite {
   // =================================================
   // ==================================================================================================
   void moveForward() {
-    state = 1;
     this.velocity.x = cos(this.angle) * this.maxspeed;
     this.velocity.y = sin(this.angle) * this.maxspeed;
   }
@@ -211,7 +257,6 @@ class Tank extends Sprite {
 
   // ==================================================================================================
   void stopMoving() {
-    this.state = 0;
     this.velocity.x = 0;
     this.velocity.y = 0;
   }
@@ -240,10 +285,6 @@ class Tank extends Sprite {
 
     if(this.name == "ally"){
       agentDamaged = true;
-    }
-
-    if (health == 2) {
-      immobilized = true;
     }
 
     if (health != 0) {
@@ -350,35 +391,7 @@ class Tank extends Sprite {
   // =================================================
   // ===  INNER CLASS STATE
   // =================================================
-  public class State {
-    PVector tankPosition;
-    float tankRotation,
-          nearestEnemy, 
-          nearestTree, 
-          nearestLandmine;
-    int tankHealth, 
-        remainingEnemies, 
-        timeRemaining;
 
-    
-    State(PVector pos, float rot, int hp, float nearestEnemy, float nearestTree, float nearestLandmine){
-      tankPosition = pos;
-      tankRotation = rot;
-      tankHealth = hp;
-      this.nearestEnemy  = nearestEnemy;
-      this.nearestTree = nearestTree;
-      this.nearestLandmine = nearestLandmine;
-      timeRemaining = 180 - ((int) currentGameTimer); // 3 minutes - current time
-      
-      remainingEnemies = 0;
-      for(Tank enemy : allTanks){
-        if(enemy.name == "enemy")
-          remainingEnemies++;
-      }
-      
-    }
-  
-  }
     
   // =================================================
   // ===  INNER CLASS VIEW AREA

@@ -98,20 +98,7 @@ void setup() {
   red_tank_img = loadImage("redtank.png");
   blue_tank_img = loadImage("bluetank.png");
 
-  // Team0
-  // Base Team 0(red)
-  team0_tank0_startpos  = new PVector(50, 50);
-  team0_tank1_startpos  = new PVector(50, 150);
-  team0_tank2_startpos  = new PVector(50, 250);
-
-  //TEMP HIVE MIND
-  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img);
-
-  allTanks[0] = tank0;                         // Symbol samma som index!
-
-  placedPositions.add(tank0);
-  team0.members.add(tank0);
-  tank0.team = team0;
+  
 
   // Team1 randomly placed in the lower right quadrant
   for (int i = 0; i < 3; i++) {
@@ -122,9 +109,22 @@ void setup() {
 
     Tank newTank = new Tank("enemy", newTankPos, blue_tank_img);
     placedPositions.add(newTank);
-    allTanks[1 + i] = newTank;
+    allTanks[i] = newTank;
     team1.members.add(newTank);
   }
+  println(allTanks);
+
+  // Team0
+  // Base Team 0(red)
+  team0_tank0_startpos  = new PVector(50, 50);
+
+  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img);
+
+  allTanks[3] = tank0;                         // Symbol samma som index!
+
+  placedPositions.add(tank0);
+  team0.members.add(tank0);
+  tank0.team = team0;
 
   previousState    = tank0.getCurrentState(); //Reset between new epochs
   previousAction   = "stop";
@@ -159,7 +159,6 @@ void draw() {
 
   background(200);
 
-  checkForInput();
 
   checkRewards();
     
@@ -206,11 +205,12 @@ void draw() {
 // ================================================================================================== TWEAK REWARDS HERE
 void assignRewards(){
   eventsRewards.put("Lost",-100);
-  eventsRewards.put("Win",+100);
-  eventsRewards.put("Enemy Hit",+5);
-  eventsRewards.put("Enemy Destroyed",+10);
+  eventsRewards.put("Win",100);
+  eventsRewards.put("Enemy Hit",5);
+  eventsRewards.put("Enemy Destroyed",10);
   eventsRewards.put("Agent Damage",-5);
   eventsRewards.put("Time",-1);
+  eventsRewards.put("See Enemy", 1);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -225,6 +225,12 @@ void checkRewards(){
   else if(gameOver && !gameWon){
     reward = eventsRewards.get("Lost");
     setReward(reward);
+  }
+
+  if(seesEnemy){
+    reward = eventsRewards.get("See Enemy");
+    setReward(reward);
+    seesEnemy = false;
   }
   
   if(enemyHit){
@@ -250,6 +256,7 @@ void checkRewards(){
     reward = eventsRewards.get("Time");
     setReward(reward);
     previousTime = currentGameTimer;
+    println(qLearner.qTable);
   }
 }
 
@@ -411,38 +418,4 @@ void keyReleased() {
     tank0.action("fire");
   }
 
-}
-
-// PLAYER TANK INPUTS =================================================================================
-void checkForInput() {
-  if (pause || gameOver)
-    return;
-
-  if (up) {
-    tank0.state = 1; // moveForward
-  } else if (down) {
-    tank0.state = 2; // moveBackward
-  } else tank0.state = 0;
-
-  if (right) {
-    tank0.action("rotateRight"); // Rotate right
-  } else if (left) {
-    tank0.action("rotateLeft"); // Rotate left
-  }
-}
-
-// ==================================================================================================
-void mousePressed() {
-  println("---------------------------------------------------------");
-  println("*** mousePressed() - Musknappen har tryckts ned.");
-
-  mouse_pressed = true;
-
-  PVector mousePos = new PVector(mouseX, mouseY);
-  deployLandmine(mousePos);
-}
-
-
-void deployLandmine(PVector targetPos) {
-  dog.startRun(targetPos);
 }

@@ -20,7 +20,8 @@ boolean left,
   gameWon,
   agentDamaged,
   enemyHit,
-  enemyIsDeadNotBigSuprise;
+  enemyIsDeadNotBigSuprise,
+  seesEnemy;
 
 PImage tree_img,
   blue_tank_img,
