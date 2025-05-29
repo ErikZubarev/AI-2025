@@ -234,12 +234,12 @@ void checkRewards(){
   }
   
   //Enemy destroyed
-  if(true){
+  if(enemyIsDeadNotBigSuprise){
     reward = eventsRewards.get("Enemy Destroyed");
     setReward(reward);
+    enemyIsDeadNotBigSuprise = false;
   }
   
-  //Agent damage
   if(agentDamaged){
     reward = eventsRewards.get("Agent Damage");
     setReward(reward);
