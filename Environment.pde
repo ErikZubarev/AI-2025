@@ -246,6 +246,7 @@ void checkRewards(){
 
 // HELPER METHODS ======================================
 
+// Update Q-Learner based on reward==================================================================
 void setReward(int reward){
   qLearner.updateQ(previousState, previousAction, reward, tank0.getCurrentState());
 }
