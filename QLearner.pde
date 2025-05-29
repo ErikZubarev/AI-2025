@@ -6,8 +6,8 @@ class QLearner {
  
   String[] actions = {"move", "reverse", "rotateLeft", "rotateRight", "stop", "fire"};
 
-  QLearner(float lr, float gamma, float eps) {
-    learningRate = lr;
+  QLearner(float alpha, float gamma, float eps) {
+    learningRate = alpha;
     discountFactor = gamma;
     epsilon = eps;
     qTable = new HashMap<Tank.State, HashMap<String, Float>>(); // Hashmap from each State -> Action + Q value
