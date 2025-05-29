@@ -47,7 +47,7 @@ class QLearner {
   }
  
   // Update the Q-table based on the state, action taken, reward received, and the next state.
-  void updateQ(Tank.State state, String action, float reward, Tank.State nextState) {
+  void updateQ(Tank.State state, String action, int reward, Tank.State nextState) {
     ensureState(state);
     ensureState(nextState);
     float currentQ = qTable.get(state).get(action);

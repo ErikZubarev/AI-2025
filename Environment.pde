@@ -211,34 +211,44 @@ void checkRewards(){
   int reward = 0;
   if(gameOver && gameWon){
     reward = eventsRewards.get("Win");
+    setReward(reward);
   }
   else if(gameOver && !gameWon){
     reward = eventsRewards.get("Lost");
+    setReward(reward);
   }
   
   //Enemy hit
   if(true){
     reward = eventsRewards.get("Enemy Hit");
+    setReward(reward);
   }
   
   //Enemy destroyed
   if(true){
     reward = eventsRewards.get("Enemy Destroyed");
+    setReward(reward);
   }
   
   //Agent damage
   if(true){
     reward = eventsRewards.get("Agent Damage");
+    setReward(reward);
   }
   
   if(previousTime < currentGameTimer){
     reward = eventsRewards.get("Time");
+    setReward(reward);
     previousTime = currentGameTimer;
   }
 }
 
 
 // HELPER METHODS ======================================
+
+void setReward(int reward){
+  qLearner.updateQ(previousState, previousAction, reward, tank0.getCurrentState());
+}
 
 //Created helper fucntion to check if the generated pos is too close to a existing one
 // ==================================================================================================
