@@ -240,12 +240,12 @@ class Tank extends Sprite {
       do{
         fake.moveForward();
         for(Sprite obs : placedPositions){
-          if(obs instanceof Tank && (Tank)obs != this && obs.boundry.intersects(this.boundry)){
-
+          if(obs instanceof Tank && (Tank)obs != this && obs.boundry.intersects(fake.boundry)){
             enemyHit = true;
           }
         }
       } while (!enemyHit && fake.position.x >= 0 && fake.position.x <= 800 && fake.position.y >= 0 && fake.position.y <= 800);
+      println(enemyHit);
       CannonBall cannonBall = new CannonBall(position.copy(), this.angle, this);
       addCannonBall(cannonBall);
       reloading = true;
@@ -258,6 +258,7 @@ class Tank extends Sprite {
 
     if(this.name == "ally"){
       agentDamaged = true;
+      println(agentDamaged);
     }
 
     if (health == 2) {
