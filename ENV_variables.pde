@@ -51,7 +51,8 @@ long startGameTimer,
   currentGameTimer,
   startPauseTimer,
   currentPauseTime,
-  totalPauseTime;
+  totalPauseTime,
+  previousTime;
 
 float alpha, 
       gamma, 

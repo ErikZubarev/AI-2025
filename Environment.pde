@@ -17,6 +17,7 @@ void setup() {
   currentGameTimer = 0L;
   totalPauseTime   = 0L;
   currentPauseTime = 0L;
+  previousTime     = 0L;
   landmineCounter  = 0;
 
   random           = new Random();
@@ -191,7 +192,7 @@ void draw() {
 
 // ================================================================================================== TWEAK REWARDS HERE
 void assignRewards(){
-  eventsRewards.put("Game Over",-100);
+  eventsRewards.put("Lost",-100);
   eventsRewards.put("Win",+100);
   eventsRewards.put("Enemy Hit",+5);
   eventsRewards.put("Enemy Destroyed",+10);
@@ -207,6 +208,33 @@ void checkRewards(){
   //Update previousState and previousAction
   //Update said event by using the rewards table above
   //updateQ()
+  int reward = 0;
+  if(gameOver && gameWon){
+    reward = eventsRewards.get("Win");
+  }
+  else if(gameOver && !gameWon){
+    reward = eventsRewards.get("Lost");
+  }
+  
+  //Enemy hit
+  if(true){
+    reward = eventsRewards.get("Enemy Hit");
+  }
+  
+  //Enemy destroyed
+  if(true){
+    reward = eventsRewards.get("Enemy Destroyed");
+  }
+  
+  //Agent damage
+  if(true){
+    reward = eventsRewards.get("Agent Damage");
+  }
+  
+  if(previousTime < currentGameTimer){
+    reward = eventsRewards.get("Time");
+    previousTime = currentGameTimer;
+  }
 }
 
 
