@@ -38,8 +38,6 @@ void setup() {
   eventsRewards    = new HashMap<>();
   assignRewards();
   
-  previousState    = null; //Reset between new epochs
-  previousAction   = null;
   
   if(qLearner == null){
     //Assures that Q-learning element does not reset every epoch
@@ -127,6 +125,10 @@ void setup() {
     allTanks[1 + i] = newTank;
     team1.members.add(newTank);
   }
+
+  previousState    = tank0.getCurrentState(); //Reset between new epochs
+  previousAction   = "stop";
+
 }
 
 
@@ -146,6 +148,11 @@ void draw() {
   if (allDead) {
     gameOver = true;
     gameWon = true;
+    checkRewards(); //Updates gameover rewards
+    setup();
+  }else if(tank0.health == 0){
+    gameOver = true;
+    gameWon = false;
     checkRewards(); //Updates gameover rewards
     setup();
   }
@@ -176,7 +183,13 @@ void draw() {
     updateCannonBalls();
     
     checkForCollisions();
+
+    Tank.State newState = tank0.getCurrentState();
+    String newAction = qLearner.chooseAction(newState);
+    tank0.action(newAction); 
     updateTanksLogic();
+    previousState = newState;
+    previousAction = newAction;
     
     
     checkLandMineCollision();
