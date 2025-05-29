@@ -202,13 +202,9 @@ void assignRewards(){
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
 void checkRewards(){
-  //TODO
-  //Checks whether the agent triggered an event (e.g., fired a shot, stepped on a landmine).
-  //Check gameOver and assign
-  //Update previousState and previousAction
-  //Update said event by using the rewards table above
-  //updateQ()
+  
   int reward = 0;
+  
   if(gameOver && gameWon){
     reward = eventsRewards.get("Win");
     setReward(reward);
@@ -218,10 +214,10 @@ void checkRewards(){
     setReward(reward);
   }
   
-  //Enemy hit
-  if(true){
+  if(enemyHit){
     reward = eventsRewards.get("Enemy Hit");
     setReward(reward);
+    enemyHit = false;
   }
   
   //Enemy destroyed
@@ -231,9 +227,10 @@ void checkRewards(){
   }
   
   //Agent damage
-  if(true){
+  if(agentDamaged){
     reward = eventsRewards.get("Agent Damage");
     setReward(reward);
+    agentDamaged = false;
   }
   
   if(previousTime < currentGameTimer){
