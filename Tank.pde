@@ -259,6 +259,10 @@ class Tank extends Sprite {
       agentDamaged = true;
     }
 
+    if(this.health == 0 && this.name.equals("enemy")){
+      enemyIsDeadNotBigSuprise = true;  
+    }
+
     if (health == 2) {
       immobilized = true;
     }
