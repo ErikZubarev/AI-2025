@@ -112,7 +112,6 @@ void setup() {
     allTanks[i] = newTank;
     team1.members.add(newTank);
   }
-  println(allTanks);
 
   // Team0
   // Base Team 0(red)
@@ -204,13 +203,13 @@ void draw() {
 
 // ================================================================================================== TWEAK REWARDS HERE
 void assignRewards(){
-  eventsRewards.put("Lost",-100);
-  eventsRewards.put("Win",100);
-  eventsRewards.put("Enemy Hit",5);
-  eventsRewards.put("Enemy Destroyed",10);
-  eventsRewards.put("Agent Damage",-5);
+  eventsRewards.put("Lost",-1000);
+  eventsRewards.put("Win",1000);
+  eventsRewards.put("Enemy Hit",50);
+  eventsRewards.put("Enemy Destroyed",100);
+  eventsRewards.put("Agent Damage",-50);
   eventsRewards.put("Time",-1);
-  eventsRewards.put("See Enemy", 1);
+  eventsRewards.put("See Enemy", 10);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -258,6 +257,9 @@ void checkRewards(){
     previousTime = currentGameTimer;
     println(qLearner.qTable);
   }
+  
+  if(reward != 0)
+    println(reward);
 }
 
 
