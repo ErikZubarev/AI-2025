@@ -17,7 +17,9 @@ boolean left,
   debugMode,
   gameOver,
   pause,
-  gameWon;
+  gameWon,
+  agentDamaged,
+  enemyHit;
 
 PImage tree_img,
   blue_tank_img,
@@ -67,8 +69,6 @@ ArrayList<Sprite> placedPositions;
 ArrayList<Explosion> allExplosions;
 
 HashMap<String, Integer> eventsRewards;
-
-
 
 QLearner qLearner;
 
