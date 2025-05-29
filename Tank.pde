@@ -9,7 +9,6 @@ class Tank extends Sprite {
   String name;
   int tankwidth,
     tankheight,
-    state,
     lastFired,
     fireCooldown,
     health;
@@ -36,7 +35,6 @@ class Tank extends Sprite {
     this.position       = new PVector(this.startpos.x, this.startpos.y);
     this.velocity       = new PVector(0, 0);
     this.angle          = 0;
-    this.state          = 0;
     this.maxspeed       = 2;
     this.viewArea       = new ViewArea(position.x, position.y, angle);
     this.boundry        = new Boundry(position.x - tankheight/2, position.y - tankheight/2, this.tankheight, this.tankheight);
@@ -59,22 +57,7 @@ class Tank extends Sprite {
       return;
       
     checkReloading();
-
-
-    switch (state) {
-    case 0:
-      action("stop");
-      break;
-    case 1:
-      action("move");
-      break;
-    case 2:
-      action("reverse");
-      break;
-    }
-
     updateCollision();
-
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
 
