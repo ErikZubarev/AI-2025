@@ -47,15 +47,11 @@ class Tank extends Sprite {
     this.reloadTimer    = 0L;
     this.hunt           = false;
     this.foundObjects   = new HashSet<Sprite>();
-    this.state          = name == "enemy" ? null : new State(
-      health,
-      findNearest("enemy"),
-      findNearest("tree"),
-      findNearest("landmine")
-    );
   }
 
-  //THIS IS A STAE EIKR HERHERE you go
+  // =================================================
+  // ===  STATE CLASS
+  // =================================================
   public class State {
     int nearestEnemy, 
           nearestTree, 
@@ -64,26 +60,53 @@ class Tank extends Sprite {
         remainingEnemies;
 
     
-    State(int hp, int nearestEnemy, int nearestTree, int nearestLandmine){
-      tankHealth = hp;
-      this.nearestEnemy  = nearestEnemy;
-      this.nearestTree = nearestTree;
-      this.nearestLandmine = nearestLandmine;
+    State(int hp, int nearestEnemyVal, int nearestTreeVal, int nearestLandmineVal){ 
+      this.tankHealth = hp;
+      this.nearestEnemy  = nearestEnemyVal;
+      this.nearestTree = nearestTreeVal;
+      this.nearestLandmine = nearestLandmineVal;
       
-      this.remainingEnemies = remainingEnemies();
-      
+      this.remainingEnemies = calculateRemainingEnemies(); 
     }
 
-    int remainingEnemies(){
-      remainingEnemies = 0;
-      for(Tank enemy : allTanks){
-        if(enemy != null && enemy.name == "enemy")
-          remainingEnemies++;
+    private int calculateRemainingEnemies(){
+      int count = 0;
+      for(Tank enemyTank : allTanks){ 
+        if(enemyTank != null && enemyTank.name != null && enemyTank.name.equals("enemy") && enemyTank.health > 0) {
+          count++;
+        }
       }
-     return remainingEnemies;
+     return count;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (obj == null || getClass() != obj.getClass()) return false;
+      State otherState = (State) obj;
+      return tankHealth == otherState.tankHealth &&
+             nearestEnemy == otherState.nearestEnemy &&
+             nearestTree == otherState.nearestTree &&
+             nearestLandmine == otherState.nearestLandmine &&
+             remainingEnemies == otherState.remainingEnemies;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = 17;
+      result = 31 * result + tankHealth;
+      result = 31 * result + nearestEnemy;
+      result = 31 * result + nearestTree;
+      result = 31 * result + nearestLandmine;
+      result = 31 * result + remainingEnemies;
+      return result;
     }
   
   }
+
+  // =================================================
+  // ===  END OF STATE CLASS
+  // =================================================
 
   // =================================================
   // ===  MAIN METHODS
@@ -124,14 +147,12 @@ class Tank extends Sprite {
   }
   
   State getCurrentState(){
-
-    state.tankHealth = this.health;
-    state.nearestEnemy = findNearest("enemy");
-    state.nearestTree = findNearest("tree");
-    state.nearestLandmine = findNearest("landmine");
-    state.remainingEnemies = state.remainingEnemies();
-    return state;
-    
+    return new State(
+      this.health,
+      findNearest("enemy"),
+      findNearest("tree"),
+      findNearest("landmine")
+    );
   }
 
   int findNearest(String type) {
@@ -290,10 +311,9 @@ class Tank extends Sprite {
 
     if (health != 0) {
       health--;
-    }
-
-    if(this.health == 0 && this.name.equals("enemy")){
-      enemyIsDeadNotBigSuprise = true;  
+      if(this.health == 0 && this.name.equals("enemy")){
+        enemyIsDeadNotBigSuprise = true;  
+      }
     }
   }
 
