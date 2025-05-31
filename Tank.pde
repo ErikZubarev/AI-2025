@@ -1,6 +1,3 @@
-  
-
-
 //Anton Lundqvist
 //Erik Zubarev
 class Tank extends Sprite {
@@ -84,7 +81,7 @@ class Tank extends Sprite {
       if (this == obj) return true;
       if (obj == null || getClass() != obj.getClass()) return false;
       State otherState = (State) obj;
-      return tankHealth == otherState.tankHealth &&
+      return 
              nearestEnemyDistCategory == otherState.nearestEnemyDistCategory &&
              nearestTree == otherState.nearestTree &&
              nearestLandmine == otherState.nearestLandmine &&
@@ -96,7 +93,6 @@ class Tank extends Sprite {
     @Override
     public int hashCode() {
       int result = 17;
-      result = 31 * result + tankHealth;
       result = 31 * result + nearestEnemyDistCategory;
       result = 31 * result + nearestTree;
       result = 31 * result + nearestLandmine;
@@ -108,12 +104,14 @@ class Tank extends Sprite {
 
     @Override
     public String toString() {
+      String[] enOr = {"None","Front","Left","Right","Back"};
+      String[] agOr = {"East","North","West","South"};
       return "State{" +
         "nearestEnemyDistCategory=" + nearestEnemyDistCategory +
         ", nearestTree=" + nearestTree +
         ", nearestLandmine=" + nearestLandmine +
-        ", relativeEnemyDirection=" + relativeEnemyDirection +
-        ", agentOrientation=" + agentOrientation +
+        ", relativeEnemyDirection=" + enOr[relativeEnemyDirection] +
+        ", agentOrientation=" + agOr[agentOrientation] +
         ", remainingEnemies=" + remainingEnemies +
         '}';
     }
