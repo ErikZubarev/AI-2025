@@ -40,17 +40,14 @@ void setup() {
   
   
   if(qLearner == null){
-    //Assures that Q-learning element does not reset every epoch
-    alpha            = 0.1; // MODIFIED: Lower learning rate
-    gamma            = 0.95; // MODIFIED: Discount factor slightly less than 1
+    alpha            = 0.1; 
+    gamma            = 0.95; 
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
   } else {
-    // Decay epsilon at the start of each new episode (setup is called per episode)
-    float epsilon_decay_rate = 0.8; // Example decay rate
-    float min_epsilon = 0.01;         // Example minimum epsilon
+    float epsilon_decay_rate = 0.99; 
+    float min_epsilon = 0.01;         
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon * epsilon_decay_rate);
-    println("New Epsilon: " + qLearner.epsilon); // For debugging
   }
 
   dogState         = DogState.ENTERING;
