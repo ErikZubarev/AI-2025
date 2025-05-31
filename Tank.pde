@@ -53,30 +53,30 @@ class Tank extends Sprite {
   // ===  STATE CLASS
   // =================================================
   public class State {
-    int nearestEnemy, 
-          nearestTree, 
-          nearestLandmine;
-    int tankHealth, 
-        remainingEnemies;
+    int nearestEnemyDistCategory; // Renamed for clarity from nearestEnemy
+    int nearestTree;
+    int nearestLandmine;
+    int relativeEnemyDirection; // 0=Far/None, 1=Front, 2=Right, 3=Left, 4=Back
+    int agentOrientation;       // New field: 0=East, 1=North, 2=West, 3=South
+    int remainingEnemies;
 
-    
-    State(int hp, int nearestEnemyVal, int nearestTreeVal, int nearestLandmineVal){ 
-      this.tankHealth = hp;
-      this.nearestEnemy  = nearestEnemyVal;
+    State(int nearestEnemyDistCat, int nearestTreeVal, int nearestLandmineVal, int relEnemyDirVal, int agentOrientVal) { // Constructor updated
+      this.nearestEnemyDistCategory = nearestEnemyDistCat;
       this.nearestTree = nearestTreeVal;
       this.nearestLandmine = nearestLandmineVal;
-      
-      this.remainingEnemies = calculateRemainingEnemies(); 
+      this.relativeEnemyDirection = relEnemyDirVal;
+      this.agentOrientation = agentOrientVal; // Assign new field
+      this.remainingEnemies = calculateRemainingEnemies();
     }
 
-    private int calculateRemainingEnemies(){
+    private int calculateRemainingEnemies() {
       int count = 0;
-      for(Tank enemyTank : allTanks){ 
-        if(enemyTank != null && enemyTank.name != null && enemyTank.name.equals("enemy") && enemyTank.health > 0) {
+      for (Tank enemyTank : allTanks) {
+        if (enemyTank != null && enemyTank.name != null && enemyTank.name.equals("enemy") && enemyTank.health > 0) {
           count++;
         }
       }
-     return count;
+      return count;
     }
 
     @Override
@@ -85,9 +85,11 @@ class Tank extends Sprite {
       if (obj == null || getClass() != obj.getClass()) return false;
       State otherState = (State) obj;
       return tankHealth == otherState.tankHealth &&
-             nearestEnemy == otherState.nearestEnemy &&
+             nearestEnemyDistCategory == otherState.nearestEnemyDistCategory &&
              nearestTree == otherState.nearestTree &&
              nearestLandmine == otherState.nearestLandmine &&
+             relativeEnemyDirection == otherState.relativeEnemyDirection &&
+             agentOrientation == otherState.agentOrientation && // Compare new field
              remainingEnemies == otherState.remainingEnemies;
     }
 
@@ -95,13 +97,26 @@ class Tank extends Sprite {
     public int hashCode() {
       int result = 17;
       result = 31 * result + tankHealth;
-      result = 31 * result + nearestEnemy;
+      result = 31 * result + nearestEnemyDistCategory;
       result = 31 * result + nearestTree;
       result = 31 * result + nearestLandmine;
+      result = 31 * result + relativeEnemyDirection;
+      result = 31 * result + agentOrientation; // Include new field in hash
       result = 31 * result + remainingEnemies;
       return result;
     }
-  
+
+    @Override
+    public String toString() {
+      return "State{" +
+        "nearestEnemyDistCategory=" + nearestEnemyDistCategory +
+        ", nearestTree=" + nearestTree +
+        ", nearestLandmine=" + nearestLandmine +
+        ", relativeEnemyDirection=" + relativeEnemyDirection +
+        ", agentOrientation=" + agentOrientation +
+        ", remainingEnemies=" + remainingEnemies +
+        '}';
+    }
   }
 
   // =================================================
@@ -146,13 +161,114 @@ class Tank extends Sprite {
     }
   }
   
-  State getCurrentState(){
+  State getCurrentState() {
+    int nearestEnemyDistCat = findNearest("enemy");
+    int relativeEnemyDir = 0; // Default: 0 for Far or No enemy relevant for direction
+
+    if (nearestEnemyDistCat < 3) {
+      Tank nearestEnemyObj = getNearestEnemyObject();
+      if (nearestEnemyObj != null) {
+        relativeEnemyDir = calculateDiscretizedRelativeAngle(nearestEnemyObj);
+      }
+    }
+
+    int currentAgentOrientation = discretizeAgentAngle(); // Get discretized agent angle
+
     return new State(
-      this.health,
-      findNearest("enemy"),
+      nearestEnemyDistCat,
       findNearest("tree"),
-      findNearest("landmine")
+      findNearest("landmine"),
+      relativeEnemyDir,
+      currentAgentOrientation // Pass the new agent orientation
     );
+  }
+
+  // Helper to get the actual nearest enemy Tank object
+  Tank getNearestEnemyObject() {
+    float minDist = Float.MAX_VALUE;
+    Tank closestEnemy = null;
+    for (Sprite obj : foundObjects) {
+      if (obj instanceof Tank && obj != this) { // Check if it's another tank
+        Tank enemyTank = (Tank) obj;
+        if (enemyTank.health > 0) { // Consider only live enemies
+          float d = PVector.dist(this.position, enemyTank.position);
+          if (d < minDist) {
+            minDist = d;
+            closestEnemy = enemyTank;
+          }
+        }
+      }
+    }
+    // Return the enemy only if it's within the "close" or "medium" range (less than 200 units)
+    // This aligns with findNearest where category 3 means distance >= 200
+    if (closestEnemy != null && minDist < 200) {
+      return closestEnemy;
+    }
+    return null;
+  }
+
+  // Calculate discretized relative angle to an enemy
+  // Returns: 0 = Enemy Far/None, 1 = Front, 2 = Right, 3 = Left, 4 = Back
+  int calculateDiscretizedRelativeAngle(Tank enemyTank) {
+    if (enemyTank == null) { // Should not happen if called correctly from getCurrentState
+      return 0; 
+    }
+
+    PVector vectorToEnemy = PVector.sub(enemyTank.position, this.position);
+    float angleToEnemy = vectorToEnemy.heading(); // Gets angle in radians (-PI to PI)
+
+    float relativeAngle = angleToEnemy - this.angle;
+
+    // Normalize angle to be between -PI and PI
+    while (relativeAngle <= -PI) {
+      relativeAngle += TWO_PI;
+    }
+    while (relativeAngle > PI) {
+      relativeAngle -= TWO_PI;
+    }
+
+    // Discretize based on relative angle:
+    // PI/4 radians is 45 degrees.
+    float PI_4 = PI / 4.0f;
+    float THREE_PI_4 = 3.0f * PI / 4.0f;
+
+    if (abs(relativeAngle) <= PI_4) {
+      return 1; // Front
+    } else if (relativeAngle > PI_4 && relativeAngle <= THREE_PI_4) {
+      return 2; // Right
+    } else if (relativeAngle < -PI_4 && relativeAngle >= -THREE_PI_4) {
+      return 3; // Left
+    } else {
+      return 4; // Back
+    }
+  }
+
+  int discretizeAgentAngle() {
+    float currentAngle = this.angle;
+
+    // Normalize angle to be between 0 and TWO_PI
+    while (currentAngle < 0) {
+      currentAngle += TWO_PI;
+    }
+    while (currentAngle >= TWO_PI) {
+      currentAngle -= TWO_PI;
+    }
+
+    // Define angle thresholds (PI/4 = 45 degrees)
+    float PI_4 = PI / 4.0f;
+    float THREE_PI_4 = 3.0f * PI / 4.0f;
+    float FIVE_PI_4 = 5.0f * PI / 4.0f;
+    float SEVEN_PI_4 = 7.0f * PI / 4.0f;
+
+    if (currentAngle >= SEVEN_PI_4 || currentAngle < PI_4) {
+      return 0; // East (Right)
+    } else if (currentAngle >= PI_4 && currentAngle < THREE_PI_4) {
+      return 1; // North (Up)
+    } else if (currentAngle >= THREE_PI_4 && currentAngle < FIVE_PI_4) {
+      return 2; // West (Left)
+    } else { // currentAngle >= FIVE_PI_4 && currentAngle < SEVEN_PI_4
+      return 3; // South (Down)
+    }
   }
 
   int findNearest(String type) {
