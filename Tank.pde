@@ -276,7 +276,8 @@ class Tank extends Sprite {
   int findNearest(String type) {
     float minDist = Float.MAX_VALUE;
     for (Sprite obj : foundObjects) {
-      if (type.equals("enemy") && obj instanceof Tank) {
+      if (type.equals("enemy") && obj instanceof Tank && ((Tank)obj).health != 0) {
+
         float d = PVector.dist(this.position, obj.position);
         if (d < minDist) minDist = d;
       } else if (type.equals("tree") && obj instanceof Tree) {
@@ -287,9 +288,9 @@ class Tank extends Sprite {
         if (d < minDist) minDist = d;
       }
     }
-    if(minDist < 50){
+    if(minDist < 150){
       return 1;
-    }else if (minDist < 200){
+    }else if (minDist < 300){
       return 2;
     }else{
       return 3;
