@@ -184,7 +184,10 @@ class Tank extends Sprite {
     for (Sprite obj : placedPositions) {
       if (viewArea.intersects(obj.boundry) && obj != this) {
         if(obj instanceof Tank /*&& !foundObjects.contains(obj)*/){
-          seesEnemy = true;
+          Tank tank = (Tank) obj;
+          if(tank.health != 0){
+            seesEnemy = true;
+          }
         }
         foundObjects.add(obj);
         
