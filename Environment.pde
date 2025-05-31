@@ -41,10 +41,16 @@ void setup() {
   
   if(qLearner == null){
     //Assures that Q-learning element does not reset every epoch
-    alpha            = 1.0;
-    gamma            = 1.0;
-    eps              = 1.0;
+    alpha            = 0.1; // MODIFIED: Lower learning rate
+    gamma            = 0.95; // MODIFIED: Discount factor slightly less than 1
+    eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
+  } else {
+    // Decay epsilon at the start of each new episode (setup is called per episode)
+    float epsilon_decay_rate = 0.995; // Example decay rate
+    float min_epsilon = 0.01;         // Example minimum epsilon
+    qLearner.epsilon = max(min_epsilon, qLearner.epsilon * epsilon_decay_rate);
+    println("New Epsilon: " + qLearner.epsilon); // For debugging
   }
 
   dogState         = DogState.ENTERING;
@@ -203,7 +209,10 @@ void draw() {
     saveQTableToFile();
   }
 
-  void saveQTableToFile() {
+  
+}
+
+void saveQTableToFile() {
     String[] lines = new String[qLearner.qTable.size()];
     int idx = 0;
     for (Object state : qLearner.qTable.keySet()) {
@@ -217,7 +226,6 @@ void draw() {
     }
     saveStrings("qtable.txt", lines);
   }
-}
 
 // ================================================================================================== TWEAK REWARDS HERE
 void assignRewards(){
@@ -273,11 +281,11 @@ void checkRewards(){
     reward = eventsRewards.get("Time");
     setReward(reward);
     previousTime = currentGameTimer;
-    println(qLearner.qTable);
+    //println(qLearner.qTable);
   }
   
-  if(reward != 0)
-    println(reward);
+  //if(reward != 0)
+  //  println(reward);
 }
 
 
