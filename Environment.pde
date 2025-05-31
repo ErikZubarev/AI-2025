@@ -47,7 +47,7 @@ void setup() {
     qLearner         = new QLearner(alpha, gamma, eps);
   } else {
     // Decay epsilon at the start of each new episode (setup is called per episode)
-    float epsilon_decay_rate = 0.995; // Example decay rate
+    float epsilon_decay_rate = 0.8; // Example decay rate
     float min_epsilon = 0.01;         // Example minimum epsilon
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon * epsilon_decay_rate);
     println("New Epsilon: " + qLearner.epsilon); // For debugging
@@ -339,7 +339,6 @@ boolean checkCollision(CannonBall cannonBall) {
   for (Sprite obj : placedPositions) {
     if (obj instanceof Tree) {
       if (cannonBall.boundry.intersects(obj.boundry)) {
-        println("Tree hit!");
         cannonBall.drawExplosion();
         return true;
       }
@@ -348,7 +347,6 @@ boolean checkCollision(CannonBall cannonBall) {
     if (obj instanceof Tank) {
       Tank tank = (Tank) obj;
       if (cannonBall.boundry.intersects(tank.boundry) && cannonBall.shooter != tank) {
-        println("Tank hit!");
         tank.reduceHealth();
         cannonBall.drawExplosion();
         return true;
@@ -370,7 +368,6 @@ void checkLandMineCollision() {
         placedPositions.remove(landmine);
         landmine.displayExplosion();
         tank.reduceHealth();
-        println("Landmine removed!");
         break; // Exit the inner loop since the landmine is already removed
       }
     }
