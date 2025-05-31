@@ -199,6 +199,24 @@ void draw() {
   }
 
   displayGUI();
+  if (keyPressed && key == 'w') {
+    saveQTableToFile();
+  }
+
+  void saveQTableToFile() {
+    String[] lines = new String[qLearner.qTable.size()];
+    int idx = 0;
+    for (Object state : qLearner.qTable.keySet()) {
+      HashMap<String, Float> actions = qLearner.qTable.get(state);
+      StringBuilder sb = new StringBuilder();
+      sb.append(state.toString()).append(": ");
+      for (String action : actions.keySet()) {
+        sb.append(action).append("=").append(actions.get(action)).append(" ");
+      }
+      lines[idx++] = sb.toString().trim();
+    }
+    saveStrings("qtable.txt", lines);
+  }
 }
 
 // ================================================================================================== TWEAK REWARDS HERE
