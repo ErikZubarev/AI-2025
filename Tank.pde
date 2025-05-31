@@ -105,7 +105,7 @@ class Tank extends Sprite {
     @Override
     public String toString() {
       String[] enOr = {"None","Front","Left","Right","Back"};
-      String[] agOr = {"East","North","West","South"};
+      String[] agOr = {"East","South","West","North"};
       return "State{" +
         "nearestEnemyDistCategory=" + nearestEnemyDistCategory +
         ", nearestTree=" + nearestTree +
@@ -172,13 +172,17 @@ class Tank extends Sprite {
 
     int currentAgentOrientation = discretizeAgentAngle(); // Get discretized agent angle
 
-    return new State(
+    State newState = new State(
       nearestEnemyDistCat,
       findNearest("tree"),
       findNearest("landmine"),
       relativeEnemyDir,
       currentAgentOrientation // Pass the new agent orientation
     );
+    println(newState.toString());
+    return newState;
+
+
   }
 
   // Helper to get the actual nearest enemy Tank object
