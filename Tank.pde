@@ -50,30 +50,18 @@ class Tank extends Sprite {
   // ===  STATE CLASS
   // =================================================
   public class State {
+    int tankHealth;
     int nearestEnemyDistCategory; // Renamed for clarity from nearestEnemy
-    int nearestTree;
     int nearestLandmine;
     int relativeEnemyDirection; // 0=Far/None, 1=Front, 2=Right, 3=Left, 4=Back
     int agentOrientation;       // New field: 0=East, 1=North, 2=West, 3=South
-    int remainingEnemies;
 
-    State(int nearestEnemyDistCat, int nearestTreeVal, int nearestLandmineVal, int relEnemyDirVal, int agentOrientVal) { // Constructor updated
+    State(int hp, int nearestEnemyDistCat, int nearestLandmineVal, int relEnemyDirVal, int agentOrientVal) { // Constructor updated
+      this.tankHealth =  hp;
       this.nearestEnemyDistCategory = nearestEnemyDistCat;
-      this.nearestTree = nearestTreeVal;
       this.nearestLandmine = nearestLandmineVal;
       this.relativeEnemyDirection = relEnemyDirVal;
       this.agentOrientation = agentOrientVal; // Assign new field
-      this.remainingEnemies = calculateRemainingEnemies();
-    }
-
-    private int calculateRemainingEnemies() {
-      int count = 0;
-      for (Tank enemyTank : allTanks) {
-        if (enemyTank != null && enemyTank.name != null && enemyTank.name.equals("enemy") && enemyTank.health > 0) {
-          count++;
-        }
-      }
-      return count;
     }
 
     @Override
@@ -82,23 +70,21 @@ class Tank extends Sprite {
       if (obj == null || getClass() != obj.getClass()) return false;
       State otherState = (State) obj;
       return 
+             tankHealth == otherState.tankHealth &&
              nearestEnemyDistCategory == otherState.nearestEnemyDistCategory &&
-             nearestTree == otherState.nearestTree &&
              nearestLandmine == otherState.nearestLandmine &&
              relativeEnemyDirection == otherState.relativeEnemyDirection &&
-             agentOrientation == otherState.agentOrientation && // Compare new field
-             remainingEnemies == otherState.remainingEnemies;
+             agentOrientation == otherState.agentOrientation;
     }
 
     @Override
     public int hashCode() {
       int result = 17;
+      result = 31 * result + tankHealth;
       result = 31 * result + nearestEnemyDistCategory;
-      result = 31 * result + nearestTree;
       result = 31 * result + nearestLandmine;
       result = 31 * result + relativeEnemyDirection;
       result = 31 * result + agentOrientation; // Include new field in hash
-      result = 31 * result + remainingEnemies;
       return result;
     }
 
@@ -107,12 +93,11 @@ class Tank extends Sprite {
       String[] enOr = {"None","Front","Left","Right","Back"};
       String[] agOr = {"East","South","West","North"};
       return "State{" +
+        "hp=" + tankHealth +
         "nearestEnemyDistCategory=" + nearestEnemyDistCategory +
-        ", nearestTree=" + nearestTree +
         ", nearestLandmine=" + nearestLandmine +
         ", relativeEnemyDirection=" + enOr[relativeEnemyDirection] +
         ", agentOrientation=" + agOr[agentOrientation] +
-        ", remainingEnemies=" + remainingEnemies +
         '}';
     }
   }
@@ -173,8 +158,8 @@ class Tank extends Sprite {
     int currentAgentOrientation = discretizeAgentAngle(); // Get discretized agent angle
 
     State newState = new State(
+      this.health,
       nearestEnemyDistCat,
-      findNearest("tree"),
       findNearest("landmine"),
       relativeEnemyDir,
       currentAgentOrientation // Pass the new agent orientation
