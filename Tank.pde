@@ -55,13 +55,15 @@ class Tank extends Sprite {
     int nearestLandmine;
     int relativeEnemyDirection; // 0=Far/None, 1=Front, 2=Right, 3=Left, 4=Back
     int agentOrientation;       // New field: 0=East, 1=North, 2=West, 3=South
+    boolean facingWall;
 
-    State(int hp, int nearestEnemyDistCat, int nearestLandmineVal, int relEnemyDirVal, int agentOrientVal) { // Constructor updated
+    State(int hp, int nearestEnemyDistCat, int nearestLandmineVal, int relEnemyDirVal, int agentOrientVal, boolean facingWall) { // Constructor updated
       this.tankHealth =  hp;
       this.nearestEnemyDistCategory = nearestEnemyDistCat;
       this.nearestLandmine = nearestLandmineVal;
       this.relativeEnemyDirection = relEnemyDirVal;
-      this.agentOrientation = agentOrientVal; // Assign new field
+      this.agentOrientation = agentOrientVal; 
+      this.facingWall = facingWall;
     }
 
     @Override
@@ -74,7 +76,8 @@ class Tank extends Sprite {
              nearestEnemyDistCategory == otherState.nearestEnemyDistCategory &&
              nearestLandmine == otherState.nearestLandmine &&
              relativeEnemyDirection == otherState.relativeEnemyDirection &&
-             agentOrientation == otherState.agentOrientation;
+             agentOrientation == otherState.agentOrientation &&
+             facingWall == otherState.facingWall;
     }
 
     @Override
@@ -84,7 +87,8 @@ class Tank extends Sprite {
       result = 31 * result + nearestEnemyDistCategory;
       result = 31 * result + nearestLandmine;
       result = 31 * result + relativeEnemyDirection;
-      result = 31 * result + agentOrientation; // Include new field in hash
+      result = 31 * result + agentOrientation;
+      result = 31 * result + (facingWall ? 1 : 0); 
       return result;
     }
 
@@ -94,6 +98,7 @@ class Tank extends Sprite {
       String[] agOr = {"East","South","West","North"};
       return "State{" +
         "hp=" + tankHealth +
+        ", isFacingWall=" + facingWall +
         ", nearestEnemyDistCategory=" + nearestEnemyDistCategory +
         ", nearestLandmine=" + nearestLandmine +
         ", relativeEnemyDirection=" + enOr[relativeEnemyDirection] +
@@ -143,6 +148,11 @@ class Tank extends Sprite {
       break;
     }
   }
+
+  // =================================================
+  // ===  STATE COLLECTION AND HELPER METHODS
+  // =================================================
+  // ==================================================================================================
   
   State getCurrentState() {
     int nearestEnemyDistCat = findNearest("enemy");
@@ -156,19 +166,21 @@ class Tank extends Sprite {
     }
 
     int currentAgentOrientation = discretizeAgentAngle(); // Get discretized agent angle
+    facingWall = checkIfFacingWall();
 
     State newState = new State(
       this.health,
       nearestEnemyDistCat,
       findNearest("landmine"),
       relativeEnemyDir,
-      currentAgentOrientation // Pass the new agent orientation
+      currentAgentOrientation,
+      facingWall
     );
     println(newState.toString());
     return newState;
-
-
   }
+
+  // ==================================================================================================
 
   // Helper to get the actual nearest enemy Tank object
   Tank getNearestEnemyObject() {
@@ -193,6 +205,8 @@ class Tank extends Sprite {
     }
     return null;
   }
+
+  // ==================================================================================================
 
   // Calculate discretized relative angle to an enemy
   // Returns: 0 = Enemy Far/None, 1 = Front, 2 = Right, 3 = Left, 4 = Back
@@ -230,6 +244,8 @@ class Tank extends Sprite {
     }
   }
 
+  // ==================================================================================================
+
   int discretizeAgentAngle() {
     float currentAngle = this.angle;
 
@@ -258,6 +274,8 @@ class Tank extends Sprite {
     }
   }
 
+  // ==================================================================================================
+
   int findNearest(String type) {
     float minDist = Float.MAX_VALUE;
     for (Sprite obj : foundObjects) {
@@ -281,6 +299,45 @@ class Tank extends Sprite {
       return 3;
     }
   }
+
+  boolean checkIfFacingWall() {
+  float stepDistance = maxspeed * 1.5f; // Check a small step ahead
+  float futureX = position.x + cos(angle) * stepDistance;
+  float futureY = position.y + sin(angle) * stepDistance;
+
+  // Check borders
+  float r = tankwidth / 2.0f;
+  if (futureX <= r || futureX >= width - r || futureY <= r || futureY >= height - r) {
+    return true; // Predicted collision with border
+  }
+
+  Boundry futureBoundry = new Boundry(futureX - tankheight / 2, futureY - tankheight / 2, tankheight, tankheight);
+  float futureTopLeftX = futureX - tankwidth / 2.0f; 
+  float futureTopLeftY = futureY - tankheight / 2.0f;
+  futureBoundry.x = futureTopLeftX;
+  futureBoundry.y = futureTopLeftY;
+  futureBoundry.width = tankwidth;   
+  futureBoundry.height = tankheight;
+
+
+  for (Sprite s : placedPositions) {
+    if (s == this || s instanceof Landmine || s instanceof CannonBall) { 
+      continue;
+    }
+    if (futureBoundry.intersects(s.boundry)) {
+      if (s instanceof Tree || (s instanceof Tank && s != this) ) {
+         return true;
+      }
+    }
+  }
+  return false; 
+}
+
+  // ==================================================================================================
+
+  // =================================================
+  // ===  END OF STATE COLLECTION AND HELPER METHODS
+  // =================================================
   
 
   // TANK VISION SENSOR ==================================================================================

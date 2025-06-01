@@ -21,7 +21,8 @@ boolean left,
   agentDamaged,
   enemyHit,
   enemyIsDeadNotBigSuprise,
-  seesEnemy;
+  seesEnemy,
+  facingWall;
 
 PImage tree_img,
   blue_tank_img,

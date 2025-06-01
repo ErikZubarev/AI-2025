@@ -233,6 +233,7 @@ void assignRewards(){
   eventsRewards.put("Agent Damage",-50);
   eventsRewards.put("Time",-1);
   eventsRewards.put("See Enemy", 10);
+  eventsRewards.put("Facing Wall", -5);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -241,45 +242,44 @@ void checkRewards(){
   int reward = 0;
   
   if(gameOver && gameWon){
-    reward = eventsRewards.get("Win");
-    setReward(reward);
+    reward += eventsRewards.get("Win");
   }
   else if(gameOver && !gameWon){
-    reward = eventsRewards.get("Lost");
-    setReward(reward);
+    reward += eventsRewards.get("Lost");
   }
 
   if(seesEnemy){
-    reward = eventsRewards.get("See Enemy");
-    setReward(reward);
+    reward += eventsRewards.get("See Enemy");
     seesEnemy = false;
   }
   
   if(enemyHit){
-    reward = eventsRewards.get("Enemy Hit");
-    setReward(reward);
+    reward += eventsRewards.get("Enemy Hit");
     enemyHit = false;
   }
   
   //Enemy destroyed
   if(enemyIsDeadNotBigSuprise){
-    reward = eventsRewards.get("Enemy Destroyed");
-    setReward(reward);
+    reward += eventsRewards.get("Enemy Destroyed");
     enemyIsDeadNotBigSuprise = false;
   }
   
   if(agentDamaged){
-    reward = eventsRewards.get("Agent Damage");
-    setReward(reward);
+    reward += eventsRewards.get("Agent Damage");
     agentDamaged = false;
   }
   
   if(previousTime < currentGameTimer){
-    reward = eventsRewards.get("Time");
-    setReward(reward);
+    reward += eventsRewards.get("Time");
     previousTime = currentGameTimer;
-    //println(qLearner.qTable);
   }
+
+  if(facingWall && previousAction != null && previousAction.equals("move")){
+    reward += eventsRewards.get("Facing Wall");
+    facingWall = false;
+  }
+
+  setReward(reward);
   
   //if(reward != 0)
   //  println(reward);
