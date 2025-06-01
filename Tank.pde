@@ -94,7 +94,7 @@ class Tank extends Sprite {
       String[] agOr = {"East","South","West","North"};
       return "State{" +
         "hp=" + tankHealth +
-        "nearestEnemyDistCategory=" + nearestEnemyDistCategory +
+        ", nearestEnemyDistCategory=" + nearestEnemyDistCategory +
         ", nearestLandmine=" + nearestLandmine +
         ", relativeEnemyDirection=" + enOr[relativeEnemyDirection] +
         ", agentOrientation=" + agOr[agentOrientation] +
