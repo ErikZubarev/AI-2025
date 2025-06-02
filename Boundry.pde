@@ -29,6 +29,11 @@ class Boundry {
       );
   }
 
+  boolean contains(float px, float py) {
+  return (px >= this.x && px <= this.x + this.width &&
+          py >= this.y && py <= this.y + this.height);
+  }
+
   // ==================================================================================================
   void draw() {
     if (debugMode) {

@@ -45,7 +45,7 @@ void setup() {
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
   } else {
-    float epsilon_decay_rate = 0.99; 
+    float epsilon_decay_rate = 0.9; 
     float min_epsilon = 0.01;         
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon * epsilon_decay_rate);
   }
@@ -162,20 +162,20 @@ void draw() {
   background(200);
 
 
-  checkRewards();
+  
     
   displayHomeBase();
   displayTrees();
   displayTanks();
 
-
-  if (landmineCounter == 1000) {
-    deployLandmine();
-    landmineCounter = 0;
-  }
-  displayMines();
-  dog.update();
-  dog.display();
+  //LANDMINE CODE
+  //if (landmineCounter == 1000) {
+  //  deployLandmine();
+  //  landmineCounter = 0;
+  //}
+  //displayMines();
+  //dog.update();
+  //dog.display();
 
   if (!gameOver && !pause) {
     currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
@@ -191,10 +191,12 @@ void draw() {
     updateTanksLogic();
     previousState = newState;
     previousAction = newAction;
+    //Får väll se ¯\_(ツ)_/¯
+    checkRewards();
     
     
-    checkLandMineCollision();
-    landmineCounter++;
+    //checkLandMineCollision();
+    //landmineCounter++;
 
     currentPauseTime = totalPauseTime; // Save prev pause time
   } else if (pause) {
@@ -233,64 +235,100 @@ void assignRewards(){
   eventsRewards.put("Agent Damage",-50);
   eventsRewards.put("Time",-1);
   eventsRewards.put("See Enemy", 10);
-  eventsRewards.put("Facing Wall", -5);
+  eventsRewards.put("Facing Wall Move", -10);
+  eventsRewards.put("Good Fire Attempt", 5);
+  eventsRewards.put("Fired When Reloading", -2);
+  eventsRewards.put("Escaped Wall", 15);
+  eventsRewards.put("Maintain LOS", 3);  
+  eventsRewards.put("Approach Enemy", 5);   
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
 void checkRewards(){
-  
-  int reward = 0;
-  
-  if(gameOver && gameWon){
-    reward += eventsRewards.get("Win");
-  }
-  else if(gameOver && !gameWon){
-    reward += eventsRewards.get("Lost");
+  int totalStepReward = 0;
+  boolean gameActuallyEndedThisStep = false;
+
+  Tank.State ps = null;
+  if (previousState instanceof Tank.State) {
+    ps = (Tank.State) previousState;
   }
 
-  if(seesEnemy){
-    reward += eventsRewards.get("See Enemy");
-    seesEnemy = false;
+
+  Tank.State currentState = tank0.getCurrentState();
+
+  if(gameOver){
+    if(gameWon){
+      totalStepReward += eventsRewards.get("Win");
+    } else {
+      totalStepReward += eventsRewards.get("Lost");
+    }
+    gameActuallyEndedThisStep = true;
   }
-  
+
   if(enemyHit){
-    reward += eventsRewards.get("Enemy Hit");
-    enemyHit = false;
+    totalStepReward += eventsRewards.get("Enemy Hit");
+    enemyHit = false; // Reset flag
   }
-  
-  //Enemy destroyed
   if(enemyIsDeadNotBigSuprise){
-    reward += eventsRewards.get("Enemy Destroyed");
-    enemyIsDeadNotBigSuprise = false;
+    totalStepReward += eventsRewards.get("Enemy Destroyed");
+    enemyIsDeadNotBigSuprise = false; // Reset flag
   }
-  
   if(agentDamaged){
-    reward += eventsRewards.get("Agent Damage");
-    agentDamaged = false;
-  }
-  
-  if(previousTime < currentGameTimer){
-    reward += eventsRewards.get("Time");
-    previousTime = currentGameTimer;
+    totalStepReward += eventsRewards.get("Agent Damage");
+    agentDamaged = false; // Reset flag
   }
 
-  if(facingWall && previousAction != null && previousAction.equals("move")){
-    reward += eventsRewards.get("Facing Wall");
-    facingWall = false;
+  if(!gameActuallyEndedThisStep && ps != null) {
+    if (ps.enemyInLOS) {
+      totalStepReward += eventsRewards.get("See Enemy");
+    }
+
+    if (ps.facingWall && previousAction != null && previousAction.equals("move")) {
+      totalStepReward += eventsRewards.get("Facing Wall Move");
+    }
+
+    if (previousAction != null && previousAction.equals("fire")) {
+      if (!ps.isReloading && ps.enemyInLOS) {
+        totalStepReward += eventsRewards.get("Good Fire Attempt");
+      }else if(ps.isReloading){
+        totalStepReward += eventsRewards.get("Fired When Reloading");
+      }
+    }
+
+    if (ps.enemyInLOS && currentState.enemyInLOS && 
+        previousAction != null && !previousAction.equals("fire") && !ps.isReloading) {
+      totalStepReward += eventsRewards.get("Maintain LOS");
+    }
+
+    if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2 &&
+        previousAction != null && (previousAction.equals("move") || previousAction.equals("reverse"))) {
+      totalStepReward += eventsRewards.get("Approach Enemy");
+    }
+
+    // Time penalty
+    if (previousTime < currentGameTimer) {
+      totalStepReward += eventsRewards.get("Time");
+      previousTime = currentGameTimer; 
+    }
+
+    if (ps.facingWall && !currentState.facingWall) {
+      totalStepReward += eventsRewards.get("Escaped Wall");
+    }
   }
 
-  setReward(reward);
-  
-  //if(reward != 0)
-  //  println(reward);
+  setReward(totalStepReward, currentState);
+
+  if(totalStepReward != 0) {
+    println("**********************");
+    println("PrevState: " + ps.toString() + ", Action: " + previousAction + ", Reward: " + totalStepReward + ", NewState: " + currentState.toString());
+  }
 }
 
 
 // HELPER METHODS ======================================
 
-// Update Q-Learner based on reward==================================================================
-void setReward(int reward){
-  qLearner.updateQ(previousState, previousAction, reward, tank0.getCurrentState());
+void setReward(int reward, Tank.State newState){
+  qLearner.updateQ(previousState, previousAction, reward, newState);
 }
 
 //Created helper fucntion to check if the generated pos is too close to a existing one
