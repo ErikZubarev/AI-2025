@@ -69,6 +69,15 @@ void displayGUI() {
     gameOver = true;
     gameWon = false;
     checkRewards(); //Updates gameover rewards
+    if(statsEpochCounter >= 0){
+      int counter = 0;
+      for(Tank tank : team1.members){
+        if(tank.health == 0){
+          counter++;
+        }
+      }
+      stats.put(statsEpochCounter++, counter + " killed in " + currentGameTimer + " seconds");
+    }
     setup();
   }
 

@@ -70,6 +70,9 @@ ArrayList<Sprite> placedPositions;
 ArrayList<Explosion> allExplosions;
 
 HashMap<String, Integer> eventsRewards;
+HashMap<Integer, String> stats = new HashMap<>();
+
+int statsEpochCounter = -1;
 
 QLearner qLearner;
 
