@@ -4,7 +4,7 @@ class QLearner {
   float discountFactor;
   float epsilon; // for epsilon-greedy exploration
  
-  String[] actions = {"move", "reverse", "rotateLeft", "rotateRight", "stop", "fire"};
+  String[] actions = {"move", "rotateLeft", "rotateRight", "stop", "fire"};
 
   QLearner(float alpha, float gamma, float eps) {
     learningRate = alpha;

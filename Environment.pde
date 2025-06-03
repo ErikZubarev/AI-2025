@@ -252,9 +252,9 @@ void assignRewards() {
   eventsRewards.put("Good Fire Attempt", 5);
   eventsRewards.put("Fired When Reloading", -2);
   eventsRewards.put("Fired When No LOS", -5);
-  eventsRewards.put("Escaped Wall", 15);
-  eventsRewards.put("Unnecessary Reverse", -4);
-  eventsRewards.put("Reverse From Frontal Enemy", -5);
+  //eventsRewards.put("Escaped Wall", 15);
+  //eventsRewards.put("Unnecessary Reverse", -4);
+  //eventsRewards.put("Reverse From Frontal Enemy", -5);
   eventsRewards.put("Maintain LOS", 3);
   eventsRewards.put("Approach Enemy", 5);
 }
@@ -313,14 +313,14 @@ void checkRewards() {
       }
     }
 
-    if (previousAction != null && previousAction.equals("reverse")) {
-      if (!ps.facingWall) { 
-        totalStepReward += eventsRewards.get("Unnecessary Reverse");
-        if (ps.enemyInLOS && ps.relativeEnemyDirection == 1) { 
-          totalStepReward += eventsRewards.get("Reverse From Frontal Enemy");
-        }
-      }
-     }
+    //if (previousAction != null && previousAction.equals("reverse")) {
+    //  if (!ps.facingWall) { 
+    //    totalStepReward += eventsRewards.get("Unnecessary Reverse");
+    //    if (ps.enemyInLOS && ps.relativeEnemyDirection == 1) { 
+    //      totalStepReward += eventsRewards.get("Reverse From Frontal Enemy");
+    //    }
+    //  }
+    //}
 
     if (ps.enemyInLOS && currentState.enemyInLOS &&
       previousAction != null && !previousAction.equals("fire") && !ps.isReloading) {
@@ -338,11 +338,11 @@ void checkRewards() {
       previousTime = currentGameTimer;
     }
 
-    if (ps.facingWall && !currentState.facingWall) {
-      if (previousAction != null && (previousAction.equals("move") || previousAction.equals("reverse"))) {
-        totalStepReward += eventsRewards.get("Escaped Wall");
-      }
-    }
+    //if (ps.facingWall && !currentState.facingWall) {
+    //  if (previousAction != null && (previousAction.equals("move") || previousAction.equals("reverse"))) {
+    //    totalStepReward += eventsRewards.get("Escaped Wall");
+    //  }
+    //}
   }
 
   setReward(totalStepReward, currentState);
