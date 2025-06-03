@@ -252,7 +252,7 @@ void assignRewards() {
   eventsRewards.put("Good Fire Attempt", 5);
   eventsRewards.put("Fired When Reloading", -2);
   eventsRewards.put("Fired When No LOS", -5);
-  eventsRewards.put("Escaped Wall", 11);
+  eventsRewards.put("Escaped Wall", 15);
   eventsRewards.put("Unnecessary Reverse", -4);
   eventsRewards.put("Reverse From Frontal Enemy", -5);
   eventsRewards.put("Maintain LOS", 3);
