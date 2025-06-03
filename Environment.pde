@@ -45,7 +45,7 @@ void setup() {
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
   } else {
-    float epsilon_decay_rate = 0.9;
+    float epsilon_decay_rate = 0.95;
     float min_epsilon = 0.01;
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon * epsilon_decay_rate);
     if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) {
