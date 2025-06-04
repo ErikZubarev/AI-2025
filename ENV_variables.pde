@@ -20,7 +20,7 @@ boolean left,
   gameWon,
   agentDamaged,
   enemyHit,
-  enemyIsDeadNotBigSuprise;
+  enemyDead;
 
 PImage tree_img,
   blue_tank_img,
@@ -73,6 +73,7 @@ HashMap<String, Float> eventsRewards;
 HashMap<Integer, String> stats = new HashMap<>();
 
 int statsEpochCounter = -1;
+int stuckCounter;
 
 QLearner qLearner;
 

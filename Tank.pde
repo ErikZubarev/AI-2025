@@ -159,7 +159,7 @@ class Tank extends Sprite {
     int relativeEnemyDir = 0;
 
     Tank nearestEnemyObj = getNearestEnemyObject(); 
-    if (nearestEnemyObj != null) {
+    if (nearestEnemyObj != null && nearestEnemyObj.health > 0) {
         if (nearestEnemyDistCat < 3) {
             relativeEnemyDir = calculateDiscretizedRelativeAngle(nearestEnemyObj);
         }
@@ -189,12 +189,10 @@ class Tank extends Sprite {
     for (Sprite obj : placedPositions) {
       if (obj instanceof Tank && obj != this) {
         Tank enemyTank = (Tank) obj;
-        if (enemyTank.health > 0) {
-          float d = PVector.dist(this.position, enemyTank.position);
-          if (d < minDist) {
-            minDist = d;
-            closestEnemy = enemyTank;
-          }
+        float d = PVector.dist(this.position, enemyTank.position);
+        if (d < minDist) {
+          minDist = d;
+          closestEnemy = enemyTank;
         }
       }
     }
@@ -308,7 +306,7 @@ class Tank extends Sprite {
 
   boolean checkLineOfSightToNearestEnemy() {
     Tank enemy = getNearestEnemyObject();
-    if (enemy == null) {
+    if (enemy == null || enemy.health <= 0) {
       return false;
     }
 
@@ -476,7 +474,7 @@ class Tank extends Sprite {
     if (health > 0) {
       health--;
       if(this.health == 0 && this.name.equals("enemy")){
-        enemyIsDeadNotBigSuprise = true; // Global flag from ENV_variables.pde
+        enemyDead = true; // Global flag from ENV_variables.pde
       }
     }
   }
