@@ -40,14 +40,14 @@ void setup() {
 
 
   if (qLearner == null) {
-    alpha            = 0.1;
+    alpha            = 0.2;
     gamma            = 0.95;
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
   } else {
-    float epsilon_decay_rate = 0.95;
+    float decayStep = 0.05; //Gradual decay is better than exponential.
     float min_epsilon = 0.01;
-    qLearner.epsilon = max(min_epsilon, qLearner.epsilon * epsilon_decay_rate);
+    qLearner.epsilon = max(min_epsilon, qLearner.epsilon - decayStep);
     if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) {
       println("Starting stat gathering");
       statsEpochCounter = 0;
@@ -134,6 +134,7 @@ void setup() {
 
   previousState    = tank0.getCurrentState(); //Reset between new epochs
   previousAction   = "stop";
+  qHeatmap = new Heatmap(qLearner.qTable.size(), qLearner.actions.length);
 }
 
 
@@ -210,6 +211,11 @@ void draw() {
     saveQTableToFile();
     saveStatsToFile();
   }
+  
+  if (debugMode) {
+    qHeatmap.updateHeatmap(qLearner.qTable);  // Update the Q-values
+    qHeatmap.display();  // Draw the heatmap
+  }
 }
 
 void saveQTableToFile() {
@@ -241,22 +247,19 @@ void saveStatsToFile() {
 
 // ================================================================================================== TWEAK REWARDS HERE
 void assignRewards() {
-  eventsRewards.put("Lost", -1000);
-  eventsRewards.put("Win", 1000);
-  eventsRewards.put("Enemy Hit", 50);
-  eventsRewards.put("Enemy Destroyed", 100);
-  eventsRewards.put("Agent Damage", -50);
-  eventsRewards.put("Time", -1);
-  eventsRewards.put("See Enemy", 10);
-  eventsRewards.put("Facing Wall Move", -10);
-  eventsRewards.put("Good Fire Attempt", 5);
-  eventsRewards.put("Fired When Reloading", -2);
-  eventsRewards.put("Fired When No LOS", -5);
-  //eventsRewards.put("Escaped Wall", 15);
-  //eventsRewards.put("Unnecessary Reverse", -4);
-  //eventsRewards.put("Reverse From Frontal Enemy", -5);
-  eventsRewards.put("Maintain LOS", 3);
-  eventsRewards.put("Approach Enemy", 5);
+  eventsRewards.put("Lost", -1.0);
+  eventsRewards.put("Win", 1.0);   
+  eventsRewards.put("Enemy Hit", 0.3); 
+  eventsRewards.put("Enemy Destroyed", 0.7);
+  eventsRewards.put("Agent Damage", -0.3);  
+  eventsRewards.put("Time", -0.05); 
+  eventsRewards.put("See Enemy", 0.1);  
+  eventsRewards.put("Facing Wall Move", -0.2);  
+  eventsRewards.put("Good Fire Attempt", 0.2);  
+  eventsRewards.put("Fired When Reloading", -0.15); 
+  eventsRewards.put("Fired When No LOS", -0.25);  
+  eventsRewards.put("Maintain LOS", 0.15);  
+  eventsRewards.put("Approach Enemy", 0.2);  
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -313,22 +316,12 @@ void checkRewards() {
       }
     }
 
-    //if (previousAction != null && previousAction.equals("reverse")) {
-    //  if (!ps.facingWall) { 
-    //    totalStepReward += eventsRewards.get("Unnecessary Reverse");
-    //    if (ps.enemyInLOS && ps.relativeEnemyDirection == 1) { 
-    //      totalStepReward += eventsRewards.get("Reverse From Frontal Enemy");
-    //    }
-    //  }
-    //}
-
     if (ps.enemyInLOS && currentState.enemyInLOS &&
       previousAction != null && !previousAction.equals("fire") && !ps.isReloading) {
       totalStepReward += eventsRewards.get("Maintain LOS");
     }
 
-    if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2 &&
-      previousAction != null && (previousAction.equals("move") || previousAction.equals("reverse"))) {
+    if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2) {
       totalStepReward += eventsRewards.get("Approach Enemy");
     }
 
@@ -337,20 +330,10 @@ void checkRewards() {
       totalStepReward += eventsRewards.get("Time");
       previousTime = currentGameTimer;
     }
-
-    //if (ps.facingWall && !currentState.facingWall) {
-    //  if (previousAction != null && (previousAction.equals("move") || previousAction.equals("reverse"))) {
-    //    totalStepReward += eventsRewards.get("Escaped Wall");
-    //  }
-    //}
   }
 
   setReward(totalStepReward, currentState);
 
-  //if(totalStepReward != 0) {
-  //  println("**********************");
-  //  println("PrevState: " + ps.toString() + ", Action: " + previousAction + ", Reward: " + totalStepReward + ", NewState: " + currentState.toString());
-  //}
 }
 
 

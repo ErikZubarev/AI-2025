@@ -69,7 +69,7 @@ ArrayList<CannonBall> allCannonBalls;
 ArrayList<Sprite> placedPositions;
 ArrayList<Explosion> allExplosions;
 
-HashMap<String, Integer> eventsRewards;
+HashMap<String, Float> eventsRewards;
 HashMap<Integer, String> stats = new HashMap<>();
 
 int statsEpochCounter = -1;
@@ -105,3 +105,5 @@ enum DogState {
 DogState dogState;
 
 Dog dog;
+
+Heatmap qHeatmap;

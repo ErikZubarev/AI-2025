@@ -18,7 +18,8 @@ class QLearner {
     if (!qTable.containsKey(state)) {
       HashMap<String, Float> actionValues = new HashMap<String, Float>();
       for (String action : actions) {
-        actionValues.put(action, 0.0f);
+        float rand = random(0, 0.5);
+        actionValues.put(action, rand);
       }
       qTable.put(state, actionValues);
     }
@@ -27,19 +28,16 @@ class QLearner {
   // Choose an action based on the current state using epsilon-greedy policy
   String chooseAction(Tank.State state) {
     ensureState(state);
-    if (random(1) < epsilon) {
-      // Exploration: randomly choose any valid action.
-      int idx = int(random(actions.length));
-      return actions[idx];
-    } else {
-      // Exploitation: choose the action with the highest Q-value.
+    if (random(1) < epsilon)
+      return actions[int(random(actions.length))];// Exploration: randomly choose any valid action.
+    else {
       float bestValue = -Float.MAX_VALUE;
       String bestAction = actions[0];
       for (String action : actions) {
         float value = qTable.get(state).get(action);
         if (value > bestValue) {
           bestValue = value;
-          bestAction = action;
+          bestAction = action; // Exploitation: choose the action with the highest Q-value.
         }
       }
       return bestAction;
@@ -47,7 +45,7 @@ class QLearner {
   }
  
   // Update the Q-table based on the state, action taken, reward received, and the next state.
-  void updateQ(Tank.State state, String action, int reward, Tank.State nextState) {
+  void updateQ(Tank.State state, String action, float reward, Tank.State nextState) {
     ensureState(state);
     ensureState(nextState);
     float currentQ = qTable.get(state).get(action);
