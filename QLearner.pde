@@ -18,8 +18,11 @@ class QLearner {
     if (!qTable.containsKey(state)) {
       HashMap<String, Float> actionValues = new HashMap<String, Float>();
       for (String action : actions) {
-        float rand = random(0, 0.5);
-        actionValues.put(action, rand);
+        if(action == "move" || action == "fire"){
+          float rand = random(0, 0.5);
+          actionValues.put(action, rand);
+        }
+        else actionValues.put(action, 0.0);
       }
       qTable.put(state, actionValues);
     }

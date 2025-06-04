@@ -40,7 +40,7 @@ void setup() {
 
 
   if (qLearner == null) {
-    alpha            = 0.2;
+    alpha            = 0.1;
     gamma            = 0.95;
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
@@ -340,6 +340,7 @@ void checkRewards() {
 // HELPER METHODS ======================================
 
 void setReward(int reward, Tank.State newState) {
+  //reward = reward * 10;
   qLearner.updateQ(previousState, previousAction, reward, newState);
 }
 
