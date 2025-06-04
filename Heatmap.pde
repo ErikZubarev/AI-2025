@@ -116,10 +116,15 @@ class Heatmap {
 
 
     int getColorForQValue(float qVal) {
-        int red = (int) map(qVal, -1, 0, 255, 128);   // Red fades toward gray at 0
-        int green = (int) map(qVal, 0, 1, 128, 255);  // Green intensifies beyond gray at 0
-        int blue = (int) map(qVal, -1, 1, 128, 128);  // Keep blue balanced for gray effect
-
+        // **Apply Log Transformation** (preserve sign)
+        float logQVal = (qVal >= 0) ? log(1 + qVal) : -log(1 - qVal);
+    
+        // **Map Log Values to a Color Scale**
+        int red = (int) map(logQVal, -log(2), log(2), 255, 128);   // Red fades toward gray at 0
+        int green = (int) map(logQVal, -log(2), log(2), 128, 255);  // Green intensifies beyond gray at 0
+        int blue = (int) map(logQVal, -log(2), log(2), 128, 128);  // Keep blue balanced for gray effect
+    
         return color(red, green, blue);
     }
+
 }
