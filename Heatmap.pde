@@ -45,109 +45,135 @@ class Heatmap {
     }
 
 
-void display() {
-    int centerX = width / 2;  // Center X of screen
-    int centerY = height / 2; // Center Y of screen
-    int heatmapWidth = 600;   // Fixed width for actions
-    int heatmapHeight = 600;  // Fixed height area for states
-    int borderSize = 20;      // Optional border for visibility
-
-    // Update rows and cols based on our current sorted state list
-    rows = sortedStates.size();
-    cols = qLearner.actions.length;
+    void display() {
+        int centerX = width / 2;     // Center X of screen
+        int centerY = height / 2;    // Center Y of screen
+        int heatmapWidth = 600;      // Fixed width for actions
+        int heatmapHeight = 600;     // Fixed height area for states
+        int borderSize = 20;         // Optional border for visibility
     
-    if (cols == 0 || rows == 0) {
-        return;
-    }
+        // Update rows and cols based on our current sorted state list
+        rows = sortedStates.size();
+        cols = qLearner.actions.length;
     
-    gridSize = heatmapWidth / cols;  
-    int stateHeight = heatmapHeight / rows;
+        if (cols == 0 || rows == 0) {
+            return;
+        }
     
-    int startX = centerX - (heatmapWidth / 2);
-    int startY = centerY - (heatmapHeight / 2);
+        gridSize = heatmapWidth / cols;  
+        int stateHeight = heatmapHeight / rows;
     
-    // **Draw Background Border**
-    fill(50);
-    rect(startX - borderSize, startY - borderSize, heatmapWidth + (borderSize * 2), heatmapHeight + (borderSize * 2));
+        int startX = centerX - (heatmapWidth / 2);
+        int startY = centerY - (heatmapHeight / 2);
     
-    // **Draw Action Labels at the Top**
-    textAlign(CENTER, CENTER);
-    textSize(16);
-    fill(0);
-    for (int j = 0; j < cols; j++) {
-        String actionName = qLearner.actions[j];
-        text(actionName, startX + (j * gridSize) + (gridSize / 2), startY - 25);
-    }
+        // Draw the background border for the heatmap
+        fill(50);
+        rect(startX - borderSize, startY - borderSize, heatmapWidth + (borderSize * 2), heatmapHeight + (borderSize * 2));
     
-    // **Identify Group Start Indexes for enemy proximity labeling**
-    int closeStart = -1, mediumStart = -1, farStart = -1;
-    for (int i = 0; i < sortedStates.size(); i++) {
-        Tank.State state = sortedStates.get(i);
-        if (state.nearestEnemyDistCategory == 1 && closeStart == -1) closeStart = i;
-        if (state.nearestEnemyDistCategory == 2 && mediumStart == -1) mediumStart = i;
-        if (state.nearestEnemyDistCategory >= 3 && farStart == -1) farStart = i;
-    }
-    
-    // **Label Enemy Proximity Groups**
-    labelGroup("Close", closeStart, mediumStart, startX, startY, stateHeight);
-    labelGroup("Medium", mediumStart, farStart, startX, startY, stateHeight);
-    labelGroup("Far/\nNone", farStart, sortedStates.size(), startX, startY, stateHeight);
-    
-    // **Draw the Heatmap Cells**
-    for (int i = 0; i < rows; i++) {
+        // Draw Action Labels at the top
+        textAlign(CENTER, CENTER);
+        textSize(16);
+        fill(0);
         for (int j = 0; j < cols; j++) {
-            if (i < qValues.length && j < qValues[i].length) { 
-                float qVal = qValues[i][j];
-                int colorVal = getColorForQValue(qVal);
-                fill(colorVal);
-                rect(startX + (j * gridSize), startY + (i * stateHeight), gridSize, stateHeight);
+            String actionName = qLearner.actions[j];
+            text(actionName, startX + (j * gridSize) + (gridSize / 2), startY - 25);
+        }
+    
+        // Draw Heatmap Cells
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (i < qValues.length && j < qValues[i].length) { 
+                    float qVal = qValues[i][j];
+                    int colorVal = getColorForQValue(qVal);
+                    fill(colorVal);
+                    rect(startX + (j * gridSize), startY + (i * stateHeight), gridSize, stateHeight);
+                }
             }
         }
-    }
     
-    // **Determine the contiguous block of states where facingWall == true**
-    int facingWallStart = -1;
-    // Since we are sorted by the boolean first (false first, true second)
-    // the true states will be at the bottom of the sortedStates list.
-    for (int i = 0; i < sortedStates.size(); i++) {
-        if (sortedStates.get(i).facingWall) {
-            facingWallStart = i;
-            break;
+        // Identify boundary between the two facingWall groups:
+        int facingWallBoundary = -1;
+        for (int i = 0; i < sortedStates.size(); i++) {
+            if (sortedStates.get(i).facingWall) {
+                facingWallBoundary = i;
+                break;
+            }
+        }
+        
+        // Label enemy proximity groups separately for states with facingWall==false
+        if (facingWallBoundary == -1) {
+            // All states have facingWall==false; label the entire heatmap.
+            labelEnemyCategories(0, sortedStates.size(), startX, startY, stateHeight, false);
+        } else {
+            // Label the false block (top)
+            labelEnemyCategories(0, facingWallBoundary, startX, startY, stateHeight, false);
+            // Label the true block (bottom)
+            labelEnemyCategories(facingWallBoundary, sortedStates.size(), startX, startY, stateHeight, true);
+        }
+    
+        // Draw a green rectangle around the block with facingWall == true
+        if (facingWallBoundary != -1) {
+            int rectX = startX;
+            int rectY = startY + (facingWallBoundary * stateHeight);
+            int rectWidth = heatmapWidth;
+            int rectHeight = (sortedStates.size() - facingWallBoundary) * stateHeight;
+            noFill();
+            stroke(0, 255, 0);  // Green border
+            strokeWeight(3);
+            rect(rectX, rectY, rectWidth, rectHeight);
+            // Reset stroke to defaults if necessary
+            strokeWeight(1);
+            stroke(0);
         }
     }
     
-    // **If there are states with facingWall == true, compute the bounding rectangle**
-    if (facingWallStart != -1) {
-        // All subsequent states are facingWall == true due to our sorting
-        int facingWallEnd = sortedStates.size();
-        int rectX = startX;
-        int rectY = startY + (facingWallStart * stateHeight);
-        int rectWidth = heatmapWidth;
-        int rectHeight = (facingWallEnd - facingWallStart) * stateHeight;
+    // Helper function to label enemy category groups within a block.
+    // The parameter "blockIsWall" indicates if this block is for states where facingWall==true.
+    void labelEnemyCategories(int blockStart, int blockEnd, int startX, int startY, int stateHeight, boolean blockIsWall) {
+        int closeStart = -1, mediumStart = -1, farStart = -1;
         
-        // **Draw the green border to highlight the group**
-        noFill();
-        stroke(0, 255, 0); // Green
-        strokeWeight(3);
-        rect(rectX, rectY, rectWidth, rectHeight);
-        // Reset stroke settings to defaults if necessary
-        strokeWeight(1);
-        stroke(0);
+        // Iterate only over states in this block.
+        for (int i = blockStart; i < blockEnd; i++) {
+            Tank.State state = sortedStates.get(i);
+            if (state.nearestEnemyDistCategory == 1 && closeStart == -1) {
+                closeStart = i;
+            }
+            if (state.nearestEnemyDistCategory == 2 && mediumStart == -1) {
+                mediumStart = i;
+            }
+            if (state.nearestEnemyDistCategory >= 3 && farStart == -1) {
+                farStart = i;
+            }
+        }
+        
+        // Determine end indexes for groups: if boundaries not found, consider blockEnd as the end.
+        int closeEnd = (mediumStart != -1) ? mediumStart : blockEnd;
+        int mediumEnd = (farStart != -1) ? farStart : blockEnd;
+        
+        // Optionally adjust the label text for states facing a wall.
+        String closeLabel = "Close";
+        String mediumLabel = "Medium";
+        String farLabel = "Far/\nNone";
+        
+        if (closeStart != -1)
+            labelGroup(closeLabel, closeStart, closeEnd, startX, startY, stateHeight);
+        if (mediumStart != -1)
+            labelGroup(mediumLabel, mediumStart, mediumEnd, startX, startY, stateHeight);
+        if (farStart != -1)
+            labelGroup(farLabel, farStart, blockEnd, startX, startY, stateHeight);
     }
-}
-
     
-    // **Helper Function to Label Each Group**
+    // This method draws a label for a group of enemy distance states
     void labelGroup(String label, int startIdx, int endIdx, int startX, int startY, int stateHeight) {
-        if (startIdx == -1 || endIdx == -1) return; // Skip if no valid range
-    
-        int midPoint = startIdx + (endIdx - startIdx) / 2; // Center the label within the group
+        if (startIdx == -1 || endIdx == -1) return;
+        int midPoint = startIdx + (endIdx - startIdx) / 2;
         float labelY = startY + (midPoint * stateHeight) + (stateHeight / 2);
-        
         fill(0);
         textAlign(RIGHT, CENTER);
         text(label, startX - 50, labelY);
     }
+
+
 
 
     int getColorForQValue(float qVal) {
