@@ -62,17 +62,29 @@ void displayGUI() {
     text("...Paused! (\'p\'-continues)\n(up/down/left/right to move)\n('d' for debug)", width/1.7-150, height/2.5);
   }
 
-  if (currentGameTimer >= 180) {
+  if (currentGameTimer >= 120) {
     textSize(36);
     fill(30);
     text("Time ran out!", width/2-150, height/3);
     gameOver = true;
+    gameWon = false;
+    checkRewards(); //Updates gameover rewards
+    if(statsEpochCounter >= 0){
+      int counter = 0;
+      for(Tank tank : team1.members){
+        if(tank.health == 0){
+          counter++;
+        }
+      }
+      stats.put(statsEpochCounter++, counter + " killed in " + currentGameTimer + " seconds");
+    }
+    setup();
   }
 
   if (gameOver) {
     textSize(36);
     fill(30);
-    text("Game Over!", width/2-150, height/2);
+    text("Game Over!", width/2-150, height/2); // this will not be visable
   }
 }
 

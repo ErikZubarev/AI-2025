@@ -4,19 +4,20 @@
 // =================================================
 // ===  SETUP METHOD
 // =================================================
-// ============================================================================================
+// =============================================================================================
 void setup() {
   size(800, 800);
   up               = false;
   down             = false;
   debugMode        = false;
   gameOver         = false;
-  pause            = true;
+  pause            = false;
   startGameTimer   = System.currentTimeMillis();
   startPauseTimer  = System.currentTimeMillis();
   currentGameTimer = 0L;
   totalPauseTime   = 0L;
   currentPauseTime = 0L;
+  previousTime     = 0L;
   landmineCounter  = 0;
 
   random           = new Random();
@@ -32,10 +33,30 @@ void setup() {
   placedPositions  = new ArrayList<Sprite>(); //Positions for every entitiy
 
   allTrees         = new Tree[3];
-  allTanks         = new Tank[6];
+  allTanks         = new Tank[4];
+
+  eventsRewards    = new HashMap<>();
+  stuckCounter     = 0;
+  assignRewards();
+
+
+  if (qLearner == null) {
+    alpha            = 0.2;
+    gamma            = 0.95;
+    eps              = 1.0; // Initial epsilon is high for exploration
+    qLearner         = new QLearner(alpha, gamma, eps);
+  } else {
+    float decayStep = 0.05; //Gradual decay is better than exponential.
+    float min_epsilon = 0.01;
+    qLearner.epsilon = max(min_epsilon, qLearner.epsilon - decayStep);
+    if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) {
+      println("Starting stat gathering");
+      statsEpochCounter = 0;
+    }
+    println(qLearner.epsilon);
+  }
 
   dogState         = DogState.ENTERING;
-
 
   bomb = loadImage("bomb.png");
 
@@ -86,36 +107,7 @@ void setup() {
   red_tank_img = loadImage("redtank.png");
   blue_tank_img = loadImage("bluetank.png");
 
-  // Team0
-  // Base Team 0(red)
-  team0_tank0_startpos  = new PVector(50, 50);
-  team0_tank1_startpos  = new PVector(50, 150);
-  team0_tank2_startpos  = new PVector(50, 250);
 
-  QuadTreeMemory memory0         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
-  QuadTreeMemory memory1         = new QuadTreeMemory(new Boundry(0, 0, 800, 800), 6);
-
-  //TEMP HIVE MIND
-
-
-  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img, memory0);
-  tank1 = new Tank("ally", team0_tank1_startpos, red_tank_img, memory0);
-  tank2 = new Tank("ally", team0_tank2_startpos, red_tank_img, memory0);
-
-  allTanks[0] = tank0;                         // Symbol samma som index!
-  allTanks[1] = tank1;
-  allTanks[2] = tank2;
-
-  placedPositions.add(tank0);
-  placedPositions.add(tank1);
-  placedPositions.add(tank2);
-
-  for (Tank t : allTanks) {
-    if (t == null) continue;
-    team0.members.add(t);
-    t.team = team0;
-    t.putBaseIntoMemory(team0.boundry);
-  }
 
   // Team1 randomly placed in the lower right quadrant
   for (int i = 0; i < 3; i++) {
@@ -124,12 +116,27 @@ void setup() {
       newTankPos = new PVector(random(450, 750), random(450, 750));
     } while (isOverlapping(newTankPos, placedPositions, 150));
 
-    Tank newTank = new Tank("enemy", newTankPos, blue_tank_img, memory1);
+    Tank newTank = new Tank("enemy", newTankPos, blue_tank_img);
     placedPositions.add(newTank);
-    allTanks[3 + i] = newTank;
+    allTanks[i] = newTank;
     team1.members.add(newTank);
-    newTank.putBaseIntoMemory(team1.boundry);
   }
+
+  // Team0
+  // Base Team 0(red)
+  team0_tank0_startpos  = new PVector(50, 50);
+
+  tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img);
+
+  allTanks[3] = tank0;                         // Symbol samma som index!
+
+  placedPositions.add(tank0);
+  team0.members.add(tank0);
+  tank0.team = team0;
+
+  previousState    = tank0.getCurrentState(); //Reset between new epochs
+  previousAction   = "stop";
+  qHeatmap = new Heatmap(qLearner.qTable.size(), qLearner.actions.length);
 }
 
 
@@ -146,44 +153,55 @@ void draw() {
       break;
     }
   }
+
   if (allDead) {
     gameOver = true;
+    gameWon = true;
+    checkRewards(); //Updates gameover rewards
+    if (statsEpochCounter >= 0) {
+      stats.put(statsEpochCounter++, "3 killed in " + currentGameTimer  + " seconds");
+    }
+    setup();
   }
 
   background(200);
 
-  checkForInput();
 
-  // For vision communications, check if tank is home
-  if(!team0.radioComs)
-    team0.checkIfTankHome();
-    
-    
+
+
   displayHomeBase();
   displayTrees();
   displayTanks();
 
-
-  if (landmineCounter == 1000) {
-    deployLandmine();
-    landmineCounter = 0;
-  }
-  displayMines();
-  dog.update();
-  dog.display();
+  //LANDMINE CODE
+  //if (landmineCounter == 1000) {
+  //  deployLandmine();
+  //  landmineCounter = 0;
+  //}
+  //displayMines();
+  //dog.update();
+  //dog.display();
 
   if (!gameOver && !pause) {
     currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
     displayExplosions();
-    checkForCollisions();
-    updateTanksLogic();
     displayCannonBalls();
     updateCannonBalls();
-    checkLandMineCollision();
-    landmineCounter++;
-    if (debugMode) {
-      tank0.memory.display();
-    }
+
+    checkForCollisions();
+
+    Tank.State newState = tank0.getCurrentState();
+    String newAction = qLearner.chooseAction(newState);
+    tank0.action(newAction);
+    updateTanksLogic();
+    previousState = newState;
+    previousAction = newAction;
+    //Får väll se ¯\_(ツ)_/¯
+    checkRewards();
+
+
+    //checkLandMineCollision();
+    //landmineCounter++;
 
     currentPauseTime = totalPauseTime; // Save prev pause time
   } else if (pause) {
@@ -191,9 +209,164 @@ void draw() {
   }
 
   displayGUI();
+  if (keyPressed && key == 'w') {
+    saveQTableToFile();
+    saveStatsToFile();
+  }
+  
+  if (debugMode) {
+    qHeatmap.updateHeatmap(qLearner.qTable);  // Update the Q-values
+    qHeatmap.display();  // Draw the heatmap
+  }
 }
 
+void saveQTableToFile() {
+  String[] lines = new String[qLearner.qTable.size()];
+  int idx = 0;
+  for (Object state : qLearner.qTable.keySet()) {
+    HashMap<String, Float> actions = qLearner.qTable.get(state);
+    StringBuilder sb = new StringBuilder();
+    sb.append(state.toString()).append(": ");
+    for (String action : actions.keySet()) {
+      sb.append(action).append("=").append(actions.get(action)).append(" ");
+    }
+    lines[idx++] = sb.toString().trim();
+  }
+  saveStrings("qtable.txt", lines);
+}
+
+void saveStatsToFile() {
+  println("This is stats" + stats.toString());
+  String[] lines = new String[stats.size()];
+  int idx = 0;
+  for (Object key : stats.keySet()) {
+    lines[idx++] = key + ": " + stats.get(key);
+  }
+  saveStrings("stats.txt", lines);
+}
+
+
+
+// ================================================================================================== TWEAK REWARDS HERE
+void assignRewards() {
+  eventsRewards.put("Lost", -1.0);
+  eventsRewards.put("Win", 1.0);   
+  eventsRewards.put("Enemy Hit", 0.5); 
+  eventsRewards.put("Enemy Destroyed", 0.7);
+  eventsRewards.put("Agent Damage", -0.2);  
+  eventsRewards.put("Time", -0.05); 
+  eventsRewards.put("See Enemy", 0.03);  
+  eventsRewards.put("Facing Wall Move", -0.5);  
+  eventsRewards.put("Good Fire Attempt", 0.2);  
+  eventsRewards.put("Fired When Reloading", -0.15); 
+  eventsRewards.put("Fired When No LOS", -0.25);  
+  eventsRewards.put("Maintain LOS", 0.15);  
+  eventsRewards.put("Approach Enemy", 0.2);  
+  eventsRewards.put("Escaped Wall", 0.5);
+  eventsRewards.put("Stand Still For No Reason", -0.2);
+}
+
+// ================================================================================================== TWEAK Q-LEARNING HERE
+void checkRewards() {
+  float totalStepReward = 0;
+  boolean gameActuallyEndedThisStep = false;
+
+  Tank.State ps = null;
+  if (previousState instanceof Tank.State) {
+    ps = (Tank.State) previousState;
+  }
+
+
+  Tank.State currentState = tank0.getCurrentState();
+
+  if (gameOver) {
+    if (gameWon) {
+      totalStepReward += eventsRewards.get("Win");
+    } else {
+      totalStepReward += eventsRewards.get("Lost");
+    }
+    gameActuallyEndedThisStep = true;
+  }
+
+  if (enemyHit) {
+    totalStepReward += eventsRewards.get("Enemy Hit");
+    enemyHit = false; // Reset flag
+  }
+  if (enemyDead) {
+    totalStepReward += eventsRewards.get("Enemy Destroyed");
+    enemyDead = false; // Reset flag
+  }
+  if (agentDamaged) {
+    totalStepReward += eventsRewards.get("Agent Damage");
+    agentDamaged = false; // Reset flag
+  }
+
+  if (!gameActuallyEndedThisStep && ps != null) {
+    if (ps.enemyInLOS) {
+      totalStepReward += eventsRewards.get("See Enemy");
+    }
+    
+    if(previousAction == "stop" && !ps.enemyInLOS){
+      totalStepReward += eventsRewards.get("Stand Still For No Reason");
+    }
+
+    if (ps.facingWall && (previousAction == "move" || previousAction == "stop") && !ps.enemyInLOS) {
+      totalStepReward += eventsRewards.get("Facing Wall Move") * ++stuckCounter;
+    }
+    
+    if(currentState.facingWall && !ps.facingWall && !currentState.enemyInLOS){
+      totalStepReward += eventsRewards.get("Facing Wall Move")* ++stuckCounter;
+    }
+    
+    if (ps.facingWall && !currentState.facingWall) {
+      totalStepReward += eventsRewards.get("Escaped Wall");
+      stuckCounter = 0;
+    }
+
+    if (previousAction != null && previousAction.equals("fire")) {
+      if (!ps.isReloading && ps.enemyInLOS) {
+        totalStepReward += eventsRewards.get("Good Fire Attempt");
+      }else if (!ps.isReloading && !ps.enemyInLOS){
+        totalStepReward += eventsRewards.get("Fired When No LOS");
+      }else if (ps.isReloading) {
+        totalStepReward += eventsRewards.get("Fired When Reloading");
+      }
+    }
+
+    if (ps.enemyInLOS && currentState.enemyInLOS &&
+      previousAction != null && !previousAction.equals("fire") && !ps.isReloading) {
+      totalStepReward += eventsRewards.get("Maintain LOS");
+    }
+
+    if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2 || 
+        ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1) {
+      totalStepReward += eventsRewards.get("Approach Enemy");
+    }
+
+    // Time penalty
+    if (previousTime < currentGameTimer) {
+      if(previousPosition != null && previousPosition == tank0.position){
+        totalStepReward += eventsRewards.get("Stand Still For No Reason");
+      }
+      previousPosition = tank0.position;
+      totalStepReward += eventsRewards.get("Time");
+      previousTime = currentGameTimer;
+    }
+  }
+
+
+
+  setReward(totalStepReward, currentState);
+
+}
+
+
 // HELPER METHODS ======================================
+
+void setReward(float reward, Tank.State newState) {
+  //reward = reward * 10;d
+  qLearner.updateQ(previousState, previousAction, reward, newState);
+}
 
 //Created helper fucntion to check if the generated pos is too close to a existing one
 // ==================================================================================================
@@ -238,7 +411,6 @@ boolean checkCollision(CannonBall cannonBall) {
   for (Sprite obj : placedPositions) {
     if (obj instanceof Tree) {
       if (cannonBall.boundry.intersects(obj.boundry)) {
-        println("Tree hit!");
         cannonBall.drawExplosion();
         return true;
       }
@@ -247,7 +419,6 @@ boolean checkCollision(CannonBall cannonBall) {
     if (obj instanceof Tank) {
       Tank tank = (Tank) obj;
       if (cannonBall.boundry.intersects(tank.boundry) && cannonBall.shooter != tank) {
-        println("Tank hit!");
         tank.reduceHealth();
         cannonBall.drawExplosion();
         return true;
@@ -269,7 +440,6 @@ void checkLandMineCollision() {
         placedPositions.remove(landmine);
         landmine.displayExplosion();
         tank.reduceHealth();
-        println("Landmine removed!");
         break; // Exit the inner loop since the landmine is already removed
       }
     }
@@ -344,39 +514,4 @@ void keyReleased() {
   if (key == 's') {
     tank0.action("fire");
   }
-
-}
-
-// PLAYER TANK INPUTS =================================================================================
-void checkForInput() {
-  if (pause || gameOver || tank0.goHome || tank0.reporting || tank0.roam)
-    return;
-
-  if (up) {
-    tank0.state = 1; // moveForward
-  } else if (down) {
-    tank0.state = 2; // moveBackward
-  } else tank0.state = 0;
-
-  if (right) {
-    tank0.action("rotateRight"); // Rotate right
-  } else if (left) {
-    tank0.action("rotateLeft"); // Rotate left
-  }
-}
-
-// ==================================================================================================
-void mousePressed() {
-  println("---------------------------------------------------------");
-  println("*** mousePressed() - Musknappen har tryckts ned.");
-
-  mouse_pressed = true;
-
-  PVector mousePos = new PVector(mouseX, mouseY);
-  deployLandmine(mousePos);
-}
-
-
-void deployLandmine(PVector targetPos) {
-  dog.startRun(targetPos);
 }

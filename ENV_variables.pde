@@ -3,7 +3,7 @@
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Comparator;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.Iterator;
 
@@ -16,7 +16,11 @@ boolean left,
 
   debugMode,
   gameOver,
-  pause;
+  pause,
+  gameWon,
+  agentDamaged,
+  enemyHit,
+  enemyDead;
 
 PImage tree_img,
   blue_tank_img,
@@ -50,13 +54,28 @@ long startGameTimer,
   currentGameTimer,
   startPauseTimer,
   currentPauseTime,
-  totalPauseTime;
+  totalPauseTime,
+  previousTime;
 
+float alpha, 
+      gamma, 
+      eps;
+
+String previousAction;
+Tank.State previousState;
 
 ArrayList<Landmine> allMines;
 ArrayList<CannonBall> allCannonBalls;
 ArrayList<Sprite> placedPositions;
 ArrayList<Explosion> allExplosions;
+
+HashMap<String, Float> eventsRewards;
+HashMap<Integer, String> stats = new HashMap<>();
+
+int statsEpochCounter = -1;
+int stuckCounter;
+
+QLearner qLearner;
 
 Random random;
 
@@ -67,9 +86,7 @@ Tree tree0,
 Tree[] allTrees;
 
 // Team0
-Tank tank0,
-  tank1,
-  tank2;
+Tank tank0;
 
 // Team1
 Tank tank3,
@@ -89,3 +106,5 @@ enum DogState {
 DogState dogState;
 
 Dog dog;
+
+Heatmap qHeatmap;
