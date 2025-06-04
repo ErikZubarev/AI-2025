@@ -345,6 +345,10 @@ void checkRewards() {
 
     // Time penalty
     if (previousTime < currentGameTimer) {
+      if(previousPosition != null && previousPosition == tank0.position){
+        totalStepReward += eventsRewards.get("Stand Still For No Reason");
+      }
+      previousPosition = tank0.position;
       totalStepReward += eventsRewards.get("Time");
       previousTime = currentGameTimer;
     }
@@ -360,7 +364,7 @@ void checkRewards() {
 // HELPER METHODS ======================================
 
 void setReward(float reward, Tank.State newState) {
-  //dreward = reward * 10;
+  //reward = reward * 10;d
   qLearner.updateQ(previousState, previousAction, reward, newState);
 }
 
