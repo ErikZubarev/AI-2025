@@ -15,7 +15,10 @@ class Heatmap {
     void updateHeatmap(HashMap<Tank.State, HashMap<String, Float>> qTable) {
         // **Extract & Sort States**
         sortedStates = new ArrayList<>(qTable.keySet());
-        sortedStates.sort(Comparator.comparingInt(s -> s.nearestEnemyDistCategory)); // Sort by nearestEnemyDistCategory
+        sortedStates.sort(
+            Comparator.comparing((Tank.State s) -> s.facingWall)
+                      .thenComparingInt(s -> s.nearestEnemyDistCategory)
+        );
     
         // **Resize qValues[][] to match actual state-action space**
         rows = sortedStates.size();
@@ -42,65 +45,97 @@ class Heatmap {
     }
 
 
-    void display() {
-        int centerX = width / 2;  // Center X of screen
-        int centerY = height / 2; // Center Y of screen
-        int heatmapWidth = 600;   // Fixed width for actions
-        int heatmapHeight = 600;  // Fixed height area for states
-        int borderSize = 20;      // Optional border for visibility
+void display() {
+    int centerX = width / 2;  // Center X of screen
+    int centerY = height / 2; // Center Y of screen
+    int heatmapWidth = 600;   // Fixed width for actions
+    int heatmapHeight = 600;  // Fixed height area for states
+    int borderSize = 20;      // Optional border for visibility
+
+    // Update rows and cols based on our current sorted state list
+    rows = sortedStates.size();
+    cols = qLearner.actions.length;
     
-        rows = sortedStates.size();
-        cols = qLearner.actions.length;
+    if (cols == 0 || rows == 0) {
+        return;
+    }
     
-        if (cols == 0 || rows == 0) {
-            return;
-        }
+    gridSize = heatmapWidth / cols;  
+    int stateHeight = heatmapHeight / rows;
     
-        gridSize = heatmapWidth / cols;  
-        int stateHeight = heatmapHeight / rows;
+    int startX = centerX - (heatmapWidth / 2);
+    int startY = centerY - (heatmapHeight / 2);
     
-        int startX = centerX - (heatmapWidth / 2);
-        int startY = centerY - (heatmapHeight / 2);
+    // **Draw Background Border**
+    fill(50);
+    rect(startX - borderSize, startY - borderSize, heatmapWidth + (borderSize * 2), heatmapHeight + (borderSize * 2));
     
-        // **Draw Background Border**
-        fill(50);
-        rect(startX - borderSize, startY - borderSize, heatmapWidth + (borderSize * 2), heatmapHeight + (borderSize * 2));
+    // **Draw Action Labels at the Top**
+    textAlign(CENTER, CENTER);
+    textSize(16);
+    fill(0);
+    for (int j = 0; j < cols; j++) {
+        String actionName = qLearner.actions[j];
+        text(actionName, startX + (j * gridSize) + (gridSize / 2), startY - 25);
+    }
     
-        // **Draw Action Labels at the Top**
-        textAlign(CENTER, CENTER);
-        textSize(16);
-        fill(0);
+    // **Identify Group Start Indexes for enemy proximity labeling**
+    int closeStart = -1, mediumStart = -1, farStart = -1;
+    for (int i = 0; i < sortedStates.size(); i++) {
+        Tank.State state = sortedStates.get(i);
+        if (state.nearestEnemyDistCategory == 1 && closeStart == -1) closeStart = i;
+        if (state.nearestEnemyDistCategory == 2 && mediumStart == -1) mediumStart = i;
+        if (state.nearestEnemyDistCategory >= 3 && farStart == -1) farStart = i;
+    }
+    
+    // **Label Enemy Proximity Groups**
+    labelGroup("Close", closeStart, mediumStart, startX, startY, stateHeight);
+    labelGroup("Medium", mediumStart, farStart, startX, startY, stateHeight);
+    labelGroup("Far/\nNone", farStart, sortedStates.size(), startX, startY, stateHeight);
+    
+    // **Draw the Heatmap Cells**
+    for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            String actionName = qLearner.actions[j];
-            text(actionName, startX + (j * gridSize) + (gridSize / 2), startY - 25);
-        }
-    
-        // **Identify Group Start Indexes**
-        int closeStart = -1, mediumStart = -1, farStart = -1;
-        for (int i = 0; i < sortedStates.size(); i++) {
-            Tank.State state = sortedStates.get(i);
-            if (state.nearestEnemyDistCategory == 1 && closeStart == -1) closeStart = i;
-            if (state.nearestEnemyDistCategory == 2 && mediumStart == -1) mediumStart = i;
-            if (state.nearestEnemyDistCategory >= 3 && farStart == -1) farStart = i;
-        }
-    
-        // **Label Group Midpoints**
-        labelGroup("Close", closeStart, mediumStart, startX, startY, stateHeight);
-        labelGroup("Medium", mediumStart, farStart, startX, startY, stateHeight);
-        labelGroup("Far/\nNone", farStart, sortedStates.size(), startX, startY, stateHeight);
-    
-        // **Draw Heatmap**
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (i < qValues.length && j < qValues[i].length) { 
-                    float qVal = qValues[i][j];
-                    int colorVal = getColorForQValue(qVal);
-                    fill(colorVal);
-                    rect(startX + (j * gridSize), startY + (i * stateHeight), gridSize, stateHeight);
-                }
+            if (i < qValues.length && j < qValues[i].length) { 
+                float qVal = qValues[i][j];
+                int colorVal = getColorForQValue(qVal);
+                fill(colorVal);
+                rect(startX + (j * gridSize), startY + (i * stateHeight), gridSize, stateHeight);
             }
         }
     }
+    
+    // **Determine the contiguous block of states where facingWall == true**
+    int facingWallStart = -1;
+    // Since we are sorted by the boolean first (false first, true second)
+    // the true states will be at the bottom of the sortedStates list.
+    for (int i = 0; i < sortedStates.size(); i++) {
+        if (sortedStates.get(i).facingWall) {
+            facingWallStart = i;
+            break;
+        }
+    }
+    
+    // **If there are states with facingWall == true, compute the bounding rectangle**
+    if (facingWallStart != -1) {
+        // All subsequent states are facingWall == true due to our sorting
+        int facingWallEnd = sortedStates.size();
+        int rectX = startX;
+        int rectY = startY + (facingWallStart * stateHeight);
+        int rectWidth = heatmapWidth;
+        int rectHeight = (facingWallEnd - facingWallStart) * stateHeight;
+        
+        // **Draw the green border to highlight the group**
+        noFill();
+        stroke(0, 255, 0); // Green
+        strokeWeight(3);
+        rect(rectX, rectY, rectWidth, rectHeight);
+        // Reset stroke settings to defaults if necessary
+        strokeWeight(1);
+        stroke(0);
+    }
+}
+
     
     // **Helper Function to Label Each Group**
     void labelGroup(String label, int startIdx, int endIdx, int startX, int startY, int stateHeight) {
@@ -116,15 +151,17 @@ class Heatmap {
 
 
     int getColorForQValue(float qVal) {
-        // **Apply Log Transformation** (preserve sign)
         float logQVal = (qVal >= 0) ? log(1 + qVal) : -log(1 - qVal);
-    
-        // **Map Log Values to a Color Scale**
-        int red = (int) map(logQVal, -log(2), log(2), 255, 128);   // Red fades toward gray at 0
-        int green = (int) map(logQVal, -log(2), log(2), 128, 255);  // Green intensifies beyond gray at 0
-        int blue = (int) map(logQVal, -log(2), log(2), 128, 128);  // Keep blue balanced for gray effect
-    
-        return color(red, green, blue);
+        
+        int red, blue;
+        if (logQVal >= 0) {
+            red = (int) map(logQVal, 0, log(2), 150, 255);
+            blue = (int) map(logQVal, 0, log(2), 100, 50);
+        } else {
+            red = (int) map(logQVal, -log(2), 0, 50, 150);
+            blue = (int) map(logQVal, -log(2), 0, 255, 200); // **Increase blue intensity for negative values**
+        }
+        return color(red, 0, blue);
     }
 
 }

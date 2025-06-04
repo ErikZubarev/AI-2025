@@ -40,7 +40,7 @@ void setup() {
 
 
   if (qLearner == null) {
-    alpha            = 0.3;
+    alpha            = 0.2;
     gamma            = 0.95;
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
@@ -249,12 +249,12 @@ void saveStatsToFile() {
 void assignRewards() {
   eventsRewards.put("Lost", -1.0);
   eventsRewards.put("Win", 1.0);   
-  eventsRewards.put("Enemy Hit", 0.3); 
+  eventsRewards.put("Enemy Hit", 0.5); 
   eventsRewards.put("Enemy Destroyed", 0.7);
-  eventsRewards.put("Agent Damage", -0.3);  
+  eventsRewards.put("Agent Damage", -0.2);  
   eventsRewards.put("Time", -0.05); 
-  eventsRewards.put("See Enemy", 0.1);  
-  eventsRewards.put("Facing Wall Move", -0.2);  
+  eventsRewards.put("See Enemy", 0.3);  
+  eventsRewards.put("Facing Wall Move", -0.5);  
   eventsRewards.put("Good Fire Attempt", 0.2);  
   eventsRewards.put("Fired When Reloading", -0.15); 
   eventsRewards.put("Fired When No LOS", -0.25);  
@@ -264,7 +264,7 @@ void assignRewards() {
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
 void checkRewards() {
-  int totalStepReward = 0;
+  float totalStepReward = 0;
   boolean gameActuallyEndedThisStep = false;
 
   Tank.State ps = null;
@@ -302,7 +302,7 @@ void checkRewards() {
       totalStepReward += eventsRewards.get("See Enemy");
     }
 
-    if (ps.facingWall && previousAction != null && previousAction.equals("move")) {
+    if (ps.facingWall && previousAction == "move") {
       totalStepReward += eventsRewards.get("Facing Wall Move");
     }
 
@@ -319,10 +319,12 @@ void checkRewards() {
     if (ps.enemyInLOS && currentState.enemyInLOS &&
       previousAction != null && !previousAction.equals("fire") && !ps.isReloading) {
       totalStepReward += eventsRewards.get("Maintain LOS");
+      println("Currently in LOS");
     }
 
     if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2) {
       totalStepReward += eventsRewards.get("Approach Enemy");
+      println("Approaching enemy");
     }
 
     // Time penalty
@@ -332,6 +334,8 @@ void checkRewards() {
     }
   }
 
+
+
   setReward(totalStepReward, currentState);
 
 }
@@ -339,7 +343,7 @@ void checkRewards() {
 
 // HELPER METHODS ======================================
 
-void setReward(int reward, Tank.State newState) {
+void setReward(float reward, Tank.State newState) {
   reward = reward * 10;
   qLearner.updateQ(previousState, previousAction, reward, newState);
 }
