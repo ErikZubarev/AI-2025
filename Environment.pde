@@ -36,11 +36,12 @@ void setup() {
   allTanks         = new Tank[4];
 
   eventsRewards    = new HashMap<>();
+  stuckCounter     = 0;
   assignRewards();
 
 
   if (qLearner == null) {
-    alpha            = 0.3;
+    alpha            = 0.2;
     gamma            = 0.95;
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
@@ -52,6 +53,7 @@ void setup() {
       println("Starting stat gathering");
       statsEpochCounter = 0;
     }
+    println(qLearner.epsilon);
   }
 
   dogState         = DogState.ENTERING;
@@ -249,21 +251,23 @@ void saveStatsToFile() {
 void assignRewards() {
   eventsRewards.put("Lost", -1.0);
   eventsRewards.put("Win", 1.0);   
-  eventsRewards.put("Enemy Hit", 0.3); 
+  eventsRewards.put("Enemy Hit", 0.5); 
   eventsRewards.put("Enemy Destroyed", 0.7);
   eventsRewards.put("Time", -0.05); 
-  eventsRewards.put("See Enemy", 0.1);  
-  eventsRewards.put("Facing Wall Move", -0.2);  
+  eventsRewards.put("See Enemy", 0.03);  
+  eventsRewards.put("Facing Wall Move", -0.5);  
   eventsRewards.put("Good Fire Attempt", 0.2);  
   eventsRewards.put("Fired When Reloading", -0.15); 
   eventsRewards.put("Fired When No LOS", -0.25);  
   eventsRewards.put("Maintain LOS", 0.15);  
   eventsRewards.put("Approach Enemy", 0.2);  
+  eventsRewards.put("Escaped Wall", 0.5);
+  eventsRewards.put("Stand Still For No Reason", -0.2);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
 void checkRewards() {
-  int totalStepReward = 0;
+  float totalStepReward = 0;
   boolean gameActuallyEndedThisStep = false;
 
   Tank.State ps = null;
@@ -287,18 +291,31 @@ void checkRewards() {
     totalStepReward += eventsRewards.get("Enemy Hit");
     enemyHit = false; // Reset flag
   }
-  if (enemyIsDeadNotBigSuprise) {
+  if (enemyDead) {
     totalStepReward += eventsRewards.get("Enemy Destroyed");
-    enemyIsDeadNotBigSuprise = false; // Reset flag
+    enemyDead = false; // Reset flag
   }
 
   if (!gameActuallyEndedThisStep && ps != null) {
     if (ps.enemyInLOS) {
       totalStepReward += eventsRewards.get("See Enemy");
     }
+    
+    if(previousAction == "stop" && !ps.enemyInLOS){
+      totalStepReward += eventsRewards.get("Stand Still For No Reason");
+    }
 
-    if (ps.facingWall && previousAction != null && previousAction.equals("move")) {
-      totalStepReward += eventsRewards.get("Facing Wall Move");
+    if (ps.facingWall && (previousAction == "move" || previousAction == "stop") && !ps.enemyInLOS) {
+      totalStepReward += eventsRewards.get("Facing Wall Move") * ++stuckCounter;
+    }
+    
+    if(currentState.facingWall && !ps.facingWall && !currentState.enemyInLOS){
+      totalStepReward += eventsRewards.get("Facing Wall Move")* ++stuckCounter;
+    }
+    
+    if (ps.facingWall && !currentState.facingWall) {
+      totalStepReward += eventsRewards.get("Escaped Wall");
+      stuckCounter = 0;
     }
 
     if (previousAction != null && previousAction.equals("fire")) {
@@ -316,16 +333,23 @@ void checkRewards() {
       totalStepReward += eventsRewards.get("Maintain LOS");
     }
 
-    if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2) {
+    if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2 || 
+        ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1) {
       totalStepReward += eventsRewards.get("Approach Enemy");
     }
 
     // Time penalty
     if (previousTime < currentGameTimer) {
+      if(previousPosition != null && previousPosition == tank0.position){
+        totalStepReward += eventsRewards.get("Stand Still For No Reason");
+      }
+      previousPosition = tank0.position;
       totalStepReward += eventsRewards.get("Time");
       previousTime = currentGameTimer;
     }
   }
+
+
 
   setReward(totalStepReward, currentState);
 
@@ -334,8 +358,8 @@ void checkRewards() {
 
 // HELPER METHODS ======================================
 
-void setReward(int reward, Tank.State newState) {
-  reward = reward * 10;
+void setReward(float reward, Tank.State newState) {
+  //reward = reward * 10;d
   qLearner.updateQ(previousState, previousAction, reward, newState);
 }
 
