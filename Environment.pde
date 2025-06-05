@@ -251,7 +251,6 @@ void assignRewards() {
   eventsRewards.put("Win", 1.0);   
   eventsRewards.put("Enemy Hit", 0.3); 
   eventsRewards.put("Enemy Destroyed", 0.7);
-  eventsRewards.put("Agent Damage", -0.3);  
   eventsRewards.put("Time", -0.05); 
   eventsRewards.put("See Enemy", 0.1);  
   eventsRewards.put("Facing Wall Move", -0.2);  
@@ -291,10 +290,6 @@ void checkRewards() {
   if (enemyIsDeadNotBigSuprise) {
     totalStepReward += eventsRewards.get("Enemy Destroyed");
     enemyIsDeadNotBigSuprise = false; // Reset flag
-  }
-  if (agentDamaged) {
-    totalStepReward += eventsRewards.get("Agent Damage");
-    agentDamaged = false; // Reset flag
   }
 
   if (!gameActuallyEndedThisStep && ps != null) {

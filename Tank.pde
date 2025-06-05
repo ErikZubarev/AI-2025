@@ -468,10 +468,6 @@ class Tank extends Sprite {
   }
 
   void reduceHealth() {
-    //Unused right now since we removed mines
-    if(this.name.equals("ally")){
-      agentDamaged = true; 
-    }
 
     if (health > 0) {
       health--;

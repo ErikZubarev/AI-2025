@@ -18,7 +18,6 @@ boolean left,
   gameOver,
   pause,
   gameWon,
-  agentDamaged,
   enemyHit,
   enemyIsDeadNotBigSuprise;
 
