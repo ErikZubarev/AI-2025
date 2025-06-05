@@ -2,10 +2,7 @@
 
 ## Funktioner
 - Tankar: Navigerar och undviker hinder.
-- Landminor: Slumpmässigt placerade av en hund som rör sig i spelvärlden.
 - Träd: Statisk miljö som fungerar som hinder.
-- Pathfinding: Implementering av GBFS och BFS för att beräkna vägar.
-- QuadTreeMemory: Hanterar minne och utforskade områden i spelvärlden.
 
 ---
 
@@ -35,24 +32,14 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
 
 ### Steg-för-steg-guide för att testa systemet
 
-1. Starta simuleringen  
-   Klicka på "Play"-knappen (p) i Processing IDE för att köra programmet.
-   OBS tillse att inte ha caps-lock igång då det ger en annan ascii kod som programmet inte reagerar på.
+1. Starta simuleringen 
 
 2. Interagera med simuleringen  
-   - När du klickar på 'p' så startar simuleringen. Stridsvagnarna kör autonomt och inga användarinput förväntas eller utförs.
-   - Tryck på `p` för att pausa/återuppta simuleringen.
-   - Tryck på `d` för att aktivera/deaktivera debug-läge.
+   - tryck på `w` för att spara agents qtable samt agentens statistik, om epsilon är under 0.1, till fil.
+   - Tryck på `d` för att aktivera/deaktivera debug-läge. Debug läget visar en heatmap på agentens Q-table.
+   ERIK SKREV MER OM HEATMAP HÄR********************************************************************************************
 
-3. Testa landminor  
-   - Vänta tills hunden placerar en landmina automatiskt.
-   - Alternativt, klicka med musen för att manuellt placera en landmina på musens position.
-
-4. Byt mellan Synbaserad och Radiobaserad samarbetsmetod.
-    - För att prova de två olika implementationerna så behövs endast boolean variabeln radioComs i Team.pde (rad 9) bytas. 
-    - Om radioComs = true så används Radiobaserad. Om radioComs = false används synbaserad.
-
-5. Debug-läge  
+3. Debug-läge  
    - Aktivera debug-läge (`d`) för att se gränser, utforskade områden och QuadTree-strukturen.
 
 ---
@@ -67,17 +54,16 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
 - `Tree.pde`: Representerar träd som hinder.
 - `Landmine.pde`: Hanterar landminor.
 - `Dog.pde`: Hanterar hundens rörelse och placering av landminor.
-- `Search.pde': Har både GBFS och BFS algoritmen som nyttjas för pathfinding. Endast GBFS har nyttjats under testning men om BFS skulle vela prövas är det bara att bytta return i Search.pde (rad 34&35)
-- `QuadTreeMemory.pde`: Hanterar minne och utforskade områden.
 - `Boundry.pde`: Hanterar gränser och kollisioner.
 - `CannonBall.pde`: Representerar stridsvagenens projektiler.
 - 'Explosion.pde`: Hjälpklass för att förenkla visualisering av explosions skapade av kannonkulor och landminor.
-- `Target.pde`: Hjälpklass för stridsvagnarnas planering av sökvägen. Agerar som ett hinder så andra vagnar inte kan planera sin väg där.
+- 'QLearner.pde`: Huvudklass för RL-logiken. Nyttjar en Q-learning struktur med epsilon-greedy exploration som tar in state, action, reward, new state för att lära sig.
+- 'Heatmap.pde`: Hjälpklass för att förenkla visualisering av agentens lärande.
 
 ---
 
 ### Debugging
-- Använd debug-läget (`d`) för att visualisera gränser och utforskade områden.
+- Använd debug-läget (`d`) för att visualisera gränser och se en heatmap på agentens lärande.
 - Lägg till `println`-utskrifter i koden för att spåra variabler och flöden.
 
 ---

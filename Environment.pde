@@ -355,13 +355,13 @@ void checkRewards() {
 
 }
 
+void setReward(float reward, Tank.State newState) {
+  //reward = reward * 10;
+  qLearner.updateQ(previousState, previousAction, reward, newState);
+}
 
 // HELPER METHODS ======================================
 
-void setReward(float reward, Tank.State newState) {
-  //reward = reward * 10;d
-  qLearner.updateQ(previousState, previousAction, reward, newState);
-}
 
 //Created helper fucntion to check if the generated pos is too close to a existing one
 // ==================================================================================================

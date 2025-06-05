@@ -18,12 +18,9 @@ class Tank extends Sprite {
   maxspeed,
     angle;
   boolean
-    reloading,
-    hunt; 
+    reloading; 
   ViewArea viewArea;
   Team team;
-  
-
 
   Tank(String _name, PVector _startpos, PImage sprite) {
     this.name           = _name;
@@ -41,7 +38,6 @@ class Tank extends Sprite {
     this.fireCooldown   = 3000; 
     this.health         = 3;    
     this.reloadTimer    = 0L;
-    this.hunt           = false;
   }
 
   // =================================================
@@ -118,13 +114,9 @@ class Tank extends Sprite {
   void update() {
     if (team == null && !this.name.equals("ally")) 
       return;
-
     checkReloading();
     updateCollision(); 
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
-    if (this.name.equals("ally")) { 
-        detectObject();
-    }
   }
 
   void action(String _action) {
@@ -154,6 +146,7 @@ class Tank extends Sprite {
   // ===  STATE COLLECTION AND HELPER METHODS
   // =================================================
 
+  // Main method that collects the tanks state in the instance its called.
   State getCurrentState() {
     int nearestEnemyDistCat = findNearest("enemy");
     int relativeEnemyDir = 0;
@@ -197,7 +190,7 @@ class Tank extends Sprite {
       }
     }
     // Consider an enemy "found" if it's within a reasonable range, e.g., viewArea.viewLength * 1.5
-    // This prevents LOS checks on extremely distant enemies.
+    // Prevents LOS checks on extremely distant enemies.
     if (closestEnemy != null && minDist < viewArea.viewLength * 1.5) {
       return closestEnemy;
     }
@@ -230,6 +223,7 @@ class Tank extends Sprite {
   }
 
 
+  // Calculate discretized relative agent angel in the world
   int discretizeAgentAngle() {
     float currentAngle = this.angle;
 
@@ -248,7 +242,8 @@ class Tank extends Sprite {
   }
 
 
-  
+  // Finds nearest enemy and discretize it.
+  // Returns: 3 = Far/Further away than 300, 2 = Middle/Closer than 300, 1 = Near/Closer than 150 
   int findNearest(String type) {
     float minDist = Float.MAX_VALUE;
     if (type.equals("enemy")) {
@@ -261,13 +256,6 @@ class Tank extends Sprite {
           }
         }
       }
-    } else if (type.equals("tree")) {
-      for (Sprite obj : placedPositions) {
-        if (obj instanceof Tree) {
-          float d = PVector.dist(this.position, obj.position);
-          if (d < minDist) minDist = d;
-        }
-      }
     }
 
     if (minDist == Float.MAX_VALUE) return 3; 
@@ -276,6 +264,7 @@ class Tank extends Sprite {
     else return 3; 
   }
 
+  //Checks if the tank would move into a object or wall if it moved forward
   boolean checkIfFacingWall() {
     float stepDistance = maxspeed * 1.5f;
     float futureX = position.x + cos(angle) * stepDistance;
@@ -304,6 +293,7 @@ class Tank extends Sprite {
     return false;
   }
 
+  // Checks if the tank has a straight line of sight to enemy within its viewArea and no other objects are infront of it.
   boolean checkLineOfSightToNearestEnemy() {
     Tank enemy = getNearestEnemyObject();
     if (enemy == null || enemy.health <= 0) {
@@ -341,12 +331,9 @@ class Tank extends Sprite {
     return false; 
   }
 
-  void detectObject() {
-    for (Sprite obj : placedPositions) {
-      if (obj == this) continue;
-      //This isnt really used anymore since i switched it using placedPositions for finding enemies instead
-    }
-  }
+  // =================================================
+  // === END OF STATE COLLECTION AND HELPER METHODS
+  // =================================================
 
   // IS RELOADING LOGIC
   void checkReloading() {
@@ -376,8 +363,6 @@ class Tank extends Sprite {
 
   // COLLISION DETECTION
   void updateCollision() {
-    // float prevX = position.x; // Store previous position if needed for justHitWall logic
-    // float prevY = position.y;
 
     float candidateX = position.x + velocity.x;
     float candidateY = position.y + velocity.y;
@@ -478,6 +463,7 @@ class Tank extends Sprite {
   // =================================================
   // ===  DISPLAY METHODS
   // =================================================
+
   // DISPLAY SELF ======================================================================================
   void display() {
     pushMatrix();
@@ -499,8 +485,7 @@ class Tank extends Sprite {
       textAlign(LEFT, TOP); 
       String stateText = "";
 
-      if (hunt) stateText = "Hunting";
-      else stateText = "Stopped";
+      stateText = "RL";
 
       text(this.name + "\n(" + nf(this.position.x, 0, 1) + ", " + nf(this.position.y, 0, 1) + ")\nState: " + stateText, textBoxX + 5, textBoxY + 5);
       textAlign(CENTER, CENTER); 

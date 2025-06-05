@@ -6,7 +6,6 @@ class Team {
   ArrayList<Tank> enemyQueue = new ArrayList<>();
   color teamColor;
   int x, y;
-  boolean radioComs = true; // #################################### SWITCH BETWEEN RADIO OR VISION COMMUNICATIONS, SWITCH TO FALSE FOR VISION ####################################
   Boundry boundry;
 
   public Team(int x, int y, color teamColor) {
