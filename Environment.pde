@@ -173,35 +173,20 @@ void draw() {
   displayTrees();
   displayTanks();
 
-  //LANDMINE CODE
-  //if (landmineCounter == 1000) {
-  //  deployLandmine();
-  //  landmineCounter = 0;
-  //}
-  //displayMines();
-  //dog.update();
-  //dog.display();
-
   if (!gameOver && !pause) {
     currentGameTimer = (System.currentTimeMillis() - startGameTimer - totalPauseTime) / 1000;
     displayExplosions();
     displayCannonBalls();
     updateCannonBalls();
 
-    checkForCollisions();
-
     Tank.State newState = tank0.getCurrentState();
     String newAction = qLearner.chooseAction(newState);
+    previousPosition = tank0.position;
     tank0.action(newAction);
     updateTanksLogic();
     previousState = newState;
     previousAction = newAction;
-    //Får väll se ¯\_(ツ)_/¯
     checkRewards();
-
-
-    //checkLandMineCollision();
-    //landmineCounter++;
 
     currentPauseTime = totalPauseTime; // Save prev pause time
   } else if (pause) {
@@ -449,14 +434,7 @@ void updateTanksLogic() {
   }
 }
 
-// ==================================================================================================
-void checkForCollisions() {
-  for (Tank tank : allTanks) {
-    if (team0.members.contains(tank)) {
-      tank.detectObject();
-    }
-  }
-}
+
 
 // ==================================================================================================
 void keyPressed() {

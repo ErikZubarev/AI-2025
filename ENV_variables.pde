@@ -45,7 +45,8 @@ PVector tree1_pos,
   team1_tank2_startpos,
 
   newLandMinePos,
-  dogExit;
+  dogExit,
+  previousPosition;
 
 int landmineCounter;
 
