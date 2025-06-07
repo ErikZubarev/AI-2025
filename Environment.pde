@@ -18,15 +18,11 @@ void setup() {
   totalPauseTime   = 0L;
   currentPauseTime = 0L;
   previousTime     = 0L;
-  landmineCounter  = 0;
 
   random           = new Random();
   healthImages     = new PImage[4];
-  runningFrames    = new PImage[3];
-  laughingFrames   = new PImage[2];
   explosionImages  = new PImage[5];
 
-  allMines         = new ArrayList<Landmine>();
   allCannonBalls   = new ArrayList<CannonBall>();
   allExplosions    = new ArrayList<Explosion>();
 
@@ -56,8 +52,6 @@ void setup() {
     println(qLearner.epsilon);
   }
 
-  dogState         = DogState.ENTERING;
-
   bomb = loadImage("bomb.png");
 
   for (int i = 0; i < healthImages.length; i++) {
@@ -69,23 +63,6 @@ void setup() {
     PImage img = loadImage("explosion"+i+".png");
     explosionImages[i] = img;
   }
-
-  //MINE STUFF
-  landmineImg = loadImage("landmine.png");
-
-  //LOADS IN THE FRAMES OF THE ANIMATIONS SINCE GIFS CANT BE USED
-  for (int i = 0; i < runningFrames.length; i++) {
-    PImage img = loadImage("dog_run_" + i + ".png");
-    runningFrames[i] = img;
-  }
-  for (int i = 0; i < laughingFrames.length; i++) {
-    PImage img = loadImage("dog_laugh_" + i + ".png");
-    laughingFrames[i] = img;
-  }
-
-  //Instantiate dog with its frames
-  dog = new Dog(runningFrames, laughingFrames);
-
 
   // Trees, randomly placed in the middle of the playing field
   tree_img = loadImage("tree01_v2.png");
@@ -359,15 +336,6 @@ boolean isOverlapping(PVector newPos, ArrayList<Sprite> existingPositions, float
   return false;
 }
 
-// ==================================================================================================
-void deployLandmine() {
-  PVector targetPos;
-  do {
-    targetPos = new PVector(random(100, 700), random(100, 700));
-  } while (isOverlapping(targetPos, placedPositions, 100));
-
-  dog.startRun(targetPos);
-}
 
 // ==================================================================================================
 void addCannonBall(CannonBall cannonBall) {
@@ -409,22 +377,6 @@ boolean checkCollision(CannonBall cannonBall) {
 }
 
 // ==================================================================================================
-void checkLandMineCollision() {
-  Iterator<Landmine> mineIterator = allMines.iterator();
-  while (mineIterator.hasNext()) {
-    Landmine landmine = mineIterator.next();
-    for (Tank tank : allTanks) {
-      if (tank != null && landmine.boundry.intersects(tank.boundry)) {
-        // Remove the landmine safely using the iterator
-        mineIterator.remove();
-        placedPositions.remove(landmine);
-        landmine.displayExplosion();
-        tank.reduceHealth();
-        break; // Exit the inner loop since the landmine is already removed
-      }
-    }
-  }
-}
 
 
 // ==================================================================================================

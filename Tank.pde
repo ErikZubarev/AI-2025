@@ -320,7 +320,7 @@ class Tank extends Sprite {
       }
 
       for (Sprite s : placedPositions) {
-        if (s == this || s == enemy || s instanceof Landmine || s instanceof CannonBall) {
+        if (s == this || s == enemy || s instanceof CannonBall) {
           continue;
         }
         if ((s instanceof Tree || (s instanceof Tank && s != enemy)) && s.boundry.contains(rayPoint.x, rayPoint.y)) {
@@ -384,7 +384,7 @@ class Tank extends Sprite {
     Boundry candidateBoundry = new Boundry(x - tankwidth / 2.0f, y - tankheight / 2.0f, tankwidth, tankheight);
 
     for (Sprite s : placedPositions) {
-      if (s == this || s instanceof Landmine || s instanceof CannonBall) {
+      if (s == this || s instanceof CannonBall) {
         continue;
       }
       if ((s instanceof Tree || (s instanceof Tank && s != this)) && candidateBoundry.intersects(s.boundry)) {

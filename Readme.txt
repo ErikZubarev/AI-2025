@@ -52,8 +52,6 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
 - `ENV_variables.pde`: Samltiga Global variabler som fanns i Environment.pde har flyttas hits.
 - `Tank.pde`: Hanterar tankarnas beteende och rörelse.
 - `Tree.pde`: Representerar träd som hinder.
-- `Landmine.pde`: Hanterar landminor.
-- `Dog.pde`: Hanterar hundens rörelse och placering av landminor.
 - `Boundry.pde`: Hanterar gränser och kollisioner.
 - `CannonBall.pde`: Representerar stridsvagenens projektiler.
 - 'Explosion.pde`: Hjälpklass för att förenkla visualisering av explosions skapade av kannonkulor och landminor.

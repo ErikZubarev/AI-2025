@@ -24,12 +24,9 @@ boolean left,
 PImage tree_img,
   blue_tank_img,
   red_tank_img,
-  bomb,
-  landmineImg;
+  bomb;
 
 PImage[] healthImages,
-  runningFrames,
-  laughingFrames,
   explosionImages;
 
 PVector tree1_pos,
@@ -44,11 +41,7 @@ PVector tree1_pos,
   team1_tank1_startpos,
   team1_tank2_startpos,
 
-  newLandMinePos,
-  dogExit,
   previousPosition;
-
-int landmineCounter;
 
 long startGameTimer,
   currentGameTimer,
@@ -64,7 +57,6 @@ float alpha,
 String previousAction;
 Tank.State previousState;
 
-ArrayList<Landmine> allMines;
 ArrayList<CannonBall> allCannonBalls;
 ArrayList<Sprite> placedPositions;
 ArrayList<Explosion> allExplosions;
@@ -98,13 +90,5 @@ Team team0,
 
 Tank[] allTanks;
 
-//Landmine assets
-enum DogState {
-  ENTERING, RUNNING_TO_TARGET, LAUGHING, EXITING
-}
-
-DogState dogState;
-
-Dog dog;
 
 Heatmap qHeatmap;
