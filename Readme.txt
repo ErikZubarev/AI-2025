@@ -36,11 +36,22 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
 
 2. Interagera med simuleringen  
    - tryck på `w` för att spara agents qtable samt agentens statistik, om epsilon är under 0.1, till fil.
-   - Tryck på `d` för att aktivera/deaktivera debug-läge. Debug läget visar en heatmap på agentens Q-table.
-   ERIK SKREV MER OM HEATMAP HÄR********************************************************************************************
+   - Tryck på `d` för att aktivera/deaktivera debug-läge. Debug läget visar en heatmap på agentens Q-table
+ 
 
 3. Debug-läge  
-   - Aktivera debug-läge (`d`) för att se gränser, utforskade områden och QuadTree-strukturen.
+    - Aktivera debug-läge (`d`) för att se heatmap.
+    - Tolka heatmap: Varje rad är en representation av klassen State och varje kolumn är en action agenten kan utföra. Det finns 5 kolumner, en för varje action: "move", "rotateLeft", "rotateRight", "stop" och "fire". Det kan finnas upp till 480 unika states, alltså up till 480 rader. 
+
+    Där en rad och kolumn skär finns en färgad cell som representerar Q värdet för den kombinationen. Blå innebär att Q värdet är under 0, röd innebär att Q värdet är över 0 och styrkan på färgen innebär hur stort Q värdet är. 
+
+    Tabellen är sorterad 2 gånger. Booleanen facingWall bestämmer om en state är i den övre (false) eller nedre (true) halvan av heatmappen. Det finns dessutom en grön border runt alla states där facingWall == true. Den andra updelningen är sorterad efter variabeln nearestEnemyDistCategory där det finns 3 kategorier: "Close", "Medium" och "Far/None". Detta sker för både den övre och nedre halvan, alltså finns det totalt 6 kategorier av sortering. Från topp till botten: 
+	1. facingWall == false, nearestEnemyDistCategory == "Close" 
+	2. facingWall == false, nearestEnemyDistCategory == "Medium"
+	3. facingWall == false, nearestEnemyDistCategory == "Far/None"
+	4. facingWall == true, nearestEnemyDistCategory == "Close"
+	5. facingWall == true, nearestEnemyDistCategory == "Medium"
+	6. facingWall == true, nearestEnemyDistCategory == "Far/None"
 
 4. *10 belöning
    - På rad 330 i metoden setReward() i filen Enviroment.pde. Avkommentera multiplikationen.
