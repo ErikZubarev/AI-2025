@@ -42,10 +42,10 @@ void setup() {
     eps              = 1.0; // Initial epsilon is high for exploration
     qLearner         = new QLearner(alpha, gamma, eps);
   } else {
-    float decayStep = 0.05; //Gradual decay is better than exponential.
+    float decayStep = 0.05; //Gradual epislon decay
     float min_epsilon = 0.01;
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon - decayStep);
-    if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) {
+    if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) { //If we have reached epsilon < 0.1 we start gathering stats for report
       println("Starting stat gathering");
       statsEpochCounter = 0;
     }
@@ -105,7 +105,7 @@ void setup() {
 
   tank0 = new Tank("ally", team0_tank0_startpos, red_tank_img);
 
-  allTanks[3] = tank0;                         // Symbol samma som index!
+  allTanks[3] = tank0;                         
 
   placedPositions.add(tank0);
   team0.members.add(tank0);
@@ -171,6 +171,7 @@ void draw() {
   }
 
   displayGUI();
+  //keybind for saving qTable and stats to file
   if (keyPressed && key == 'w') {
     saveQTableToFile();
     saveStatsToFile();
@@ -182,6 +183,7 @@ void draw() {
   }
 }
 
+//Helper method for saving the Qtable hashmap to file
 void saveQTableToFile() {
   String[] lines = new String[qLearner.qTable.size()];
   int idx = 0;
@@ -197,6 +199,7 @@ void saveQTableToFile() {
   saveStrings("qtable.txt", lines);
 }
 
+//Helper method for saving stats for report
 void saveStatsToFile() {
   println("This is stats" + stats.toString());
   String[] lines = new String[stats.size()];
@@ -253,11 +256,13 @@ void checkRewards() {
     totalStepReward += eventsRewards.get("Enemy Hit");
     enemyHit = false; // Reset flag
   }
+
   if (enemyDead) {
     totalStepReward += eventsRewards.get("Enemy Destroyed");
     enemyDead = false; // Reset flag
   }
 
+  //Movement related rewards
   if (!gameActuallyEndedThisStep && ps != null) {
     if (ps.enemyInLOS) {
       totalStepReward += eventsRewards.get("See Enemy");
@@ -280,6 +285,7 @@ void checkRewards() {
       stuckCounter = 0;
     }
 
+    //Combat related rewards
     if (previousAction != null && previousAction.equals("fire")) {
       if (!ps.isReloading && ps.enemyInLOS) {
         totalStepReward += eventsRewards.get("Good Fire Attempt");
@@ -290,11 +296,13 @@ void checkRewards() {
       }
     }
 
+    //Maintaing line of sight reward
     if (ps.enemyInLOS && currentState.enemyInLOS &&
       previousAction != null && !previousAction.equals("fire") && !ps.isReloading) {
       totalStepReward += eventsRewards.get("Maintain LOS");
     }
 
+    //Reward for getting closer to enemy
     if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2 || 
         ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1) {
       totalStepReward += eventsRewards.get("Approach Enemy");
@@ -318,6 +326,7 @@ void checkRewards() {
 }
 
 void setReward(float reward, Tank.State newState) {
+  //***** UNCOMMENT THE MULTIPLICATION TO TRY OUT *10 REWARDS MENTIONED IN REPORT *********
   //reward = reward * 10;
   qLearner.updateQ(previousState, previousAction, reward, newState);
 }

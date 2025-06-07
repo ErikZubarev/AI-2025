@@ -42,6 +42,9 @@ Inga externa bibliotek krävs utöver de som medföljer Processing.
 3. Debug-läge  
    - Aktivera debug-läge (`d`) för att se gränser, utforskade områden och QuadTree-strukturen.
 
+4. *10 belöning
+   - På rad 330 i metoden setReward() i filen Enviroment.pde. Avkommentera multiplikationen.
+
 ---
 
 ## Struktur

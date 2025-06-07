@@ -18,6 +18,7 @@ class QLearner {
     if (!qTable.containsKey(state)) {
       HashMap<String, Float> actionValues = new HashMap<String, Float>();
       for (String action : actions) {
+        //Gives the actions "move" and "fire" a smaller starting bonus to promote them when ties come around.
         if(action == "move" || action == "fire"){
           float rand = random(0, 0.5);
           actionValues.put(action, rand);

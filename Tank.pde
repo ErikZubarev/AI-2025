@@ -3,22 +3,22 @@
 class Tank extends Sprite {
   PVector velocity,
     startpos,
-    enemy, 
-    prevPos; 
+    enemy,
+    prevPos;
   PImage img;
   String name;
   int tankwidth,
     tankheight,
-    lastFired, 
+    lastFired,
     fireCooldown,
     health;
   long
     reloadTimer;
-  float speed, 
-  maxspeed,
+  float speed,
+    maxspeed,
     angle;
   boolean
-    reloading; 
+    reloading;
   ViewArea viewArea;
   Team team;
 
@@ -30,13 +30,13 @@ class Tank extends Sprite {
     this.startpos       = new PVector(_startpos.x, _startpos.y);
     this.position       = new PVector(this.startpos.x, this.startpos.y);
     this.velocity       = new PVector(0, 0);
-    this.angle          = 0; 
+    this.angle          = 0;
     this.maxspeed       = 2;
     this.viewArea       = new ViewArea(position.x, position.y, angle);
     this.boundry        = new Boundry(position.x - tankwidth/2.0f, position.y - tankheight/2.0f, this.tankwidth, this.tankheight);
     this.reloading      = false;
-    this.fireCooldown   = 3000; 
-    this.health         = 3;    
+    this.fireCooldown   = 3000;
+    this.health         = 3;
     this.reloadTimer    = 0L;
   }
 
@@ -112,10 +112,10 @@ class Tank extends Sprite {
 
   // MAIN TANK LOGIC
   void update() {
-    if (team == null && !this.name.equals("ally")) 
+    if (team == null && !this.name.equals("ally"))
       return;
     checkReloading();
-    updateCollision(); 
+    updateCollision();
     viewArea.updateViewArea(this.position.x, this.position.y, this.angle);
   }
 
@@ -124,7 +124,7 @@ class Tank extends Sprite {
     case "move":
       moveForward();
       break;
-    case "reverse": 
+    case "reverse":
       moveBackward();
       break;
     case "rotateLeft":
@@ -151,26 +151,26 @@ class Tank extends Sprite {
     int nearestEnemyDistCat = findNearest("enemy");
     int relativeEnemyDir = 0;
 
-    Tank nearestEnemyObj = getNearestEnemyObject(); 
+    Tank nearestEnemyObj = getNearestEnemyObject();
     if (nearestEnemyObj != null && nearestEnemyObj.health > 0) {
-        if (nearestEnemyDistCat < 3) {
-            relativeEnemyDir = calculateDiscretizedRelativeAngle(nearestEnemyObj);
-        }
+      if (nearestEnemyDistCat < 3) {
+        relativeEnemyDir = calculateDiscretizedRelativeAngle(nearestEnemyObj);
+      }
     }
 
     int currentAgentOrientation = discretizeAgentAngle();
-    boolean amIFacingWall = checkIfFacingWall(); 
-    boolean doISeeEnemyInLOS = checkLineOfSightToNearestEnemy(); 
+    boolean amIFacingWall = checkIfFacingWall();
+    boolean doISeeEnemyInLOS = checkLineOfSightToNearestEnemy();
 
     State newState = new State(
       nearestEnemyDistCat,
       relativeEnemyDir,
       currentAgentOrientation,
-      amIFacingWall,    
+      amIFacingWall,
       this.reloading,
-      doISeeEnemyInLOS  
-    );
-    //println(newState.toString()); 
+      doISeeEnemyInLOS
+      );
+    //println(newState.toString());
     return newState;
   }
 
@@ -216,9 +216,9 @@ class Tank extends Sprite {
     float PI_4 = PI / 4.0f;
     float THREE_PI_4 = 3.0f * PI / 4.0f;
 
-    if (abs(relativeAngle) <= PI_4) return 1; 
-    else if (relativeAngle > PI_4 && relativeAngle <= THREE_PI_4) return 2; 
-    else if (relativeAngle < -PI_4 && relativeAngle >= -THREE_PI_4) return 3; 
+    if (abs(relativeAngle) <= PI_4) return 1;
+    else if (relativeAngle > PI_4 && relativeAngle <= THREE_PI_4) return 2;
+    else if (relativeAngle < -PI_4 && relativeAngle >= -THREE_PI_4) return 3;
     else return 4;
   }
 
@@ -235,15 +235,15 @@ class Tank extends Sprite {
     float FIVE_PI_4 = 5.0f * PI / 4.0f;
     float SEVEN_PI_4 = 7.0f * PI / 4.0f;
 
-    if (currentAngle >= SEVEN_PI_4 || currentAngle < PI_4) return 0; 
-    else if (currentAngle >= PI_4 && currentAngle < THREE_PI_4) return 1; 
-    else if (currentAngle >= THREE_PI_4 && currentAngle < FIVE_PI_4) return 2; 
-    else return 3; 
+    if (currentAngle >= SEVEN_PI_4 || currentAngle < PI_4) return 0;
+    else if (currentAngle >= PI_4 && currentAngle < THREE_PI_4) return 1;
+    else if (currentAngle >= THREE_PI_4 && currentAngle < FIVE_PI_4) return 2;
+    else return 3;
   }
 
 
   // Finds nearest enemy and discretize it.
-  // Returns: 3 = Far/Further away than 300, 2 = Middle/Closer than 300, 1 = Near/Closer than 150 
+  // Returns: 3 = Far/Further away than 300, 2 = Middle/Closer than 300, 1 = Near/Closer than 150
   int findNearest(String type) {
     float minDist = Float.MAX_VALUE;
     if (type.equals("enemy")) {
@@ -258,10 +258,10 @@ class Tank extends Sprite {
       }
     }
 
-    if (minDist == Float.MAX_VALUE) return 3; 
-    if (minDist < 150) return 1; 
-    else if (minDist < 300) return 2; 
-    else return 3; 
+    if (minDist == Float.MAX_VALUE) return 3;
+    if (minDist < 150) return 1;
+    else if (minDist < 300) return 2;
+    else return 3;
   }
 
   //Checks if the tank would move into a object or wall if it moved forward
@@ -270,14 +270,14 @@ class Tank extends Sprite {
     float futureX = position.x + cos(angle) * stepDistance;
     float futureY = position.y + sin(angle) * stepDistance;
 
-    
+
     float rX = tankwidth / 2.0f;
     float rY = tankheight / 2.0f;
     if (futureX <= rX || futureX >= width - rX || futureY <= rY || futureY >= height - rY) {
       return true;
     }
 
-    
+
     Boundry futureBoundry = new Boundry(futureX - tankwidth / 2.0f, futureY - tankheight / 2.0f, tankwidth, tankheight);
 
     for (Sprite s : placedPositions) {
@@ -301,7 +301,7 @@ class Tank extends Sprite {
     }
 
     float rayStep = 5;
-    float maxRayLength = viewArea.viewLength; 
+    float maxRayLength = viewArea.viewLength;
 
     PVector rayOrigin = this.position.copy();
     float rayAngle = this.angle;
@@ -328,7 +328,7 @@ class Tank extends Sprite {
         }
       }
     }
-    return false; 
+    return false;
   }
 
   // =================================================
@@ -340,7 +340,7 @@ class Tank extends Sprite {
     if (reloadTimer == 0L) return;
 
     long now = System.currentTimeMillis();
-    if (now - reloadTimer >= fireCooldown) { 
+    if (now - reloadTimer >= fireCooldown) {
       reloading = false;
       reloadTimer = 0L;
     }
@@ -355,10 +355,10 @@ class Tank extends Sprite {
   // CHECK IF TANK TOUCHES EDGE OF THE WORLD
   void checkBorders() {
     float rX = tankwidth / 2.0f;
-    float rY = tankheight / 2.0f; 
+    float rY = tankheight / 2.0f;
     position.x = constrain(position.x, rX, width - rX);
     position.y = constrain(position.y, rY, height - rY);
-    updateBoundry(); 
+    updateBoundry();
   }
 
   // COLLISION DETECTION
@@ -367,20 +367,20 @@ class Tank extends Sprite {
     float candidateX = position.x + velocity.x;
     float candidateY = position.y + velocity.y;
 
-    
+
     if (!collisionAt(candidateX, position.y)) {
       position.x = candidateX;
     }
-    
+
     if (!collisionAt(position.x, candidateY)) {
       position.y = candidateY;
     }
-    
-    checkBorders(); 
+
+    checkBorders();
   }
 
   boolean collisionAt(float x, float y) {
-    
+
     Boundry candidateBoundry = new Boundry(x - tankwidth / 2.0f, y - tankheight / 2.0f, tankwidth, tankheight);
 
     for (Sprite s : placedPositions) {
@@ -388,10 +388,10 @@ class Tank extends Sprite {
         continue;
       }
       if ((s instanceof Tree || (s instanceof Tank && s != this)) && candidateBoundry.intersects(s.boundry)) {
-        return true; 
+        return true;
       }
     }
-    return false; 
+    return false;
   }
 
 
@@ -429,32 +429,31 @@ class Tank extends Sprite {
       CannonBall fake = new CannonBall(position.copy(), this.angle, this);
       boolean directHitPredicted = false;
       // Simulate steps up to view range or a bit beyond
-      for(int i=0; i < viewArea.viewLength / fake.maxSpeed + 10; i++){ 
+      for (int i=0; i < viewArea.viewLength / fake.maxSpeed + 10; i++) {
         fake.moveForward();
-        for(Sprite obs : placedPositions){
-          if(obs instanceof Tank && obs != this && ((Tank)obs).health > 0){
-            if (obs.boundry.intersects(fake.boundry)){
+        for (Sprite obs : placedPositions) {
+          if (obs instanceof Tank && obs != this && ((Tank)obs).health > 0) {
+            if (obs.boundry.intersects(fake.boundry)) {
               enemyHit = true; // Global flag from ENV_variables.pde
               directHitPredicted = true;
               break;
             }
           }
         }
-        if(directHitPredicted || fake.position.x < 0 || fake.position.x > width || fake.position.y < 0 || fake.position.y > height) break;
+        if (directHitPredicted || fake.position.x < 0 || fake.position.x > width || fake.position.y < 0 || fake.position.y > height) break;
       }
-      
+
       CannonBall cannonBall = new CannonBall(position.copy(), this.angle, this);
-      addCannonBall(cannonBall); 
+      addCannonBall(cannonBall);
       reloading = true;
       reloadTimer = System.currentTimeMillis();
     }
   }
 
   void reduceHealth() {
-
     if (health > 0) {
       health--;
-      if(this.health == 0 && this.name.equals("enemy")){
+      if (this.health == 0 && this.name.equals("enemy")) {
         enemyDead = true; // Global flag from ENV_variables.pde
       }
     }
@@ -469,35 +468,35 @@ class Tank extends Sprite {
     pushMatrix();
     translate(this.position.x, this.position.y);
     drawTank(0, 0);
-    if (debugMode) { 
+    if (debugMode) {
       fill(230);
       stroke(0);
       strokeWeight(1);
-      
-      
+
+
       float textBoxWidth = 100;
       float textBoxHeight = 50;
-      float textBoxX = 40; 
-      float textBoxY = -40; 
+      float textBoxX = 40;
+      float textBoxY = -40;
       rect(textBoxX, textBoxY, textBoxWidth, textBoxHeight);
       fill(30);
-      textSize(12); 
-      textAlign(LEFT, TOP); 
+      textSize(12);
+      textAlign(LEFT, TOP);
       String stateText = "";
 
       stateText = "RL";
 
       text(this.name + "\n(" + nf(this.position.x, 0, 1) + ", " + nf(this.position.y, 0, 1) + ")\nState: " + stateText, textBoxX + 5, textBoxY + 5);
-      textAlign(CENTER, CENTER); 
+      textAlign(CENTER, CENTER);
     }
     popMatrix();
-    boundry.draw(); 
+    boundry.draw();
     displayHealth();
     if (reloading) {
-      displayReloadTimer(); 
+      displayReloadTimer();
     }
     if (debugMode) {
-      drawViewArea(); 
+      drawViewArea();
     }
   }
 
@@ -538,7 +537,7 @@ class Tank extends Sprite {
     fill(255);
     rect(35, -25, 7, 50, 2);
 
-    
+
     long now = System.currentTimeMillis();
     float progress = constrain((now - reloadTimer) / 3000.0, 0, 1);
 
