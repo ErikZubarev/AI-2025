@@ -45,7 +45,7 @@ void setup() {
     float decayStep = 0.05; //Gradual epislon decay
     float min_epsilon = 0.01;
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon - decayStep);
-    qLearner.learningRate = max(0, qLearner.learningRate - 0.01);
+    qLearner.learningRate = max(0, qLearner.learningRate - 0.01  );
     if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) { //If we have reached epsilon < 0.1 we start gathering stats for report
       println("Starting stat gathering");
       statsEpochCounter = 0;
@@ -221,13 +221,13 @@ void assignRewards() {
   eventsRewards.put("Enemy Destroyed", 0.7);
   eventsRewards.put("Time", -0.05); 
   eventsRewards.put("See Enemy", 0.03);  
-  eventsRewards.put("Facing Wall Move", -0.5);  
+  eventsRewards.put("Facing Wall Move", -0.2);  
   eventsRewards.put("Good Fire Attempt", 0.2);  
   eventsRewards.put("Fired When Reloading", -0.15); 
   eventsRewards.put("Fired When No LOS", -0.25);  
   eventsRewards.put("Maintain LOS", 0.15);  
   eventsRewards.put("Approach Enemy", 0.2);  
-  eventsRewards.put("Escaped Wall", 0.5);
+  eventsRewards.put("Escaped Wall", 0.1);
   eventsRewards.put("Stand Still For No Reason", -0.2);
 }
 
