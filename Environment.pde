@@ -238,9 +238,8 @@ void checkRewards() {
   boolean gameActuallyEndedThisStep = false;
 
   Tank.State ps = null;
-  if (previousState instanceof Tank.State) {
+  if (previousState instanceof Tank.State)
     ps = (Tank.State) previousState;
-  }
 
 
   Tank.State currentState = tank0.getCurrentState();
@@ -278,10 +277,6 @@ void checkRewards() {
       totalStepReward += eventsRewards.get("Facing Wall Move") * ++stuckCounter;
     }
     
-    if(currentState.facingWall && !ps.facingWall && !currentState.enemyInLOS){
-      totalStepReward += eventsRewards.get("Facing Wall Move")* ++stuckCounter;
-    }
-    
     if (ps.facingWall && !currentState.facingWall) {
       totalStepReward += eventsRewards.get("Escaped Wall");
       stuckCounter = 0;
@@ -305,23 +300,10 @@ void checkRewards() {
     }
 
     //Reward for getting closer to enemy
-    if (ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2 || 
-        ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1) {
+    if ((ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2) || 
+        (ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1)) {
       totalStepReward += eventsRewards.get("Approach Enemy");
     }
-    
-    boolean clean = true;
-    for(Sprite item : placedPositions){
-      if(item instanceOf Tank)
-        continue;
-        
-      if(tank0.viewArea.intersects(item.boundry) && previousAction == "move"){
-         clean = false;
-      }
-    } 
-    if(clean)
-      totalStepReward += eventsRewards.get("Good Movevemnt");
-    
     
 
     // Time penalty
@@ -333,9 +315,16 @@ void checkRewards() {
       totalStepReward += eventsRewards.get("Time");
       previousTime = currentGameTimer;
     }
+    
+    boolean clean = true;
+    for(Tree tree : allTrees){
+      if(tank0.viewArea.intersects(tree.boundry) && previousAction == "move")
+         clean = false;
+    } 
+    if(clean)
+      totalStepReward += eventsRewards.get("Good Movevemnt");
+
   }
-
-
 
   setReward(totalStepReward, currentState);
 
