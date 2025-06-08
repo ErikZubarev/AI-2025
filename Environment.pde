@@ -45,6 +45,7 @@ void setup() {
     float decayStep = 0.05; //Gradual epislon decay
     float min_epsilon = 0.01;
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon - decayStep);
+    qLearner.learningRate = max(0, qLearner.learningRate - decayStep);
     if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) { //If we have reached epsilon < 0.1 we start gathering stats for report
       println("Starting stat gathering");
       statsEpochCounter = 0;
