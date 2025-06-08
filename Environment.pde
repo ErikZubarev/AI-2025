@@ -229,6 +229,7 @@ void assignRewards() {
   eventsRewards.put("Approach Enemy", 0.2);  
   eventsRewards.put("Escaped Wall", 0.1);
   eventsRewards.put("Stand Still For No Reason", -0.2);
+  eventsRewards.put("Good Movevemnt", 0.15);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -308,6 +309,20 @@ void checkRewards() {
         ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1) {
       totalStepReward += eventsRewards.get("Approach Enemy");
     }
+    
+    boolean clean = true;
+    for(Sprite item : placedPositions){
+      if(item instanceOf Tank)
+        continue;
+        
+      if(tank0.viewArea.intersects(item.boundry) && previousAction == "move"){
+         clean = false;
+      }
+    } 
+    if(clean)
+      totalStepReward += eventsRewards.get("Good Movevemnt");
+    
+    
 
     // Time penalty
     if (previousTime < currentGameTimer) {
