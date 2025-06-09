@@ -87,13 +87,12 @@ class Tank extends Sprite {
       public String toString() {
       String[] enOr = {"None", "Front", "Left", "Right", "Back"};
       String[] agOr = {"East", "South", "West", "North"};
-      return "State{" +
+      return
         "facingWall=" + facingWall +
         ", enemyInLOS=" + enemyInLOS +
         ", nearestEnemyDistCategory=" + nearestEnemyDistCategory +
         ", relativeEnemyDirection=" + (relativeEnemyDirection >= 0 && relativeEnemyDirection < enOr.length ? enOr[relativeEnemyDirection] : "Invalid") +
-        ", agentOrientation=" + (agentOrientation >= 0 && agentOrientation < agOr.length ? agOr[agentOrientation] : "Invalid") +
-        '}';
+        ", agentOrientation=" + (agentOrientation >= 0 && agentOrientation < agOr.length ? agOr[agentOrientation] : "Invalid");
     }
   }
 
@@ -462,25 +461,30 @@ class Tank extends Sprite {
     pushMatrix();
     translate(this.position.x, this.position.y);
     drawTank(0, 0);
-    if (debugMode) {
+    if (true) {
       fill(230);
       stroke(0);
       strokeWeight(1);
 
 
-      float textBoxWidth = 100;
-      float textBoxHeight = 50;
+      float textBoxWidth = 160;
+      float textBoxHeight = 80;
       float textBoxX = 40;
       float textBoxY = -40;
       rect(textBoxX, textBoxY, textBoxWidth, textBoxHeight);
       fill(30);
       textSize(12);
       textAlign(LEFT, TOP);
-      String stateText = "";
-
-      stateText = "RL";
-
-      text(this.name + "\n(" + nf(this.position.x, 0, 1) + ", " + nf(this.position.y, 0, 1) + ")\nState: " + stateText, textBoxX + 5, textBoxY + 5);
+      String stateText[] = {};
+      String text = "";
+      
+      if(previousState != null){
+        stateText = previousState.toString().split(", ");
+        for(int i = 0; i < stateText.length; i++){
+          text += stateText[i] + "\n";
+        }
+      }
+      text(text, textBoxX + 5, textBoxY + 5);
       textAlign(CENTER, CENTER);
     }
     popMatrix();
