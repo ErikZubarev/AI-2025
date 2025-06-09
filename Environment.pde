@@ -229,7 +229,7 @@ void assignRewards() {
   eventsRewards.put("Approach Enemy", 0.2);  
   eventsRewards.put("Escaped Wall", 0.1);
   eventsRewards.put("Stand Still For No Reason", -0.2);
-  eventsRewards.put("Good Movevemnt", 0.15);
+  eventsRewards.put("Good Movevemnt", 0.05);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -316,12 +316,17 @@ void checkRewards() {
       previousTime = currentGameTimer;
     }
     
-    boolean clean = true;
+    boolean clear = true;
+    float centerX = tank0.position.x + (tank0.viewArea.width-20) * cos(tank0.angle);
+    float centerY = tank0.position.y + (tank0.viewArea.height-20) * sin(tank0.angle);
+    fill(255, 0, 0);
+    ellipse(centerX, centerY, 10, 10);
+    Boundry point = new Boundry(centerX, centerY, 1, 1);
     for(Tree tree : allTrees){
-      if(tank0.viewArea.intersects(tree.boundry) && previousAction == "move")
-         clean = false;
+      if(point.isWithin(tree.boundry) || centerX > 800 || centerY > 800)
+         clear = false;
     } 
-    if(clean)
+    if(clear && !ps.facingWall && previousAction == "move" && !ps.enemyInLOS)
       totalStepReward += eventsRewards.get("Good Movevemnt");
 
   }
