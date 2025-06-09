@@ -219,17 +219,16 @@ void assignRewards() {
   eventsRewards.put("Win", 1.0);   
   eventsRewards.put("Enemy Hit", 0.5); 
   eventsRewards.put("Enemy Destroyed", 0.7);
-  eventsRewards.put("Time", -0.05); 
+  eventsRewards.put("Time", -0.1); 
   eventsRewards.put("See Enemy", 0.03);  
   eventsRewards.put("Facing Wall Move", -0.2);  
   eventsRewards.put("Good Fire Attempt", 0.2);  
-  eventsRewards.put("Fired When Reloading", -0.15); 
   eventsRewards.put("Fired When No LOS", -0.25);  
   eventsRewards.put("Maintain LOS", 0.15);  
   eventsRewards.put("Approach Enemy", 0.2);  
   eventsRewards.put("Escaped Wall", 0.1);
   eventsRewards.put("Stand Still For No Reason", -0.2);
-  eventsRewards.put("Good Movevemnt", 0.05);
+  eventsRewards.put("Good Movevemnt", 0.02);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -284,18 +283,16 @@ void checkRewards() {
 
     //Combat related rewards
     if (previousAction != null && previousAction.equals("fire")) {
-      if (!ps.isReloading && ps.enemyInLOS) {
+      if (ps.enemyInLOS) {
         totalStepReward += eventsRewards.get("Good Fire Attempt");
-      }else if (!ps.isReloading && !ps.enemyInLOS){
+      }else if (!ps.enemyInLOS){
         totalStepReward += eventsRewards.get("Fired When No LOS");
-      }else if (ps.isReloading) {
-        totalStepReward += eventsRewards.get("Fired When Reloading");
       }
     }
 
     //Maintaing line of sight reward
     if (ps.enemyInLOS && currentState.enemyInLOS &&
-      previousAction != null && !previousAction.equals("fire") && !ps.isReloading) {
+      previousAction != null && !previousAction.equals("fire")) {
       totalStepReward += eventsRewards.get("Maintain LOS");
     }
 

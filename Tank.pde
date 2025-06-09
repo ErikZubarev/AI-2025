@@ -48,16 +48,14 @@ class Tank extends Sprite {
     int relativeEnemyDirection;   // 0=Far/None, 1=Front, 2=Right, 3=Left, 4=Back
     int agentOrientation;         // 0=East, 1=North, 2=West, 3=South
     boolean facingWall;
-    boolean isReloading;
     boolean enemyInLOS;           // True if direct line of sight to an enemy
 
 
-    State(int nearestEnemyDistCat, int relEnemyDirVal, int agentOrientVal, boolean facingWallVal, boolean isReloadingVal, boolean enemyInLOSVal) {
+    State(int nearestEnemyDistCat, int relEnemyDirVal, int agentOrientVal, boolean facingWallVal, boolean enemyInLOSVal) {
       this.nearestEnemyDistCategory = nearestEnemyDistCat;
       this.relativeEnemyDirection = relEnemyDirVal;
       this.agentOrientation = agentOrientVal;
       this.facingWall = facingWallVal;
-      this.isReloading = isReloadingVal;
       this.enemyInLOS = enemyInLOSVal;
     }
 
@@ -71,7 +69,6 @@ class Tank extends Sprite {
         relativeEnemyDirection == otherState.relativeEnemyDirection &&
         agentOrientation == otherState.agentOrientation &&
         facingWall == otherState.facingWall &&
-        isReloading == otherState.isReloading &&
         enemyInLOS == otherState.enemyInLOS;
     }
 
@@ -82,7 +79,6 @@ class Tank extends Sprite {
       result = 31 * result + relativeEnemyDirection;
       result = 31 * result + agentOrientation;
       result = 31 * result + (facingWall ? 1 : 0);
-      result = 31 * result + (isReloading ? 1 : 0);
       result = 31 * result + (enemyInLOS ? 1 : 0);
       return result;
     }
@@ -93,7 +89,6 @@ class Tank extends Sprite {
       String[] agOr = {"East", "South", "West", "North"};
       return "State{" +
         "facingWall=" + facingWall +
-        ", isReloading=" + isReloading +
         ", enemyInLOS=" + enemyInLOS +
         ", nearestEnemyDistCategory=" + nearestEnemyDistCategory +
         ", relativeEnemyDirection=" + (relativeEnemyDirection >= 0 && relativeEnemyDirection < enOr.length ? enOr[relativeEnemyDirection] : "Invalid") +
@@ -167,7 +162,6 @@ class Tank extends Sprite {
       relativeEnemyDir,
       currentAgentOrientation,
       amIFacingWall,
-      this.reloading,
       doISeeEnemyInLOS
       );
     //println(newState.toString());
