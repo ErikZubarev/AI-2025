@@ -459,18 +459,23 @@ class Tank extends Sprite {
   // DISPLAY SELF ======================================================================================
   void display() {
     pushMatrix();
-    translate(this.position.x, this.position.y);
-    drawTank(0, 0);
-    if (true) {
+      translate(this.position.x, this.position.y);
+      drawTank(0,0);
+    popMatrix();
+    pushMatrix();
+    if (name != "enemy") {
       fill(230);
       stroke(0);
       strokeWeight(1);
-
+      
 
       float textBoxWidth = 160;
       float textBoxHeight = 80;
-      float textBoxX = 40;
-      float textBoxY = -40;
+      
+      PVector pos = this.position.copy();
+      float textBoxX = constrain(pos.x + 50, 0, width - textBoxWidth);
+      float textBoxY = constrain(pos.y - 50, 0, height - textBoxHeight);
+      
       rect(textBoxX, textBoxY, textBoxWidth, textBoxHeight);
       fill(30);
       textSize(12);
