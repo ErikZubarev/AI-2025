@@ -220,8 +220,9 @@ void assignRewards() {
   eventsRewards.put("Enemy Hit", 0.5); 
   eventsRewards.put("Enemy Destroyed", 0.7);
   eventsRewards.put("Time", -0.1); 
-  eventsRewards.put("See Enemy", 0.05);  
-  eventsRewards.put("Facing Wall Move", -0.2);
+  eventsRewards.put("See Enemy", 0.3);  
+  eventsRewards.put("Facing Wall Move", -0.05);
+  eventsRewards.put("Turn to Wall", -0.3);
   eventsRewards.put("Good Fire Attempt", 0.2);  
   eventsRewards.put("Approach Enemy", 0.2);  
   eventsRewards.put("Escaped Wall", 0.1);
@@ -284,6 +285,11 @@ void checkRewards() {
   //Penalty for looking at wall
   if (ps.facingWall && (previousAction == "move" || previousAction == "stop") && !ps.enemyInLOS) {
     totalStepReward += eventsRewards.get("Facing Wall Move") * ++stuckCounter;
+  }
+  
+  //Penalty for looking at wall
+  if (!ps.facingWall && currentState.facingWall && !ps.enemyInLOS) {
+    totalStepReward += eventsRewards.get("Turn to Wall");
   }
   
   //Reward for going from looking at wall to not
