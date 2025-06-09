@@ -302,13 +302,13 @@ class Tank extends Sprite {
     for (float currentLength = 0; currentLength < maxRayLength; currentLength += rayStep) {
       float x = rayOrigin.x + cos(rayAngle) * currentLength;
       float y = rayOrigin.y + sin(rayAngle) * currentLength;
-      PVector rayPoint = new PVector(x, y);
+      Boundry rayPoint = new Boundry(x, y, 10, 10);
 
       if (x < 0 || x > width || y < 0 || y > height) {
         return false; // Ray went off screen
       }
 
-      if (enemy.boundry.contains(rayPoint.x, rayPoint.y)) {
+      if (enemy.boundry.intersects(rayPoint)) {
         return true; // Clear line of sight to this enemy
       }
 
@@ -316,7 +316,7 @@ class Tank extends Sprite {
         if (s == this || s == enemy || s instanceof CannonBall) {
           continue;
         }
-        if ((s instanceof Tree || (s instanceof Tank && s != enemy)) && s.boundry.contains(rayPoint.x, rayPoint.y)) {
+        if ((s instanceof Tree || (s instanceof Tank && s != enemy)) && s.boundry.intersects(rayPoint)) {
           return false; // LOS is blocked by another object
         }
       }
