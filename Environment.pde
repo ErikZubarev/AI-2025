@@ -220,7 +220,8 @@ void assignRewards() {
   eventsRewards.put("Enemy Hit", 0.5); 
   eventsRewards.put("Enemy Destroyed", 0.7);
   eventsRewards.put("Time", -0.1); 
-  eventsRewards.put("See Enemy", 0.3);  
+  eventsRewards.put("See Enemy", 0.1);  
+  eventsRewards.put("Look Away From Enemy", -0.15);
   eventsRewards.put("Facing Wall Move", -0.05);
   eventsRewards.put("Turn to Wall", -0.3);
   eventsRewards.put("Good Fire Attempt", 0.2);  
@@ -310,6 +311,11 @@ void checkRewards() {
     totalStepReward += eventsRewards.get("Moved Away From Enemy");
   }
   
+  //Penalty look away from enemy
+  if(ps.enemyInLOS && !currentState.enemyInLOS && 
+    (previousAction == "move" || previousAction == "rotateLeft" || previousAction == "rotateRight")){
+    totalStepReward += eventsRewards.get("Look Away From Enemy");
+  }
   
   
   // Time based rewards
