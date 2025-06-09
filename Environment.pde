@@ -45,7 +45,7 @@ void setup() {
     float decayStep = 0.05; //Gradual epislon decay
     float min_epsilon = 0.01;
     qLearner.epsilon = max(min_epsilon, qLearner.epsilon - decayStep);
-    qLearner.learningRate = max(0, qLearner.learningRate - 0.01  );
+    qLearner.learningRate = max(0, qLearner.learningRate - 0.005  );
     if (qLearner.epsilon < 0.1 && statsEpochCounter == -1) { //If we have reached epsilon < 0.1 we start gathering stats for report
       println("Starting stat gathering");
       statsEpochCounter = 0;
@@ -220,11 +220,9 @@ void assignRewards() {
   eventsRewards.put("Enemy Hit", 0.5); 
   eventsRewards.put("Enemy Destroyed", 0.7);
   eventsRewards.put("Time", -0.1); 
-  eventsRewards.put("See Enemy", 0.03);  
-  eventsRewards.put("Facing Wall Move", -0.2);  
+  eventsRewards.put("See Enemy", 0.05);  
+  eventsRewards.put("Facing Wall Move", -0.2);
   eventsRewards.put("Good Fire Attempt", 0.2);  
-  eventsRewards.put("Fired When No LOS", -0.25);  
-  eventsRewards.put("Maintain LOS", 0.15);  
   eventsRewards.put("Approach Enemy", 0.2);  
   eventsRewards.put("Escaped Wall", 0.1);
   eventsRewards.put("Stand Still For No Reason", -0.2);
@@ -235,101 +233,87 @@ void assignRewards() {
 void checkRewards() {
   float totalStepReward = 0;
   boolean gameActuallyEndedThisStep = false;
-
-  Tank.State ps = null;
-  if (previousState instanceof Tank.State)
-    ps = (Tank.State) previousState;
-
-
+  Tank.State ps = previousState instanceof Tank.State? (Tank.State) previousState : null;
   Tank.State currentState = tank0.getCurrentState();
 
-  if (gameOver) {
-    if (gameWon) {
-      totalStepReward += eventsRewards.get("Win");
-    } else {
-      totalStepReward += eventsRewards.get("Lost");
-    }
-    gameActuallyEndedThisStep = true;
+  //Enemy damage rewards
+  if (!gameActuallyEndedThisStep && ps != null && previousAction != null && previousAction.equals("fire") && ps.enemyInLOS && !enemyHit) {
+    totalStepReward += eventsRewards.get("Good Fire Attempt");
   }
-
   if (enemyHit) {
     totalStepReward += eventsRewards.get("Enemy Hit");
     enemyHit = false; // Reset flag
   }
-
   if (enemyDead) {
     totalStepReward += eventsRewards.get("Enemy Destroyed");
     enemyDead = false; // Reset flag
   }
 
+  //Game Over rewards
+  if (gameOver) {
+    totalStepReward += gameWon ? eventsRewards.get("Win") : eventsRewards.get("Lost");
+    gameActuallyEndedThisStep = true;
+  }
+  
+  if (gameActuallyEndedThisStep || ps == null) {
+    setReward(totalStepReward, currentState);
+    return; // RETURN IF GAME ENDED ##############
+  }
+  
   //Movement related rewards
-  if (!gameActuallyEndedThisStep && ps != null) {
-    if (ps.enemyInLOS) {
-      totalStepReward += eventsRewards.get("See Enemy");
-    }
-    
-    if(previousAction == "stop" && !ps.enemyInLOS){
-      totalStepReward += eventsRewards.get("Stand Still For No Reason");
-    }
+  //Pseudoreward to keep moving forward
+  boolean clear = true;
+  float centerX = tank0.position.x + (tank0.viewArea.width-20) * cos(tank0.angle);
+  float centerY = tank0.position.y + (tank0.viewArea.height-20) * sin(tank0.angle);
+  fill(255, 0, 0);
+  ellipse(centerX, centerY, 10, 10);
+  Boundry point = new Boundry(centerX, centerY, 1, 1);
+  for(Tree tree : allTrees){
+    if(point.isWithin(tree.boundry) || centerX > 800 || centerY > 800)
+       clear = false;
+  } 
+  if(clear && !ps.facingWall && previousAction == "move" && !ps.enemyInLOS)
+    totalStepReward += eventsRewards.get("Good Movevemnt");
 
-    if (ps.facingWall && (previousAction == "move" || previousAction == "stop") && !ps.enemyInLOS) {
-      totalStepReward += eventsRewards.get("Facing Wall Move") * ++stuckCounter;
-    }
-    
-    if (ps.facingWall && !currentState.facingWall) {
-      totalStepReward += eventsRewards.get("Escaped Wall");
-      stuckCounter = 0;
-    }
-
-    //Combat related rewards
-    if (previousAction != null && previousAction.equals("fire")) {
-      if (ps.enemyInLOS) {
-        totalStepReward += eventsRewards.get("Good Fire Attempt");
-      }else if (!ps.enemyInLOS){
-        totalStepReward += eventsRewards.get("Fired When No LOS");
-      }
-    }
-
-    //Maintaing line of sight reward
-    if (ps.enemyInLOS && currentState.enemyInLOS &&
-      previousAction != null && !previousAction.equals("fire")) {
-      totalStepReward += eventsRewards.get("Maintain LOS");
-    }
-
-    //Reward for getting closer to enemy
-    if ((ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2) || 
-        (ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1)) {
-      totalStepReward += eventsRewards.get("Approach Enemy");
-    }
-    
-
-    // Time penalty
-    if (previousTime < currentGameTimer) {
-      if(previousPosition != null && previousPosition == tank0.position){
-        totalStepReward += eventsRewards.get("Stand Still For No Reason");
-      }
-      previousPosition = tank0.position;
-      totalStepReward += eventsRewards.get("Time");
-      previousTime = currentGameTimer;
-    }
-    
-    boolean clear = true;
-    float centerX = tank0.position.x + (tank0.viewArea.width-20) * cos(tank0.angle);
-    float centerY = tank0.position.y + (tank0.viewArea.height-20) * sin(tank0.angle);
-    fill(255, 0, 0);
-    ellipse(centerX, centerY, 10, 10);
-    Boundry point = new Boundry(centerX, centerY, 1, 1);
-    for(Tree tree : allTrees){
-      if(point.isWithin(tree.boundry) || centerX > 800 || centerY > 800)
-         clear = false;
-    } 
-    if(clear && !ps.facingWall && previousAction == "move" && !ps.enemyInLOS)
-      totalStepReward += eventsRewards.get("Good Movevemnt");
-
+  //Keep LOS
+  if (ps.enemyInLOS) {
+    totalStepReward += eventsRewards.get("See Enemy");
+  }
+  
+  //Penalty for standing still
+  if(previousAction == "stop" && !ps.enemyInLOS){
+    totalStepReward += eventsRewards.get("Stand Still For No Reason");
   }
 
-  setReward(totalStepReward, currentState);
+  //Penalty for looking at wall
+  if (ps.facingWall && (previousAction == "move" || previousAction == "stop") && !ps.enemyInLOS) {
+    totalStepReward += eventsRewards.get("Facing Wall Move") * ++stuckCounter;
+  }
+  
+  //Reward for going from looking at wall to not
+  if (ps.facingWall && !currentState.facingWall) {
+    totalStepReward += eventsRewards.get("Escaped Wall");
+    stuckCounter = 0;
+  }
 
+  //Reward for getting closer to enemy
+  if ((ps.nearestEnemyDistCategory == 3 && currentState.nearestEnemyDistCategory == 2) || 
+      (ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 1)) {
+    totalStepReward += eventsRewards.get("Approach Enemy");
+  }
+  
+  // Time based rewards
+  if (previousTime < currentGameTimer) {
+    //Same position every second penalty
+    if(previousPosition != null && previousPosition == tank0.position){
+      totalStepReward += eventsRewards.get("Stand Still For No Reason");
+    }
+    previousPosition = tank0.position;
+    previousTime = currentGameTimer;
+    totalStepReward += eventsRewards.get("Time");
+  }
+    
+  setReward(totalStepReward, currentState);
 }
 
 void setReward(float reward, Tank.State newState) {
