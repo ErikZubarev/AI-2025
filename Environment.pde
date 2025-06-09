@@ -220,15 +220,15 @@ void assignRewards() {
   eventsRewards.put("Enemy Hit", 0.5); 
   eventsRewards.put("Enemy Destroyed", 0.7);
   eventsRewards.put("Time", -0.1); 
-  eventsRewards.put("See Enemy", 0.1);  
-  eventsRewards.put("Look Away From Enemy", -0.15);
-  eventsRewards.put("Facing Wall Move", -0.05);
+  eventsRewards.put("See Enemy", 0.11);  
+  eventsRewards.put("Look Away From Enemy", -0.2);
+  eventsRewards.put("Facing Wall Move", -0.01);
   eventsRewards.put("Turn to Wall", -0.3);
   eventsRewards.put("Good Fire Attempt", 0.2);  
   eventsRewards.put("Approach Enemy", 0.2);  
   eventsRewards.put("Escaped Wall", 0.1);
   eventsRewards.put("Stand Still For No Reason", -0.2);
-  eventsRewards.put("Good Movevemnt", 0.02);
+  eventsRewards.put("Good Movevemnt", 0.01);
   eventsRewards.put("Moved Away From Enemy", -0.25);
 }
 
