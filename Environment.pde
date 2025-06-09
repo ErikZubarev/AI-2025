@@ -227,6 +227,7 @@ void assignRewards() {
   eventsRewards.put("Escaped Wall", 0.1);
   eventsRewards.put("Stand Still For No Reason", -0.2);
   eventsRewards.put("Good Movevemnt", 0.02);
+  eventsRewards.put("Moved Away From Enemy", -0.25);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -274,11 +275,6 @@ void checkRewards() {
   } 
   if(clear && !ps.facingWall && previousAction == "move" && !ps.enemyInLOS)
     totalStepReward += eventsRewards.get("Good Movevemnt");
-
-  //Keep LOS
-  if (ps.enemyInLOS) {
-    totalStepReward += eventsRewards.get("See Enemy");
-  }
   
   //Penalty for standing still
   if(previousAction == "stop" && !ps.enemyInLOS){
@@ -302,12 +298,26 @@ void checkRewards() {
     totalStepReward += eventsRewards.get("Approach Enemy");
   }
   
+  //Penalty for moving away from enemy
+  if ((ps.nearestEnemyDistCategory == 1 && currentState.nearestEnemyDistCategory == 2) || 
+      (ps.nearestEnemyDistCategory == 2 && currentState.nearestEnemyDistCategory == 3)) {
+    totalStepReward += eventsRewards.get("Moved Away From Enemy");
+  }
+  
+  
+  
   // Time based rewards
   if (previousTime < currentGameTimer) {
     //Same position every second penalty
     if(previousPosition != null && previousPosition == tank0.position){
       totalStepReward += eventsRewards.get("Stand Still For No Reason");
     }
+    
+    //Keep LOS
+    if (ps.enemyInLOS && currentState.enemyInLOS) {
+      totalStepReward += eventsRewards.get("See Enemy");
+    }
+    
     previousPosition = tank0.position;
     previousTime = currentGameTimer;
     totalStepReward += eventsRewards.get("Time");
