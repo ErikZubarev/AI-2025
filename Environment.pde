@@ -230,6 +230,8 @@ void assignRewards() {
   eventsRewards.put("Stand Still For No Reason", -0.2);
   eventsRewards.put("Good Movevemnt", 0.01);
   eventsRewards.put("Moved Away From Enemy", -0.25);
+  eventsRewards.put("Moved to Enemy in Front", 0.1);
+  eventsRewards.put("Moved away from Enemy in Front", -0.1);
 }
 
 // ================================================================================================== TWEAK Q-LEARNING HERE
@@ -317,6 +319,12 @@ void checkRewards() {
     totalStepReward += eventsRewards.get("Look Away From Enemy");
   }
   
+  if(ps.relativeEnemyDirection != 1 && currentState.relativeEnemyDirection == 1){
+    totalStepReward += eventsRewards.get("Moved to Enemy in Front");
+  }
+  else if (ps.relativeEnemyDirection == 1 && currentState.relativeEnemyDirection != 1){
+    totalStepReward += eventsRewards.get("Moved away from Enemy in Front");
+  }
   
   // Time based rewards
   if (previousTime < currentGameTimer) {
